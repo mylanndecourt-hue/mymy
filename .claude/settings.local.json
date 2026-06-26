@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem \"C:\\\\Program Files\" | Where-Object { $_.Name -match \"node\" }; Get-ChildItem \"C:\\\\Users\\\\mylan\\\\AppData\\\\Local\" | Where-Object { $_.Name -match \"node|nvm\" })",
+      "PowerShell(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\mylan\\\\Desktop\\\\spirit-trading\\\\spirit-trading-app\\\\src\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\mylan\\\\Desktop\\\\spirit-trading\\\\spirit-trading-app\\\\public\")"
+    ]
+  }
+}

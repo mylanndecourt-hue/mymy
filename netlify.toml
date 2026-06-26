@@ -1,0 +1,11 @@
+[build]
+  publish = "spirit-trading-app/dist"
+  command = "cd spirit-trading-app && npm install && npm run build"
+
+[functions]
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
