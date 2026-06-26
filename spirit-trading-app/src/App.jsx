@@ -5071,18 +5071,23 @@ function SessionDuJour({ sessions, setSessions }) {
         const sport = session.sport ?? null;
         const tierce = session.tierce ?? null;
         const alimentation = session.alimentation ?? null;
-        const sommeil = session.sommeil ?? null;
+        const qualiteSommeil = session.qualite_sommeil ?? null;
+        const heureCoucher = session.heure_coucher ?? "";
+        const ecrans = session.ecrans ?? null;
 
-        const BtnOuiNon = ({ val, current, onChange }) => (
+        const BtnOuiNon = ({ current, onChange, ouiColor, nonColor }) => (
           <div style={{ display: "flex", gap: 6 }}>
-            {["Oui", "Non"].map(opt => (
-              <button key={opt} onClick={() => onChange(current === opt ? null : opt)} style={{
-                flex: 1, padding: "8px 0", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 700,
-                background: current === opt ? (opt === "Oui" ? "rgba(0,212,255,0.15)" : "rgba(239,68,68,0.12)") : "rgba(255,255,255,0.03)",
-                border: `1.5px solid ${current === opt ? (opt === "Oui" ? G.cyan : G.red) : G.border}`,
-                color: current === opt ? (opt === "Oui" ? G.cyan : G.red) : G.dim,
+            {[
+              { val: "Oui", color: ouiColor || G.green },
+              { val: "Non", color: nonColor || G.red },
+            ].map(({ val, color }) => (
+              <button key={val} onClick={() => onChange(current === val ? null : val)} style={{
+                flex: 1, padding: "10px 0", borderRadius: 10, cursor: "pointer", fontSize: 13, fontWeight: 700,
+                background: current === val ? `${color}22` : "rgba(255,255,255,0.03)",
+                border: `1.5px solid ${current === val ? color : G.border}`,
+                color: current === val ? color : G.dim,
                 transition: "all 0.15s",
-              }}>{opt}</button>
+              }}>{val}</button>
             ))}
           </div>
         );
@@ -5092,27 +5097,22 @@ function SessionDuJour({ sessions, setSessions }) {
           { val: "Neutre",   emoji: "🍱", color: G.amber },
           { val: "Mauvaise", emoji: "🍔", color: G.red },
         ];
-        const SOMMEILS = [
-          { val: "Mauvais", emoji: "😴", color: G.red },
-          { val: "Moyen",   emoji: "🌙", color: G.amber },
-          { val: "Bon",     emoji: "⭐", color: G.green },
-        ];
 
         return (
           <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px" }}>
             <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, marginBottom: 18 }}>🌿 Conditions du jour</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
 
               {/* Sport */}
               <div>
                 <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>🏃 Sport aujourd'hui ?</div>
-                <BtnOuiNon val={sport} current={sport} onChange={v => set("sport", v)} />
+                <BtnOuiNon current={sport} onChange={v => set("sport", v)} ouiColor={G.green} nonColor={G.dim} />
               </div>
 
               {/* Tierce personne */}
               <div>
                 <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>👤 Présence d'une tierce personne dans le lieu de trade ?</div>
-                <BtnOuiNon val={tierce} current={tierce} onChange={v => set("tierce", v)} />
+                <BtnOuiNon current={tierce} onChange={v => set("tierce", v)} ouiColor={G.amber} nonColor={G.green} />
               </div>
 
               {/* Alimentation */}
@@ -5135,19 +5135,40 @@ function SessionDuJour({ sessions, setSessions }) {
 
               {/* Sommeil */}
               <div>
-                <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>😴 Qualité du sommeil</div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  {SOMMEILS.map(s => (
-                    <button key={s.val} onClick={() => set("sommeil", sommeil === s.val ? null : s.val)} style={{
-                      flex: 1, padding: "10px 4px", borderRadius: 12, cursor: "pointer",
-                      background: sommeil === s.val ? `${s.color}18` : "rgba(255,255,255,0.02)",
-                      border: `1.5px solid ${sommeil === s.val ? s.color : G.border}`,
-                      display: "flex", flexDirection: "column", alignItems: "center", gap: 4, transition: "all 0.15s",
-                    }}>
-                      <span style={{ fontSize: 22 }}>{s.emoji}</span>
-                      <span style={{ fontSize: 10, color: sommeil === s.val ? s.color : G.dim, fontWeight: sommeil === s.val ? 700 : 400 }}>{s.val}</span>
-                    </button>
-                  ))}
+                <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 10 }}>😴 Sommeil</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {/* Heure de coucher */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 12, color: G.dim }}>🌙 Heure de coucher</span>
+                    <input
+                      type="time"
+                      value={heureCoucher}
+                      onChange={e => set("heure_coucher", e.target.value)}
+                      style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${G.border}`, borderRadius: 8, padding: "6px 10px", color: G.text, fontSize: 13, outline: "none" }}
+                    />
+                  </div>
+                  {/* Écrans avant dodo */}
+                  <div>
+                    <div style={{ fontSize: 12, color: G.dim, marginBottom: 6 }}>📱 Écrans avant de dormir ?</div>
+                    <BtnOuiNon current={ecrans} onChange={v => set("ecrans", v)} ouiColor={G.amber} nonColor={G.green} />
+                  </div>
+                  {/* Qualité 1-5 étoiles */}
+                  <div>
+                    <div style={{ fontSize: 12, color: G.dim, marginBottom: 6 }}>⭐ Qualité du sommeil</div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {[1,2,3,4,5].map(n => (
+                        <button key={n} onClick={() => set("qualite_sommeil", qualiteSommeil === n ? null : n)} style={{
+                          flex: 1, padding: "10px 4px", borderRadius: 10, cursor: "pointer",
+                          background: qualiteSommeil >= n ? "rgba(245,158,11,0.18)" : "rgba(255,255,255,0.02)",
+                          border: `1.5px solid ${qualiteSommeil >= n ? G.amber : G.border}`,
+                          fontSize: 20, transition: "all 0.15s",
+                        }}>⭐</button>
+                      ))}
+                    </div>
+                    {qualiteSommeil && (
+                      <div style={{ fontSize: 11, color: G.amber, marginTop: 4, textAlign: "center" }}>{qualiteSommeil}/5</div>
+                    )}
+                  </div>
                 </div>
               </div>
 
