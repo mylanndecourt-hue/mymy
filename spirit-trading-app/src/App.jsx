@@ -6090,7 +6090,7 @@ function LandingPage({ onEnter, lang }) {
           </h1>
 
           <p style={{ fontSize:"clamp(15px,2vw,18px)", color:"#555", lineHeight:1.8, maxWidth:560, margin:"0 auto 48px", fontWeight:400 }}>
-            Conçu pour les traders prop firm. Analyse tes patterns, comprends ta psychologie et arrête de répéter les mêmes erreurs — pour passer le funded et le garder.
+            Conçu pour les traders prop firm. Passe le funded, garde-le.<br /><span style={{ color:"#00e5a0", fontWeight:600 }}>Comprends tes patterns perdants — et arrête.</span>
           </p>
 
           <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:14, flexWrap:"wrap" }}>
