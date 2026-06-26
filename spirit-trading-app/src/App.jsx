@@ -4848,7 +4848,7 @@ function SessionDuJour({ sessions, setSessions }) {
 
   const G = { green: "#00e5a0", red: "#ef4444", purple: "#818cf8", amber: "#f59e0b", dim: "#6b7280", bg: "#0a0a14", card: "#0e0e1a", border: "#1a1a2e" };
 
-  const dateLabel = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  const dateLabel = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   // Statut marché du jour
   const todayHolidays = HOLIDAYS_CACHE[today] || [];
