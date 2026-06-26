@@ -2081,12 +2081,10 @@ function CalendrierTrading({ trades }) {
           const hasMed = ecoDay.some(e => e.impact === "medium");
 
           const dayColor = isWeekend ? "#374151" : "#6b7280";
+          const bg = "rgba(255,255,255,0.02)";
           let borderColor = G.border;
-          let bg = "rgba(255,255,255,0.02)";
 
-          if (isClosed) { bg = "rgba(239,68,68,0.06)"; borderColor = "rgba(239,68,68,0.25)"; }
-          else if (isEarly) { bg = "rgba(245,158,11,0.05)"; borderColor = "rgba(245,158,11,0.25)"; }
-          if (hasTrade) borderColor = pnl >= 0 ? "rgba(0,229,160,0.45)" : "rgba(239,68,68,0.45)";
+          if (isClosed || isEarly || hasHigh || hasMed) borderColor = "rgba(239,68,68,0.55)";
           if (isToday) borderColor = G.purple;
 
           const hasInfo = hols.length > 0 || hasTrade || ecoDay.length > 0;
