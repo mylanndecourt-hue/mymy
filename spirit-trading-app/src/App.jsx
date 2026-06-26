@@ -2662,7 +2662,7 @@ function Dashboard({ trades, comptes, onEditCompte, onNewCompte, onGoToAnalyse, 
       </div>
 
       {/* ── KPI ROW ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 12 }}>
         {[
           {
             label: fr ? "P&L Global (gains latents)" : "Global P&L (unrealized)",
@@ -2671,6 +2671,17 @@ function Dashboard({ trades, comptes, onEditCompte, onNewCompte, onGoToAnalyse, 
             sub: hasData ? (pnlPositif ? (fr ? "En gain" : "In profit") : (fr ? "En perte" : "In loss")) : (fr ? "Aucun trade" : "No trades"),
             glow: pnlPositif ? G.green : G.red,
           },
+          (() => {
+            const net = trades.reduce((a, t) => a + (t.pnl || 0), 0);
+            const pos = net >= 0;
+            return {
+              label: fr ? "P&L net (prop firms)" : "Net P&L (prop firms)",
+              val: trades.length ? `${pos ? "+" : ""}${net.toFixed(0)}$` : "—",
+              color: trades.length ? (pos ? G.green : G.red) : G.muted,
+              sub: fr ? `${comptes.length} compte${comptes.length > 1 ? "s" : ""} actif${comptes.length > 1 ? "s" : ""}` : `${comptes.length} active account${comptes.length > 1 ? "s" : ""}`,
+              glow: pos ? G.green : G.red,
+            };
+          })(),
           {
             label: fr ? "Win Rate" : "Win Rate",
             val: trades.length ? `${winRate}%` : "—",
