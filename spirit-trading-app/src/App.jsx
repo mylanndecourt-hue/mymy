@@ -6082,28 +6082,28 @@ function LandingPage({ onEnter, lang }) {
         <div style={{ position:"relative", zIndex:1, animation:"fadeUp .9s ease forwards" }}>
           <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"#00e5a010", border:"1px solid #00e5a025", borderRadius:20, padding:"6px 18px", fontSize:11, fontWeight:700, color:"#00e5a0", letterSpacing:2, textTransform:"uppercase", marginBottom:32 }}>
             <span style={{ width:6, height:6, background:"#00e5a0", borderRadius:"50%", display:"inline-block", animation:"glow-pulse 2s ease-in-out infinite" }} />
-            {fr ? "Écosystème prop firm" : "Prop firm ecosystem"}
+            Journal de trading intelligent
           </div>
 
           <h1 style={{ fontSize:"clamp(40px,7vw,80px)", fontWeight:900, lineHeight:1.05, margin:"0 0 24px", letterSpacing:-3, maxWidth:900 }}>
-            {fr ? <><span className="grad-text">Tradez avec</span><br />l'edge des pros.</> : <><span className="grad-text">Trade with</span><br />the pro edge.</>}
+            <span className="grad-text">Comprends pourquoi</span><br />tu perds — et arrête.
           </h1>
 
           <p style={{ fontSize:"clamp(15px,2vw,18px)", color:"#555", lineHeight:1.8, maxWidth:560, margin:"0 auto 48px", fontWeight:400 }}>
-            {fr ? "Journal, dashboard, fiscalité, session du jour — tout ce dont un trader prop firm a besoin dans un seul écosystème." : "Journal, dashboard, taxation, daily session — everything a prop firm trader needs in one ecosystem."}
+            Identifie tes patterns perdants, analyse ta psychologie de trader et détecte les comportements qui sabotent tes performances — trade après trade.
           </p>
 
           <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:14, flexWrap:"wrap" }}>
             <button className="land-cta" onClick={onEnter}>
-              {fr ? "Accéder à mon espace" : "Open my dashboard"} <span style={{ fontSize:18 }}>→</span>
+              Accéder à mon espace <span style={{ fontSize:18 }}>→</span>
             </button>
             <button className="land-cta-outline" onClick={() => scrollTo(1)}>
-              {fr ? "Découvrir" : "Learn more"}
+              Découvrir
             </button>
           </div>
 
           <div style={{ marginTop:64, display:"flex", justifyContent:"center", gap:48, flexWrap:"wrap" }}>
-            {[["6", fr?"modules":"modules"], ["15+", fr?"prop firms":"prop firms"], ["FR/EN", fr?"bilingue":"bilingual"], ["☁️", fr?"Cloud sync":"Cloud sync"]].map(([v,l]) => (
+            {[["500+", "trades analysés"], ["15+", "prop firms"], ["IA", "coach intégré"], ["☁️", "Cloud sync"]].map(([v,l]) => (
               <div key={l} style={{ textAlign:"center" }}>
                 <div style={{ fontSize:22, fontWeight:900, color:"#fff", letterSpacing:-1 }}>{v}</div>
                 <div style={{ fontSize:11, color:"#444", fontWeight:600, letterSpacing:1, textTransform:"uppercase", marginTop:2 }}>{l}</div>
