@@ -3573,13 +3573,37 @@ function AnalysePage({ trades, comptes, onDetail, lang = "fr" }) {
           {/* ── HEATMAP JOUR × HEURE ── */}
           {(() => {
             const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
-            const heures = Array.from({ length: 14 }, (_, i) => i + 7); // 7h → 20h
+            const heures = Array.from({ length: 14 }, (_, i) => i + 7);
             const jourMap = { "lundi": 0, "mardi": 1, "mercredi": 2, "jeudi": 3, "vendredi": 4 };
 
-            // Construire grille [jour][heure] = { pnl, count, trades[] }
+            // Trouver lundi de la semaine contenant une date
+            const getMondayOf = (d) => {
+              const day = new Date(d);
+              const wd = (day.getDay() + 6) % 7;
+              day.setDate(day.getDate() - wd);
+              day.setHours(0, 0, 0, 0);
+              return day;
+            };
+
+            // Semaines disponibles (lunettes qui ont au moins 1 trade)
+            const weekSet = new Set();
+            trades.forEach(t => { if (t.date) weekSet.add(getMondayOf(t.date + "T12:00:00").toISOString().slice(0, 10)); });
+            const allWeeks = [...weekSet].sort();
+
+            const [heatPopover, setHeatPopover] = useState(null);
+            const [weekMode, setWeekMode] = useState("all"); // "all" | ISO date string of monday
+            const [weekIdx, setWeekIdx] = useState(allWeeks.length - 1);
+
+            const selectedWeek = weekMode === "all" ? null : allWeeks[weekIdx];
+
+            // Construire grille
             const grid = Array.from({ length: 5 }, () => Array.from({ length: 14 }, () => ({ pnl: 0, count: 0, trades: [] })));
             trades.forEach(t => {
               if (!t.date || !t.heure) return;
+              if (selectedWeek) {
+                const monday = getMondayOf(t.date + "T12:00:00").toISOString().slice(0, 10);
+                if (monday !== selectedWeek) return;
+              }
               const jourLabel = new Date(t.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long" }).toLowerCase();
               const jourIdx = jourMap[jourLabel];
               if (jourIdx === undefined) return;
@@ -3592,17 +3616,26 @@ function AnalysePage({ trades, comptes, onDetail, lang = "fr" }) {
             });
 
             const allPnls = grid.flat().filter(c => c.count > 0).map(c => c.pnl);
-            if (allPnls.length === 0) return null;
+            if (allPnls.length === 0 && weekMode === "all") return null;
             const maxAbs = Math.max(...allPnls.map(Math.abs), 1);
 
-            const cellColor = (pnl, count) => {
-              if (count === 0) return "#0d0d1a";
-              const ratio = Math.abs(pnl) / maxAbs;
-              const alpha = 0.15 + ratio * 0.85;
-              return pnl >= 0 ? `rgba(0,229,160,${alpha.toFixed(2)})` : `rgba(239,68,68,${alpha.toFixed(2)})`;
+            // Couleurs sobres: fond très subtil, bordure gauche colorée
+            const cellStyle = (pnl, count) => {
+              if (count === 0) return { bg: "rgba(255,255,255,0.02)", borderLeft: "3px solid transparent" };
+              const ratio = Math.min(Math.abs(pnl) / maxAbs, 1);
+              const bgAlpha = 0.04 + ratio * 0.10;
+              const borderAlpha = 0.4 + ratio * 0.6;
+              return pnl >= 0
+                ? { bg: `rgba(0,229,160,${bgAlpha.toFixed(2)})`, borderLeft: `3px solid rgba(0,229,160,${borderAlpha.toFixed(2)})` }
+                : { bg: `rgba(239,68,68,${bgAlpha.toFixed(2)})`, borderLeft: `3px solid rgba(239,68,68,${borderAlpha.toFixed(2)})` };
             };
 
-            const [heatPopover, setHeatPopover] = useState(null);
+            // Dates de la semaine affichée
+            const weekDates = selectedWeek ? Array.from({ length: 5 }, (_, i) => {
+              const d = new Date(selectedWeek + "T12:00:00");
+              d.setDate(d.getDate() + i);
+              return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+            }) : null;
 
             const handleCellClick = (cellTrades, jour, heure) => {
               if (cellTrades.length === 0) return;
@@ -3610,9 +3643,31 @@ function AnalysePage({ trades, comptes, onDetail, lang = "fr" }) {
               setHeatPopover({ trades: cellTrades, jour, heure });
             };
 
+            const weekLabel = selectedWeek
+              ? (() => {
+                  const d = new Date(selectedWeek + "T12:00:00");
+                  const end = new Date(d); end.setDate(end.getDate() + 4);
+                  return `${d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} – ${end.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}`;
+                })()
+              : "Toutes les semaines";
+
             return (
               <div style={{ ...card, position: "relative" }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: G.text, marginBottom: 16 }}>🕐 Heatmap Jour × Heure</div>
+                {/* Header */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: G.text }}>🕐 Heatmap Jour × Heure</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <button onClick={() => setWeekMode("all")} style={{ background: weekMode === "all" ? `${G.purple}20` : "none", border: `1px solid ${weekMode === "all" ? G.purple : G.border}`, color: weekMode === "all" ? G.purple : G.dim, borderRadius: 8, padding: "4px 10px", fontSize: 11, cursor: "pointer", fontWeight: 700 }}>Global</button>
+                    <button onClick={() => { setWeekMode("week"); setWeekIdx(allWeeks.length - 1); }} disabled={allWeeks.length === 0} style={{ background: weekMode === "week" ? `${G.purple}20` : "none", border: `1px solid ${weekMode === "week" ? G.purple : G.border}`, color: weekMode === "week" ? G.purple : G.dim, borderRadius: 8, padding: "4px 10px", fontSize: 11, cursor: "pointer", fontWeight: 700 }}>Par semaine</button>
+                    {weekMode === "week" && allWeeks.length > 0 && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <button onClick={() => setWeekIdx(i => Math.max(0, i - 1))} disabled={weekIdx === 0} style={{ background: "none", border: `1px solid ${G.border}`, color: "#e5e7eb", borderRadius: 6, width: 24, height: 24, cursor: "pointer", fontSize: 12, opacity: weekIdx === 0 ? 0.3 : 1 }}>‹</button>
+                        <span style={{ fontSize: 11, color: "#e5e7eb", fontWeight: 600, minWidth: 160, textAlign: "center" }}>{weekLabel}</span>
+                        <button onClick={() => setWeekIdx(i => Math.min(allWeeks.length - 1, i + 1))} disabled={weekIdx === allWeeks.length - 1} style={{ background: "none", border: `1px solid ${G.border}`, color: "#e5e7eb", borderRadius: 6, width: 24, height: 24, cursor: "pointer", fontSize: 12, opacity: weekIdx === allWeeks.length - 1 ? 0.3 : 1 }}>›</button>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 {/* Popover multi-trades */}
                 {heatPopover && (
@@ -3640,7 +3695,7 @@ function AnalysePage({ trades, comptes, onDetail, lang = "fr" }) {
                   <table style={{ borderCollapse: "separate", borderSpacing: 3, width: "100%" }}>
                     <thead>
                       <tr>
-                        <td style={{ width: 72, fontSize: 9, color: G.dim }} />
+                        <td style={{ width: 90, fontSize: 9, color: G.dim }} />
                         {heures.map(h => (
                           <td key={h} style={{ fontSize: 11, color: "#666", textAlign: "center", paddingBottom: 6, fontWeight: 600 }}>{h}h</td>
                         ))}
@@ -3649,23 +3704,25 @@ function AnalysePage({ trades, comptes, onDetail, lang = "fr" }) {
                     <tbody>
                       {jours.map((jour, ji) => (
                         <tr key={ji}>
-                          <td style={{ fontSize: 12, color: "#ccc", fontWeight: 700, paddingRight: 12, whiteSpace: "nowrap" }}>{jour}</td>
+                          <td style={{ verticalAlign: "middle", paddingRight: 10, whiteSpace: "nowrap" }}>
+                            <div style={{ fontSize: 12, color: "#ccc", fontWeight: 700 }}>{jour}</div>
+                            {weekDates && <div style={{ fontSize: 10, color: G.dim, marginTop: 1 }}>{weekDates[ji]}</div>}
+                          </td>
                           {heures.map((h, hi) => {
                             const cell = grid[ji][hi];
-                            const bg = cellColor(cell.pnl, cell.count);
+                            const { bg, borderLeft } = cellStyle(cell.pnl, cell.count);
                             return (
                               <td key={hi}
                                 onClick={() => handleCellClick(cell.trades, jours[ji], heures[hi])}
-                                title={cell.count > 0 ? `${cell.count} trade(s) · ${cell.pnl >= 0 ? "+" : ""}${cell.pnl.toFixed(0)}$ — cliquer pour voir` : ""}
-                                style={{ background: bg, borderRadius: 6, height: 56, minWidth: 52, textAlign: "center", position: "relative", verticalAlign: "middle", cursor: cell.count > 0 ? "pointer" : "default", transition: "filter 0.15s" }}
-                                onMouseEnter={e => { if (cell.count > 0) e.currentTarget.style.filter = "brightness(1.3)"; }}
+                                style={{ background: bg, borderLeft, borderRadius: 6, height: 56, minWidth: 52, textAlign: "center", verticalAlign: "middle", cursor: cell.count > 0 ? "pointer" : "default", transition: "filter 0.15s" }}
+                                onMouseEnter={e => { if (cell.count > 0) e.currentTarget.style.filter = "brightness(1.4)"; }}
                                 onMouseLeave={e => { e.currentTarget.style.filter = ""; }}>
                                 {cell.count > 0 && (
                                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-                                    <span style={{ fontSize: 11, color: cell.pnl >= 0 ? "#00e5a0" : "#ef4444", fontWeight: 800, fontFamily: "monospace" }}>
+                                    <span style={{ fontSize: 11, color: cell.pnl >= 0 ? G.green : "#ef4444", fontWeight: 700, fontFamily: "monospace" }}>
                                       {cell.pnl >= 0 ? "+" : ""}{Math.abs(cell.pnl) >= 1000 ? `${(cell.pnl/1000).toFixed(1)}k` : cell.pnl.toFixed(0)}$
                                     </span>
-                                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)" }}>{cell.count}t</span>
+                                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>{cell.count}t</span>
                                   </div>
                                 )}
                               </td>
@@ -3677,14 +3734,14 @@ function AnalysePage({ trades, comptes, onDetail, lang = "fr" }) {
                   </table>
                 </div>
                 {/* Légende */}
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, justifyContent: "flex-end" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12, justifyContent: "flex-end" }}>
                   <span style={{ fontSize: 9, color: G.dim }}>Perte</span>
-                  {[0.15, 0.4, 0.65, 0.85, 1].map((a, i) => (
-                    <div key={i} style={{ width: 16, height: 10, borderRadius: 2, background: `rgba(239,68,68,${a})` }} />
+                  {[0.08, 0.12, 0.18, 0.22].map((a, i) => (
+                    <div key={i} style={{ width: 14, height: 8, borderRadius: 2, background: `rgba(239,68,68,${a})`, borderLeft: `2px solid rgba(239,68,68,${0.4 + i * 0.15})` }} />
                   ))}
-                  <div style={{ width: 1, height: 10, background: "#2a2a3e" }} />
-                  {[0.15, 0.4, 0.65, 0.85, 1].map((a, i) => (
-                    <div key={i} style={{ width: 16, height: 10, borderRadius: 2, background: `rgba(0,229,160,${a})` }} />
+                  <div style={{ width: 1, height: 10, background: "#2a2a3e", margin: "0 4px" }} />
+                  {[0.08, 0.12, 0.18, 0.22].map((a, i) => (
+                    <div key={i} style={{ width: 14, height: 8, borderRadius: 2, background: `rgba(0,229,160,${a})`, borderLeft: `2px solid rgba(0,229,160,${0.4 + i * 0.15})` }} />
                   ))}
                   <span style={{ fontSize: 9, color: G.dim }}>Gain</span>
                 </div>
