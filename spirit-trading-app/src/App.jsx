@@ -4920,9 +4920,9 @@ function SessionDuJour({ sessions, setSessions }) {
       {(() => {
         const PAYS_FLAG = { USD: "🇺🇸", EUR: "🇪🇺", GBP: "🇬🇧", JPY: "🇯🇵", CAD: "🇨🇦", AUD: "🇦🇺", CHF: "🇨🇭", CNY: "🇨🇳", NZD: "🇳🇿", US: "🇺🇸", EU: "🇪🇺", GB: "🇬🇧" };
         const IMPACT_STYLE = {
-          high:   { color: "#ef4444", bg: "rgba(239,68,68,0.15)",   label: "Fort" },
-          medium: { color: "#f59e0b", bg: "rgba(245,158,11,0.15)",  label: "Moyen" },
-          low:    { color: "#6b7280", bg: "rgba(107,114,128,0.10)", label: "Faible" },
+          high:   { color: "#ef4444", bg: "rgba(239,68,68,0.12)",   border: "rgba(239,68,68,0.3)",  label: "Fort" },
+          medium: { color: "#f59e0b", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.3)", label: "Moyen" },
+          low:    { color: "#6b7280", bg: "rgba(107,114,128,0.08)", border: G.border,               label: "Faible" },
         };
         const fmtTime = (timeStr) => {
           if (!timeStr) return "--:--";
@@ -4934,70 +4934,90 @@ function SessionDuJour({ sessions, setSessions }) {
 
         const [expanded, setExpanded] = useState(false);
         const important = (annonces || []).filter(a => a.impact === "high" || a.impact === "medium");
+        const lowAnnonces = (annonces || []).filter(a => a.impact === "low" || !a.impact);
         const highCount = (annonces || []).filter(a => a.impact === "high").length;
+        const medCount = (annonces || []).filter(a => a.impact === "medium").length;
 
         return (
-          <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, overflow: "hidden" }}>
-            {/* Header cliquable */}
-            <button
-              onClick={() => setExpanded(v => !v)}
-              style={{ width: "100%", background: "none", border: "none", cursor: "pointer", padding: "16px 20px", textAlign: "left" }}
-            >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-                  <span style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, whiteSpace: "nowrap" }}>📰 Points importants</span>
-                  {/* Badges compacts high/medium en mode réduit */}
-                  {!expanded && annonces && important.length > 0 && (
-                    <div style={{ display: "flex", gap: 5, flexWrap: "wrap", flex: 1, minWidth: 0 }}>
-                      {important.map((a, i) => {
-                        const imp = IMPACT_STYLE[a.impact];
-                        const flag = PAYS_FLAG[a.country] || "🌐";
-                        return (
-                          <span key={i} style={{
-                            background: imp.bg, color: imp.color,
-                            border: `1px solid ${imp.color}40`,
-                            borderRadius: 6, padding: "2px 7px",
-                            fontSize: 10, fontWeight: 700,
-                            whiteSpace: "nowrap", fontFamily: "monospace",
-                          }}>
-                            {fmtTime(a.time)} {flag}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {!expanded && annonces === null && !annoncesErr && (
-                    <span style={{ fontSize: 11, color: G.dim }}>Chargement…</span>
-                  )}
-                  {!expanded && annonces && important.length === 0 && (
-                    <span style={{ fontSize: 11, color: G.dim }}>Aucune annonce importante aujourd'hui</span>
-                  )}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                  {annonces && annonces.length > 0 && (
-                    <span style={{ fontSize: 10, color: G.dim }}>{highCount > 0 && <b style={{ color: "#ef4444" }}>{highCount} fort</b>}{highCount > 0 && important.length > highCount ? " · " : ""}{important.length > highCount ? <span style={{ color: "#f59e0b" }}>{important.length - highCount} moyen</span> : null}{annonces.length > important.length ? ` · ${annonces.length - important.length} faible` : ""}</span>
-                  )}
-                  <span style={{ color: G.dim, fontSize: 12, transition: "transform 0.2s", display: "block", transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}>▼</span>
-                </div>
-              </div>
-            </button>
+          <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "18px 20px" }}>
+            {/* Header fixe */}
+            <div style={{ marginBottom: 4 }}>
+              <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2 }}>📰 Points importants</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: G.text, marginTop: 2 }}>Annonces économiques</div>
+            </div>
 
-            {/* Liste dépliable */}
-            {expanded && (
-              <div style={{ padding: "0 20px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
-                {annoncesErr && (
-                  <div style={{ fontSize: 12, color: G.red, textAlign: "center", padding: "8px 0" }}>{annoncesErr}</div>
-                )}
-                {annonces && annonces.length === 0 && (
-                  <div style={{ fontSize: 12, color: G.dim, textAlign: "center", padding: "8px 0" }}>Aucune annonce prévue aujourd'hui.</div>
-                )}
-                {annonces && annonces.length > 0 && annonces.map((a, i) => {
-                  const imp = IMPACT_STYLE[a.impact] || IMPACT_STYLE.low;
+            {/* Sous-titre comptage */}
+            {annonces && annonces.length > 0 && (
+              <div style={{ display: "flex", gap: 10, marginBottom: 14, marginTop: 6 }}>
+                {highCount > 0 && <span style={{ fontSize: 11, color: "#ef4444", fontWeight: 700 }}>● {highCount} fort</span>}
+                {medCount > 0 && <span style={{ fontSize: 11, color: "#f59e0b", fontWeight: 700 }}>● {medCount} moyen</span>}
+                {lowAnnonces.length > 0 && <span style={{ fontSize: 11, color: G.dim }}>● {lowAnnonces.length} faible</span>}
+              </div>
+            )}
+
+            {/* Chargement / erreur / vide */}
+            {annonces === null && !annoncesErr && (
+              <div style={{ fontSize: 12, color: G.dim, textAlign: "center", padding: "12px 0" }}>Chargement…</div>
+            )}
+            {annoncesErr && (
+              <div style={{ fontSize: 12, color: G.red, padding: "8px 0" }}>{annoncesErr}</div>
+            )}
+            {annonces && annonces.length === 0 && (
+              <div style={{ fontSize: 12, color: G.dim, padding: "8px 0" }}>Aucune annonce prévue aujourd'hui.</div>
+            )}
+
+            {/* Cartes importantes toujours visibles */}
+            {important.length > 0 && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, marginBottom: lowAnnonces.length > 0 ? 10 : 0 }}>
+                {important.map((a, i) => {
+                  const imp = IMPACT_STYLE[a.impact];
                   const flag = PAYS_FLAG[a.country] || "🌐";
                   return (
                     <div key={i} style={{
-                      background: a.impact === "high" ? "rgba(239,68,68,0.05)" : "rgba(255,255,255,0.02)",
-                      border: `1px solid ${a.impact === "high" ? "rgba(239,68,68,0.2)" : G.border}`,
+                      background: imp.bg,
+                      border: `1px solid ${imp.border}`,
+                      borderRadius: 12, padding: "12px 14px",
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: "#fff", fontFamily: "monospace" }}>{fmtTime(a.time)}</span>
+                        <span style={{ fontSize: 14 }}>{flag}</span>
+                      </div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: imp.color, lineHeight: 1.3, marginBottom: 4 }}>{a.event}</div>
+                      <div style={{ display: "flex", gap: 8, fontSize: 10, color: G.dim, flexWrap: "wrap" }}>
+                        {a.prev != null && <span>Préc. <b style={{ color: "#9ca3af" }}>{fmtVal(a.prev, a.unit)}</b></span>}
+                        {a.estimate != null && <span>Est. <b style={{ color: G.amber }}>{fmtVal(a.estimate, a.unit)}</b></span>}
+                        {a.actual != null && <span>Réel <b style={{ color: a.actual >= (a.estimate ?? a.prev ?? 0) ? G.green : G.red }}>{fmtVal(a.actual, a.unit)}</b></span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {important.length === 0 && annonces && annonces.length > 0 && (
+              <div style={{ fontSize: 12, color: G.dim, marginBottom: 10 }}>Aucune annonce importante aujourd'hui.</div>
+            )}
+
+            {/* Bouton déplier les faibles */}
+            {lowAnnonces.length > 0 && (
+              <button onClick={() => setExpanded(v => !v)} style={{
+                width: "100%", background: "none", border: `1px dashed ${G.border}`,
+                borderRadius: 10, padding: "8px", color: G.dim, fontSize: 11,
+                cursor: "pointer", marginBottom: expanded ? 10 : 0,
+              }}>
+                {expanded ? "▲ Masquer les annonces faibles" : `▼ Voir ${lowAnnonces.length} annonce(s) faible(s)`}
+              </button>
+            )}
+
+            {/* Liste faibles dépliable */}
+            {expanded && lowAnnonces.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {lowAnnonces.map((a, i) => {
+                  const imp = IMPACT_STYLE.low;
+                  const flag = PAYS_FLAG[a.country] || "🌐";
+                  return (
+                    <div key={i} style={{
+                      background: "rgba(255,255,255,0.02)",
+                      border: `1px solid ${G.border}`,
                       borderLeft: `3px solid ${imp.color}`,
                       borderRadius: 10, padding: "10px 14px",
                       display: "grid", gridTemplateColumns: "44px 1fr auto", alignItems: "center", gap: 12,
@@ -5007,7 +5027,7 @@ function SessionDuJour({ sessions, setSessions }) {
                         <div style={{ fontSize: 16, lineHeight: 1, marginTop: 2 }}>{flag}</div>
                       </div>
                       <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: a.impact === "high" ? "#fff" : "#d1d5db", marginBottom: 3 }}>{a.event}</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#d1d5db", marginBottom: 3 }}>{a.event}</div>
                         <div style={{ display: "flex", gap: 10, fontSize: 10, color: G.dim }}>
                           {a.prev != null && <span>Préc. <b style={{ color: "#9ca3af" }}>{fmtVal(a.prev, a.unit)}</b></span>}
                           {a.estimate != null && <span>Est. <b style={{ color: G.amber }}>{fmtVal(a.estimate, a.unit)}</b></span>}
@@ -5015,7 +5035,7 @@ function SessionDuJour({ sessions, setSessions }) {
                         </div>
                       </div>
                       <div style={{ background: imp.bg, color: imp.color, fontSize: 9, fontWeight: 800, borderRadius: 6, padding: "3px 7px", whiteSpace: "nowrap", letterSpacing: 0.5 }}>
-                        {imp.label.toUpperCase()}
+                        FAIBLE
                       </div>
                     </div>
                   );
