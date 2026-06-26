@@ -4919,6 +4919,7 @@ function SessionDuJour({ sessions, setSessions }) {
   const customItems = session.customItems || [];
 
   const [step, setStep] = useState(1);
+  const [expanded, setExpanded] = useState(false);
   const STEPS = ["Annonces", "État d'esprit", "Conditions", "Intention", "Checklist"];
   const [newItem, setNewItem] = useState("");
   const [showAdd, setShowAdd] = useState(false);
@@ -5165,7 +5166,6 @@ function SessionDuJour({ sessions, setSessions }) {
         };
         const fmtVal = (v, unit) => v != null ? `${v}${unit ? " " + unit : ""}` : "—";
 
-        const [expanded, setExpanded] = useState(false);
         const important = (annonces || []).filter(a => a.impact === "high" || a.impact === "medium");
         const lowAnnonces = (annonces || []).filter(a => a.impact === "low" || !a.impact);
         const highCount = (annonces || []).filter(a => a.impact === "high").length;
