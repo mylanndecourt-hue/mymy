@@ -6020,7 +6020,7 @@ function LandingPage({ onEnter, lang }) {
   ];
 
   return (
-    <div ref={containerRef} style={{ height:"100vh", overflowY:"scroll", scrollSnapType:"y mandatory", background:"#06060f", fontFamily:"'Inter','Segoe UI',sans-serif", color:"#fff", scrollBehavior:"smooth" }}>
+    <div ref={containerRef} style={{ height:"100vh", overflowY:"scroll", scrollSnapType:"y proximity", background:"#06060f", fontFamily:"'Inter','Segoe UI',sans-serif", color:"#fff", scrollBehavior:"smooth" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
         * { box-sizing: border-box; }
@@ -6086,7 +6086,7 @@ function LandingPage({ onEnter, lang }) {
           </div>
 
           <h1 style={{ fontSize:"clamp(40px,7vw,80px)", fontWeight:900, lineHeight:1.05, margin:"0 0 24px", letterSpacing:-3, maxWidth:900 }}>
-            <span className="grad-text">Comprends pourquoi</span><br />tu perds — et arrête.
+            <span className="grad-text">Comprends pourquoi</span><br />tu perds <span style={{ fontSize:"0.6em", verticalAlign:"middle", opacity:0.7 }}>—</span> et arrête.
           </h1>
 
           <p style={{ fontSize:"clamp(15px,2vw,18px)", color:"#555", lineHeight:1.8, maxWidth:560, margin:"0 auto 48px", fontWeight:400 }}>
