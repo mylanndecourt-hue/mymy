@@ -3173,7 +3173,7 @@ function AnalysePage({ trades, comptes, onDetail, lang = "fr" }) {
       actifStats: actifStats.map(a => ({ actif: a.label, trades: a.count, winRate: a.wr, pnl: Math.round(a.pnl) })),
     };
     try {
-      const res = await fetch("/.netlify/functions/ai-analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ stats }) });
+      const res = await fetch("/api/ai-analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ stats }) });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setAiResult(data.text);
