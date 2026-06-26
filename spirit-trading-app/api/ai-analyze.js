@@ -1,8 +1,15 @@
 export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
-  if (!ANTHROPIC_KEY) return res.status(500).json({ error: "Clé API manquante" });
+  if (!ANTHROPIC_KEY) {
+    console.error("[ai-analyze] ANTHROPIC_API_KEY is not set. Available env keys:", Object.keys(process.env).filter(k => k.startsWith("ANTHR") || k.startsWith("API")));
+    return res.status(500).json({ error: "Clé API manquante — vérifier ANTHROPIC_API_KEY dans Vercel > Settings > Environment Variables" });
+  }
 
   const { stats } = req.body || {};
   if (!stats) return res.status(400).json({ error: "Données manquantes" });

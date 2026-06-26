@@ -5742,6 +5742,153 @@ function SessionDuJour({ sessions, setSessions }) {
   );
 }
 
+function Tarifs({ lang = "fr" }) {
+  const fr = lang === "fr";
+  const G = { purple: "#818cf8", green: "#00e5a0", amber: "#f59e0b", red: "#ef4444", bg: "#06060f", card: "#0a0a14", border: "#1a1a2e", text: "#e5e7eb", dim: "#6b7280" };
+
+  const plans = [
+    {
+      id: "monthly",
+      badge: null,
+      name: fr ? "Mensuel" : "Monthly",
+      price: "9,99€",
+      period: fr ? "/mois" : "/month",
+      priceNote: fr ? "Sans engagement" : "No commitment",
+      color: G.purple,
+      features: [
+        fr ? "Journal de trading illimité" : "Unlimited trading journal",
+        fr ? "Analyse IA personnalisée" : "Personalized AI analysis",
+        fr ? "Dashboard & statistiques" : "Dashboard & statistics",
+        fr ? "Calendrier économique" : "Economic calendar",
+        fr ? "Sync cloud multi-appareils" : "Multi-device cloud sync",
+        fr ? "Suivi prop firms" : "Prop firm tracking",
+      ],
+      cta: fr ? "Commencer — 9,99€/mois" : "Start — €9.99/month",
+    },
+    {
+      id: "annual",
+      badge: fr ? "🔥 -2 mois offerts" : "🔥 2 months free",
+      name: fr ? "Annuel" : "Annual",
+      price: "99,99€",
+      period: fr ? "/an" : "/year",
+      priceNote: fr ? "soit 8,33€/mois" : "€8.33/month",
+      color: G.green,
+      features: [
+        fr ? "Tout le plan Mensuel" : "Everything in Monthly",
+        fr ? "2 mois offerts vs mensuel" : "2 months free vs monthly",
+        fr ? "Accès prioritaire aux nouvelles fonctionnalités" : "Priority access to new features",
+        fr ? "Support prioritaire" : "Priority support",
+      ],
+      cta: fr ? "Choisir l'Annuel — 99,99€/an" : "Choose Annual — €99.99/year",
+    },
+    {
+      id: "lifetime",
+      badge: fr ? "⚡ Paiement unique" : "⚡ One-time",
+      name: fr ? "Lifetime" : "Lifetime",
+      price: "500€",
+      period: fr ? " une fois" : " once",
+      priceNote: fr ? "Accès à vie, pour toujours" : "Lifetime access, forever",
+      color: G.amber,
+      features: [
+        fr ? "Tout le plan Annuel" : "Everything in Annual",
+        fr ? "Accès à vie sans abonnement" : "Lifetime access, no subscription",
+        fr ? "Toutes les futures mises à jour" : "All future updates included",
+        fr ? "Accès aux fonctionnalités bêta" : "Beta features access",
+        fr ? "Badge Lifetime dans l'app" : "Lifetime badge in-app",
+      ],
+      cta: fr ? "Payer une fois — 500€" : "Pay once — €500",
+    },
+  ];
+
+  return (
+    <div style={{ padding: "32px 24px", maxWidth: 900, margin: "0 auto" }}>
+      {/* Header */}
+      <div style={{ textAlign: "center", marginBottom: 48 }}>
+        <div style={{ fontSize: 11, color: G.purple, textTransform: "uppercase", letterSpacing: 3, fontWeight: 700, marginBottom: 12 }}>
+          {fr ? "TARIFS" : "PRICING"}
+        </div>
+        <div style={{ fontSize: 28, fontWeight: 900, color: G.text, lineHeight: 1.2, marginBottom: 12 }}>
+          {fr ? "Investis dans ta discipline." : "Invest in your discipline."}
+        </div>
+        <div style={{ fontSize: 14, color: G.dim, maxWidth: 420, margin: "0 auto" }}>
+          {fr
+            ? "Un outil pensé pour les traders prop firm sérieux. Annule quand tu veux."
+            : "Built for serious prop firm traders. Cancel anytime."}
+        </div>
+      </div>
+
+      {/* Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
+        {plans.map(p => (
+          <div key={p.id} style={{
+            background: G.card,
+            border: `1.5px solid ${p.id === "annual" ? p.color + "60" : G.border}`,
+            borderRadius: 20, padding: "28px 24px",
+            display: "flex", flexDirection: "column", gap: 0,
+            position: "relative",
+            boxShadow: p.id === "annual" ? `0 0 40px ${p.color}18` : "none",
+          }}>
+            {/* Badge */}
+            {p.badge && (
+              <div style={{
+                position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)",
+                background: p.color, color: p.id === "lifetime" ? "#06060f" : "#06060f",
+                fontSize: 10, fontWeight: 800, borderRadius: 20, padding: "4px 14px",
+                whiteSpace: "nowrap", letterSpacing: 0.5,
+              }}>{p.badge}</div>
+            )}
+
+            {/* Name */}
+            <div style={{ fontSize: 10, color: p.color, textTransform: "uppercase", letterSpacing: 2, fontWeight: 700, marginBottom: 16 }}>{p.name}</div>
+
+            {/* Price */}
+            <div style={{ marginBottom: 6 }}>
+              <span style={{ fontSize: 36, fontWeight: 900, color: G.text, letterSpacing: -1 }}>{p.price}</span>
+              <span style={{ fontSize: 14, color: G.dim, fontWeight: 500 }}>{p.period}</span>
+            </div>
+            <div style={{ fontSize: 11, color: p.color, fontWeight: 700, marginBottom: 24 }}>{p.priceNote}</div>
+
+            {/* Features */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, marginBottom: 28 }}>
+              {p.features.map((f, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <div style={{ width: 16, height: 16, borderRadius: "50%", background: `${p.color}22`, border: `1.5px solid ${p.color}60`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                    <span style={{ fontSize: 9, color: p.color, fontWeight: 900 }}>✓</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: G.text, lineHeight: 1.4 }}>{f}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <button style={{
+              background: p.id === "annual" ? p.color : "transparent",
+              border: `1.5px solid ${p.color}`,
+              color: p.id === "annual" ? "#06060f" : p.color,
+              borderRadius: 12, padding: "13px 0",
+              fontSize: 12, fontWeight: 800, cursor: "pointer",
+              width: "100%", transition: "all 0.15s",
+              boxShadow: p.id === "annual" ? `0 0 24px ${p.color}40` : "none",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = p.color; e.currentTarget.style.color = "#06060f"; }}
+              onMouseLeave={e => { if (p.id !== "annual") { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = p.color; } }}
+            >
+              {p.cta}
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Footer note */}
+      <div style={{ textAlign: "center", marginTop: 36, fontSize: 12, color: G.dim }}>
+        {fr
+          ? "💳 Paiement sécurisé via Stripe · Annulation à tout moment · TVA incluse"
+          : "💳 Secure payment via Stripe · Cancel anytime · VAT included"}
+      </div>
+    </div>
+  );
+}
+
 function LeChemin({ chapitres, setChapitres, lang = "fr" }) {
   const fr = lang === "fr";
   return (
@@ -6665,6 +6812,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
     { id: "objectifs",  label: fr ? "Objectifs"  : "Goals"      },
     { id: "roi",        label: fr ? "Structure & Fiscalité" : "Structure & Tax" },
     { id: "regles",     label: fr ? "Règles"     : "Rules"      },
+    { id: "tarifs",     label: fr ? "Tarifs"     : "Pricing"    },
   ];
 
   const isLanding = tab === "landing";
@@ -6797,6 +6945,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
               : tab === "regles"     ? <Regles comptes={comptes} preselectedFirm={reglesPreselect} reglesPerso={reglesPerso} setReglesPerso={setReglesPerso} lang={lang} />
               : tab === "objectifs"  ? <Objectifs trades={trades} comptes={comptes} objectifs={objectifs} setObjectifs={setObjectifs} lang={lang} />
               : tab === "chemin"     ? <LeChemin chapitres={chapitres} setChapitres={setChapitres} lang={lang} />
+              : tab === "tarifs"     ? <Tarifs lang={lang} />
               : <ROI comptes={comptes} setComptes={setComptes} trades={trades} onEditCompte={handleEditCompte} mentorQ={mentorQ} setMentorQ={setMentorQ} fraisDivers={fraisDivers} setFraisDivers={setFraisDivers} fiscal={fiscal} setFiscal={setFiscal} deviseRecue={deviseRecue} setDeviseRecue={setDeviseRecue} deviseRef={deviseRef} setDeviseRef={setDeviseRef} tauxPerso={tauxPerso} setTauxPerso={setTauxPerso} lang={lang} />
             }
           </div>
