@@ -4918,32 +4918,8 @@ function SessionDuJour({ sessions, setSessions }) {
   const humeur = session.humeur ?? null;
   const customItems = session.customItems || [];
 
-  // Scroll guidé
-  const [activeStep, setActiveStep] = useState(0);
-  const stepRefs = [useRef(), useRef(), useRef(), useRef(), useRef()];
+  const [step, setStep] = useState(1);
   const STEPS = ["Annonces", "État d'esprit", "Conditions", "Intention", "Checklist"];
-  const goToStep = (i) => {
-    setActiveStep(i);
-    setTimeout(() => stepRefs[i]?.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
-  };
-  const stepStyle = (i) => ({
-    border: activeStep === i
-      ? `2px solid ${G.purple}`
-      : `1px solid ${G.border}`,
-    boxShadow: activeStep === i ? `0 0 0 4px ${G.purple}15, 0 0 30px ${G.purple}10` : "none",
-    transition: "border 0.3s, box-shadow 0.3s",
-  });
-  const BtnSuivant = ({ step, label }) => (
-    <button onClick={() => goToStep(step)} style={{
-      marginTop: 14, width: "100%", padding: "11px 0",
-      background: `linear-gradient(135deg, ${G.purple}30, ${G.green}20)`,
-      border: `1px solid ${G.purple}50`,
-      borderRadius: 12, color: "#fff", fontSize: 13, fontWeight: 700,
-      cursor: "pointer", letterSpacing: 0.5, transition: "opacity 0.2s",
-    }}>
-      {label || "Suivant →"}
-    </button>
-  );
   const [newItem, setNewItem] = useState("");
   const [showAdd, setShowAdd] = useState(false);
 
@@ -5159,8 +5135,21 @@ function SessionDuJour({ sessions, setSessions }) {
         </div>
       )}
 
+      {/* Progress dots */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        {STEPS.map((s, i) => (
+          <div key={s} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div onClick={() => i < step - 1 && setStep(i + 1)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, cursor: i < step - 1 ? "pointer" : "default" }}>
+              <div style={{ width: i === step - 1 ? 24 : 8, height: 8, borderRadius: 4, background: i < step - 1 ? G.purple : i === step - 1 ? G.purple : "#1e1e2e", transition: "all 0.3s", boxShadow: i === step - 1 ? `0 0 12px ${G.purple}60` : "none", opacity: i < step - 1 ? 0.5 : 1 }} />
+              <div style={{ fontSize: 9, color: i === step - 1 ? G.purple : i < step - 1 ? `${G.purple}70` : "#333", fontWeight: i === step - 1 ? 700 : 400, textTransform: "uppercase", letterSpacing: 1, whiteSpace: "nowrap" }}>{s}</div>
+            </div>
+            {i < STEPS.length - 1 && <div style={{ width: 20, height: 1, background: i < step - 1 ? `${G.purple}50` : "#1e1e2e", marginBottom: 16, flexShrink: 0 }} />}
+          </div>
+        ))}
+      </div>
+
       {/* Annonces économiques */}
-      <div ref={stepRefs[0]} style={{ scrollMarginTop: 20 }}>
+      {step === 1 && (<div>
       {(() => {
         const PAYS_FLAG = { USD: "🇺🇸", EUR: "🇪🇺", GBP: "🇬🇧", JPY: "🇯🇵", CAD: "🇨🇦", AUD: "🇦🇺", CHF: "🇨🇭", CNY: "🇨🇳", NZD: "🇳🇿", US: "🇺🇸", EU: "🇪🇺", GB: "🇬🇧" };
         const IMPACT_STYLE = {
@@ -5289,11 +5278,10 @@ function SessionDuJour({ sessions, setSessions }) {
           </div>
         );
       })()}
-      <BtnSuivant step={1} />
-      </div>
+      </div>)}
 
       {/* Aujourd'hui je me sens */}
-      <div ref={stepRefs[1]} style={{ scrollMarginTop: 20 }}>
+      {step === 2 && (<div>
       {(() => {
         const ETATS = [
           { val: "concentré",       label: "Concentré",         emoji: "🎯" },
@@ -5314,7 +5302,7 @@ function SessionDuJour({ sessions, setSessions }) {
           set("etat_esprit", next);
         };
         return (
-          <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px", ...stepStyle(1) }}>
+          <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px" }}>
             <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, marginBottom: 14 }}>💭 Aujourd'hui je me sens…</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {ETATS.map(e => {
@@ -5339,11 +5327,10 @@ function SessionDuJour({ sessions, setSessions }) {
           </div>
         );
       })()}
-      <BtnSuivant step={2} />
-      </div>
+      </div>)}
 
       {/* Conditions du jour */}
-      <div ref={stepRefs[2]} style={{ scrollMarginTop: 20 }}>
+      {step === 3 && (<div>
       {(() => {
         const sport = session.sport ?? null;
         const tierce = session.tierce ?? null;
@@ -5377,7 +5364,7 @@ function SessionDuJour({ sessions, setSessions }) {
         ];
 
         return (
-          <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px", ...stepStyle(2) }}>
+          <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px" }}>
             <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, marginBottom: 18 }}>🌿 Conditions du jour</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
 
@@ -5483,12 +5470,11 @@ function SessionDuJour({ sessions, setSessions }) {
           </div>
         );
       })()}
-      <BtnSuivant step={3} />
-      </div>
+      </div>)}
 
       {/* Intention */}
-      <div ref={stepRefs[3]} style={{ scrollMarginTop: 20 }}>
-      <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px", ...stepStyle(3) }}>
+      {step === 4 && (
+      <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px" }}>
         <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, marginBottom: 14 }}>✍️ Intention du jour</div>
         <textarea
           value={intention}
@@ -5502,12 +5488,11 @@ function SessionDuJour({ sessions, setSessions }) {
           }}
         />
       </div>
-      <BtnSuivant step={4} />
-      </div>
+      </div>)}
 
       {/* Checklist */}
-      <div ref={stepRefs[4]} style={{ scrollMarginTop: 20 }}>
-      <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px", ...stepStyle(4) }}>
+      {step === 5 && (
+      <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2 }}>✅ Checklist pré-session</div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -5605,11 +5590,20 @@ function SessionDuJour({ sessions, setSessions }) {
           )}
         </div>
 
-      </div>
+      </div>)}
+
+      {/* Bottom navigation */}
+      <div style={{ display: "flex", gap: 10 }}>
+        {step > 1 && (
+          <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, background: "#0e0e1a", border: `1px solid ${G.border}`, color: "#888", borderRadius: 12, padding: "13px 0", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>← Retour</button>
+        )}
+        {step < 5 && (
+          <button onClick={() => setStep(s => s + 1)} style={{ flex: 2, background: G.purple, border: "none", color: "#fff", borderRadius: 12, padding: "13px 0", fontSize: 13, fontWeight: 800, cursor: "pointer", boxShadow: `0 0 20px ${G.purple}40` }}>Suivant →</button>
+        )}
       </div>
 
-      {/* Bouton de validation — apparaît quand checklist complète */}
-      {pct === 100 && (() => {
+      {/* Bouton de validation — apparaît quand checklist complète à l'étape 5 */}
+      {step === 5 && pct === 100 && (() => {
         const validated = !!session.validatedAt;
         const heure = session.validatedAt
           ? new Date(session.validatedAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
