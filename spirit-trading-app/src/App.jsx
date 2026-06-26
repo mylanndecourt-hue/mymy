@@ -4867,18 +4867,72 @@ function SessionDuJour({ sessions, setSessions }) {
     return Object.entries(byPays).map(([flag, names]) => `${flag} ${names.join(" · ")}`).join("  |  ");
   };
 
+  // Score de complétion de la session
+  const completionItems = [
+    { label: "État d'esprit",    done: (session.etat_esprit || []).length > 0 },
+    { label: "Plan de trading",  done: !!session.plan_trading },
+    { label: "Sport",            done: !!session.sport },
+    { label: "Tierce personne",  done: !!session.tierce },
+    { label: "Alimentation",     done: !!session.alimentation },
+    { label: "Sommeil",          done: !!session.qualite_sommeil },
+    { label: "Intention",        done: (session.intention || "").trim().length > 10 },
+    { label: "Checklist",        done: pct === 100 },
+  ];
+  const completionDone = completionItems.filter(i => i.done).length;
+  const completionPct = Math.round((completionDone / completionItems.length) * 100);
+  const completionColor = completionPct === 100 ? G.green : completionPct >= 50 ? G.amber : G.purple;
+
   return (
     <div style={{ maxWidth: 760, margin: "0 auto", padding: "28px 16px", display: "flex", flexDirection: "column", gap: 20, color: "#e5e7eb" }}>
 
-      {/* Header */}
+      {/* Header + progression */}
       <div>
         <div style={{ fontSize: 11, fontWeight: 700, color: G.green, letterSpacing: 3, textTransform: "uppercase", marginBottom: 6 }}>
           Préparation · <span style={{ color: "#fff" }}>{dateLabel}</span>
         </div>
-        <h1 style={{ fontSize: "clamp(22px,3vw,32px)", fontWeight: 900, letterSpacing: -1.2, lineHeight: 1, margin: 0 }}>
-          Session<br />
-          <span style={{ background: "linear-gradient(135deg,#00e5a0,#818cf8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>du jour.</span>
-        </h1>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16 }}>
+          <h1 style={{ fontSize: "clamp(22px,3vw,32px)", fontWeight: 900, letterSpacing: -1.2, lineHeight: 1, margin: 0 }}>
+            Session<br />
+            <span style={{ background: "linear-gradient(135deg,#00e5a0,#818cf8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>du jour.</span>
+          </h1>
+          {/* Cercle de complétion */}
+          <div style={{ flexShrink: 0, textAlign: "center" }}>
+            <svg width="72" height="72" viewBox="0 0 72 72">
+              <circle cx="36" cy="36" r="30" fill="none" stroke="#1a1a2e" strokeWidth="6" />
+              <circle cx="36" cy="36" r="30" fill="none" stroke={completionColor} strokeWidth="6"
+                strokeDasharray={`${2 * Math.PI * 30}`}
+                strokeDashoffset={`${2 * Math.PI * 30 * (1 - completionPct / 100)}`}
+                strokeLinecap="round"
+                transform="rotate(-90 36 36)"
+                style={{ transition: "stroke-dashoffset 0.5s ease" }}
+              />
+              <text x="36" y="40" textAnchor="middle" fill={completionColor} fontSize="14" fontWeight="800" fontFamily="inherit">{completionPct}%</text>
+            </svg>
+            <div style={{ fontSize: 10, color: G.dim, marginTop: 2 }}>
+              {completionDone}/{completionItems.length} complétés
+            </div>
+          </div>
+        </div>
+
+        {/* Barre de progression linéaire */}
+        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ height: 6, background: "#1a1a2e", borderRadius: 6, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${completionPct}%`, background: `linear-gradient(90deg, ${G.purple}, ${completionColor})`, borderRadius: 6, transition: "width 0.5s ease" }} />
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {completionItems.map((item, i) => (
+              <div key={i} style={{
+                fontSize: 10, padding: "3px 8px", borderRadius: 20,
+                background: item.done ? `${completionColor}18` : "rgba(255,255,255,0.03)",
+                border: `1px solid ${item.done ? completionColor + "50" : "#1a1a2e"}`,
+                color: item.done ? completionColor : G.dim,
+                fontWeight: item.done ? 700 : 400,
+              }}>
+                {item.done ? "✓ " : ""}{item.label}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Bandeau statut marché */}
