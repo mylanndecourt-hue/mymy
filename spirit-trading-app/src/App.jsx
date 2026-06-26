@@ -5417,24 +5417,24 @@ function SessionDuJour({ sessions, setSessions }) {
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {/* Heure de coucher + Temps de sommeil */}
                   <div style={{ display: "flex", gap: 10 }}>
-                    <div style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}`, borderRadius: 10, padding: "12px 14px" }}>
-                      <div style={{ fontSize: 10, color: G.dim, marginBottom: 8, fontWeight: 600 }}>🌙 Heure de coucher</div>
+                    <div style={{ flex: 1, background: G.card, border: `2px solid ${G.border}`, borderRadius: 12, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 0.8, whiteSpace: "nowrap", fontWeight: 700 }}>🌙 Coucher</div>
                       <input
                         type="time"
                         value={heureCoucher}
                         onChange={e => set("heure_coucher", e.target.value)}
-                        style={{ background: "transparent", border: "none", color: "#e5e7eb", fontSize: 15, fontWeight: 700, outline: "none", width: "100%", colorScheme: "dark" }}
+                        style={{ background: "transparent", border: "none", color: "#e5e7eb", fontSize: 20, fontWeight: 800, outline: "none", flex: 1, textAlign: "center", colorScheme: "dark" }}
                       />
                     </div>
-                    <div style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}`, borderRadius: 10, padding: "12px 14px" }}>
-                      <div style={{ fontSize: 10, color: G.dim, marginBottom: 8, fontWeight: 600 }}>⏱️ Temps de sommeil (h)</div>
+                    <div style={{ flex: 1, background: G.card, border: `2px solid ${G.border}`, borderRadius: 12, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 0.8, whiteSpace: "nowrap", fontWeight: 700 }}>⏱️ Sommeil (h)</div>
                       <input
                         type="number"
                         min="0" max="24" step="0.5"
                         value={tempsSommeil}
                         onChange={e => set("temps_sommeil", e.target.value)}
                         placeholder="7.5"
-                        style={{ background: "transparent", border: "none", color: "#e5e7eb", fontSize: 15, fontWeight: 700, outline: "none", width: "100%", colorScheme: "dark" }}
+                        style={{ background: "transparent", border: "none", color: "#e5e7eb", fontSize: 20, fontWeight: 800, outline: "none", flex: 1, textAlign: "center", colorScheme: "dark" }}
                       />
                     </div>
                   </div>
