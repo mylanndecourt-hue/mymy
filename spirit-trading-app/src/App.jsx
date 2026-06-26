@@ -1903,13 +1903,15 @@ function CalendrierTrading({ trades }) {
     })();
   }, []);
 
-  // PnL et nb trades par date
+  // PnL, nb trades et wins par date
   const pnlByDate = {};
   const countByDate = {};
+  const winByDate = {};
   trades.forEach(t => {
     if (!t.date) return;
     pnlByDate[t.date] = (pnlByDate[t.date] || 0) + (t.pnl || 0);
     countByDate[t.date] = (countByDate[t.date] || 0) + 1;
+    if ((t.pnl || 0) > 0) winByDate[t.date] = (winByDate[t.date] || 0) + 1;
   });
 
   const maxAbs = Math.max(1, ...Object.values(pnlByDate).map(Math.abs));
@@ -2070,6 +2072,7 @@ function CalendrierTrading({ trades }) {
           const dateStr = `${viewYear}-${String(viewMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
           const pnl = pnlByDate[dateStr];
           const nbTrades = countByDate[dateStr] || 0;
+          const nbWins = winByDate[dateStr] || 0;
           const hols = HOLIDAYS_CACHE[dateStr] || [];
           const isClosed = hols.some(h => h.type === "closed");
           const isEarly = hols.some(h => h.type === "early");
@@ -2121,13 +2124,19 @@ function CalendrierTrading({ trades }) {
                 </div>
               )}
 
-              {/* P&L + nb trades */}
+              {/* Résumé journée */}
               {hasTrade && (
                 <div style={{ marginTop: "auto" }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, fontFamily: "monospace", color: pnl >= 0 ? G.green : G.red, lineHeight: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, fontFamily: "monospace", color: pnl >= 0 ? G.green : G.red, lineHeight: 1 }}>
                     {pnl >= 0 ? "+" : ""}{Math.abs(pnl) >= 1000 ? `${(pnl/1000).toFixed(1)}k` : pnl.toFixed(0)}$
                   </div>
-                  <div style={{ fontSize: 9, color: G.dim, marginTop: 2 }}>{nbTrades} trade{nbTrades > 1 ? "s" : ""}</div>
+                  <div style={{ display: "flex", gap: 5, alignItems: "center", marginTop: 4 }}>
+                    <span style={{ fontSize: 10, color: G.dim }}>{nbTrades} trade{nbTrades > 1 ? "s" : ""}</span>
+                    <span style={{ fontSize: 9, color: G.dim }}>·</span>
+                    <span style={{ fontSize: 10, color: nbWins / nbTrades >= 0.5 ? G.green : G.red }}>
+                      {nbWins}W/{nbTrades - nbWins}L
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
