@@ -6339,8 +6339,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
   };
 
   const handleGoToAnalyse = () => {
-    setJournalInitialVue("analyse");
-    setTab("journal");
+    setTab("analyse");
   };
 
   const handleCancelCompteEdit = () => {
