@@ -6086,11 +6086,11 @@ function LandingPage({ onEnter, lang }) {
           </div>
 
           <h1 style={{ fontSize:"clamp(40px,7vw,80px)", fontWeight:900, lineHeight:1.05, margin:"0 0 24px", letterSpacing:-3, maxWidth:900 }}>
-            <span className="grad-text">Comprends pourquoi</span><br />tu perds <span style={{ fontSize:"0.6em", verticalAlign:"middle", opacity:0.7 }}>—</span> et arrête.
+            <span className="grad-text">Le journal</span><br />du trader prop firm.
           </h1>
 
           <p style={{ fontSize:"clamp(15px,2vw,18px)", color:"#555", lineHeight:1.8, maxWidth:560, margin:"0 auto 48px", fontWeight:400 }}>
-            Identifie tes patterns perdants, analyse ta psychologie de trader et détecte les comportements qui sabotent tes performances — trade après trade.
+            Conçu pour les traders prop firm. Analyse tes patterns, comprends ta psychologie et arrête de répéter les mêmes erreurs — pour passer le funded et le garder.
           </p>
 
           <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:14, flexWrap:"wrap" }}>
