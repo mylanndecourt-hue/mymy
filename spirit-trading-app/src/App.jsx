@@ -6259,6 +6259,12 @@ function LandingPage({ onEnter, lang }) {
         @keyframes glow-pulse { 0%,100% { opacity:.4; } 50% { opacity:.8; } }
         @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-12px); } }
         @keyframes spin-slow { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+        @keyframes bg-drift1 { 0%,100%{transform:translateY(0) translateX(0)} 33%{transform:translateY(-14px) translateX(6px)} 66%{transform:translateY(8px) translateX(-4px)} }
+        @keyframes bg-drift2 { 0%,100%{transform:translateY(0) translateX(0)} 33%{transform:translateY(10px) translateX(-8px)} 66%{transform:translateY(-12px) translateX(5px)} }
+        @keyframes bg-drift3 { 0%,100%{transform:translateY(0) translateX(0)} 50%{transform:translateY(-18px) translateX(10px)} }
+        .bg-d1 { animation: bg-drift1 12s ease-in-out infinite; }
+        .bg-d2 { animation: bg-drift2 16s ease-in-out infinite; }
+        .bg-d3 { animation: bg-drift3 10s ease-in-out infinite 3s; }
 
         .land-section { scroll-snap-align:start; height:100vh; position:relative; display:flex; flex-direction:column; overflow:hidden; }
         .land-nav-dot { width:6px; height:6px; border-radius:50%; background:#333; cursor:pointer; transition:all .3s; }
@@ -6304,6 +6310,96 @@ function LandingPage({ onEnter, lang }) {
       <section className="land-section noise-bg" style={{ justifyContent:"center", alignItems:"center", textAlign:"center", padding:"64px 24px 0", background:"radial-gradient(ellipse 80% 60% at 50% 20%,#00e5a010 0%,transparent 60%), radial-gradient(ellipse 60% 40% at 80% 80%,#818cf808 0%,transparent 60%), #06060f" }}>
         {/* Orb */}
         <div style={{ position:"absolute", top:"15%", left:"50%", transform:"translateX(-50%)", width:600, height:600, background:"radial-gradient(circle,#00e5a012 0%,transparent 70%)", borderRadius:"50%", animation:"glow-pulse 4s ease-in-out infinite", pointerEvents:"none" }} />
+
+        {/* ── Background charts ── */}
+        <div style={{ position:"absolute", inset:0, pointerEvents:"none", overflow:"hidden", zIndex:0 }}>
+          {/* Grid lines */}
+          <svg style={{ position:"absolute", inset:0, width:"100%", height:"100%" }} opacity={0.04}>
+            {Array.from({length:10}).map((_,i) => <line key={`h${i}`} x1="0" y1={`${(i/9)*100}%`} x2="100%" y2={`${(i/9)*100}%`} stroke="#fff" strokeWidth="1"/>)}
+            {Array.from({length:14}).map((_,i) => <line key={`v${i}`} x1={`${(i/13)*100}%`} y1="0" x2={`${(i/13)*100}%`} y2="100%" stroke="#fff" strokeWidth="1"/>)}
+          </svg>
+
+          {/* P&L curve — LEFT */}
+          <div className="bg-d1" style={{ position:"absolute", left:"1%", top:"18%", width:380, opacity:0.22 }}>
+            <div style={{ fontSize:9, color:"#00e5a0", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:6, paddingLeft:4 }}>📈 Courbe P&L cumulé</div>
+            <svg viewBox="0 0 380 110" style={{ width:"100%", height:110 }} preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="plg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#00e5a0" stopOpacity="0.35"/>
+                  <stop offset="100%" stopColor="#00e5a0" stopOpacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d="M0,100 C30,95 50,85 80,72 C110,60 120,68 150,52 C180,36 200,42 230,28 C260,14 280,20 310,10 C340,0 360,6 380,4 L380,110 L0,110 Z" fill="url(#plg)"/>
+              <path d="M0,100 C30,95 50,85 80,72 C110,60 120,68 150,52 C180,36 200,42 230,28 C260,14 280,20 310,10 C340,0 360,6 380,4" fill="none" stroke="#00e5a0" strokeWidth="2.5" strokeLinecap="round"/>
+            </svg>
+          </div>
+
+          {/* Stat cards — TOP RIGHT */}
+          <div className="bg-d2" style={{ position:"absolute", right:"2%", top:"12%", display:"flex", flexDirection:"column", gap:10, opacity:0.2 }}>
+            {[
+              { l:"WIN RATE", v:"69%", c:"#00e5a0", s:"347W / 153L" },
+              { l:"P&L NET", v:"+12 840$", c:"#00e5a0", s:"500 trades" },
+              { l:"R/R MOYEN", v:"1.26", c:"#818cf8", s:"respect 81%" },
+            ].map(({ l, v, c, s }) => (
+              <div key={l} style={{ background:"rgba(10,10,20,0.9)", border:`1px solid ${c}30`, borderRadius:12, padding:"12px 16px", minWidth:140 }}>
+                <div style={{ fontSize:8, color:"#4b5e7a", textTransform:"uppercase", letterSpacing:1.5, marginBottom:4 }}>{l}</div>
+                <div style={{ fontSize:20, fontWeight:900, color:c, letterSpacing:-1 }}>{v}</div>
+                <div style={{ fontSize:9, color:"#4b5e7a", marginTop:2 }}>{s}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Bar chart — right */}
+          <div className="bg-d3" style={{ position:"absolute", right:"2%", bottom:"20%", width:260, opacity:0.17 }}>
+            <div style={{ fontSize:9, color:"#818cf8", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>P&L par setup</div>
+            <svg viewBox="0 0 260 80" style={{ width:"100%", height:80 }}>
+              {[55,82,38,91,63,74,48,95,70,44,88,60].map((v,i) => {
+                const h = (v/100)*72;
+                const c = v>70?"#00e5a0":v>50?"#818cf8":"#ef4444";
+                return <rect key={i} x={i*22+1} y={80-h} width={18} height={h} rx={3} fill={c} opacity={0.75}/>;
+              })}
+            </svg>
+          </div>
+
+          {/* Calendar heatmap — BOTTOM LEFT */}
+          <div className="bg-d1" style={{ position:"absolute", left:"2%", bottom:"12%", width:230, opacity:0.18 }}>
+            <div style={{ fontSize:9, color:"#818cf8", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>Calendrier trading</div>
+            <svg viewBox="0 0 230 70" style={{ width:"100%", height:70 }}>
+              {Array.from({length:35}).map((_,i) => {
+                const r=Math.random(), col=i%7, row=Math.floor(i/7);
+                const c=r>0.65?"#00e5a0":r>0.4?"#818cf8":r>0.2?"#1e2d45":"#0d1520";
+                return <rect key={i} x={col*33} y={row*14} width={30} height={11} rx={3} fill={c} opacity={0.85}/>;
+              })}
+            </svg>
+          </div>
+
+          {/* Donut fiscal — BOTTOM RIGHT corner */}
+          <div className="bg-d2" style={{ position:"absolute", right:"20%", bottom:"8%", width:100, opacity:0.2 }}>
+            <div style={{ fontSize:9, color:"#f59e0b", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:6 }}>Structure fiscale</div>
+            <svg viewBox="0 0 100 100" style={{ width:100, height:100 }}>
+              <circle cx="50" cy="50" r="36" fill="none" stroke="#1e2d45" strokeWidth="14"/>
+              <circle cx="50" cy="50" r="36" fill="none" stroke="#00e5a0" strokeWidth="14" strokeDasharray="143 83" strokeDashoffset="25" strokeLinecap="round"/>
+              <circle cx="50" cy="50" r="36" fill="none" stroke="#818cf8" strokeWidth="14" strokeDasharray="57 169" strokeDashoffset="-118" strokeLinecap="round"/>
+              <circle cx="50" cy="50" r="36" fill="none" stroke="#f59e0b" strokeWidth="14" strokeDasharray="26 200" strokeDashoffset="-175" strokeLinecap="round"/>
+              <text x="50" y="55" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="800">69%</text>
+            </svg>
+          </div>
+
+          {/* Second equity curve — center bottom */}
+          <div className="bg-d3" style={{ position:"absolute", left:"28%", bottom:"6%", width:280, height:80, opacity:0.12 }}>
+            <div style={{ fontSize:9, color:"#00d4ff", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:4 }}>Compte Apex #2</div>
+            <svg viewBox="0 0 280 70" style={{ width:"100%", height:70 }} preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="plg2" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#00d4ff" stopOpacity="0.3"/>
+                  <stop offset="100%" stopColor="#00d4ff" stopOpacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d="M0,60 C40,58 60,40 100,32 C140,24 160,35 200,18 C240,4 260,12 280,8 L280,70 L0,70 Z" fill="url(#plg2)"/>
+              <path d="M0,60 C40,58 60,40 100,32 C140,24 160,35 200,18 C240,4 260,12 280,8" fill="none" stroke="#00d4ff" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </div>
+        </div>
 
         <div style={{ position:"relative", zIndex:1, animation:"fadeUp .9s ease forwards" }}>
           <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"#00e5a010", border:"1px solid #00e5a025", borderRadius:20, padding:"6px 18px", fontSize:11, fontWeight:700, color:"#00e5a0", letterSpacing:2, textTransform:"uppercase", marginBottom:32 }}>
