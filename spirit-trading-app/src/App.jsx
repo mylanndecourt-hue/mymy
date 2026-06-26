@@ -5488,7 +5488,7 @@ function SessionDuJour({ sessions, setSessions }) {
           }}
         />
       </div>
-      </div>)}
+      )}
 
       {/* Checklist */}
       {step === 5 && (
