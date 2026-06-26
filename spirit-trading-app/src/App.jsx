@@ -5212,6 +5212,7 @@ function SessionDuJour({ sessions, setSessions }) {
         const alimentation = session.alimentation ?? null;
         const qualiteSommeil = session.qualite_sommeil ?? null;
         const heureCoucher = session.heure_coucher ?? "";
+        const tempsSommeil = session.temps_sommeil ?? "";
         const ecrans = session.ecrans ?? null;
 
         const BtnOuiNon = ({ current, onChange, ouiColor, nonColor }) => (
@@ -5282,15 +5283,28 @@ function SessionDuJour({ sessions, setSessions }) {
               <div>
                 <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 10 }}>😴 Sommeil</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {/* Heure de coucher */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <span style={{ fontSize: 12, color: G.dim }}>🌙 Heure de coucher</span>
-                    <input
-                      type="time"
-                      value={heureCoucher}
-                      onChange={e => set("heure_coucher", e.target.value)}
-                      style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${G.border}`, borderRadius: 8, padding: "6px 10px", color: G.text, fontSize: 13, outline: "none" }}
-                    />
+                  {/* Heure de coucher + Temps de sommeil */}
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <div style={{ flex: 1, background: "rgba(255,255,255,0.03)", border: `1px solid ${G.border}`, borderRadius: 10, padding: "10px 12px" }}>
+                      <div style={{ fontSize: 10, color: G.dim, marginBottom: 6 }}>🌙 Heure de coucher</div>
+                      <input
+                        type="time"
+                        value={heureCoucher}
+                        onChange={e => set("heure_coucher", e.target.value)}
+                        style={{ background: "transparent", border: "none", color: G.text, fontSize: 13, outline: "none", width: "100%" }}
+                      />
+                    </div>
+                    <div style={{ flex: 1, background: "rgba(255,255,255,0.03)", border: `1px solid ${G.border}`, borderRadius: 10, padding: "10px 12px" }}>
+                      <div style={{ fontSize: 10, color: G.dim, marginBottom: 6 }}>⏱️ Temps de sommeil (h)</div>
+                      <input
+                        type="number"
+                        min="0" max="24" step="0.5"
+                        value={tempsSommeil}
+                        onChange={e => set("temps_sommeil", e.target.value)}
+                        placeholder="ex: 7.5"
+                        style={{ background: "transparent", border: "none", color: G.text, fontSize: 13, outline: "none", width: "100%" }}
+                      />
+                    </div>
                   </div>
                   {/* Écrans avant dodo */}
                   <div>
