@@ -1874,12 +1874,42 @@ function CalendrierTrading({ trades }) {
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
+  const [ecoByDate, setEcoByDate] = useState({});
 
-  // PnL par date
+  // Fetch annonces éco et grouper par date
+  useEffect(() => {
+    const cacheKey = `ff_eco7_cal_${toYMD(today)}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) { setEcoByDate(JSON.parse(cached)); return; }
+    (async () => {
+      try {
+        const r = await fetch("/api/calendar");
+        if (!r.ok) return;
+        const data = await r.json();
+        if (!Array.isArray(data)) return;
+        const byDate = {};
+        data.forEach(a => {
+          const raw = a.time || a.date || "";
+          if (!raw) return;
+          const d = new Date(raw);
+          if (isNaN(d)) return;
+          const dateStr = d.toLocaleDateString("fr-CA", { timeZone: "Europe/Paris" });
+          if (!byDate[dateStr]) byDate[dateStr] = [];
+          byDate[dateStr].push({ event: a.event || a.title || "—", impact: (a.impact || "low").toLowerCase(), country: a.country || "USD" });
+        });
+        sessionStorage.setItem(cacheKey, JSON.stringify(byDate));
+        setEcoByDate(byDate);
+      } catch {}
+    })();
+  }, []);
+
+  // PnL et nb trades par date
   const pnlByDate = {};
+  const countByDate = {};
   trades.forEach(t => {
     if (!t.date) return;
     pnlByDate[t.date] = (pnlByDate[t.date] || 0) + (t.pnl || 0);
+    countByDate[t.date] = (countByDate[t.date] || 0) + 1;
   });
 
   const maxAbs = Math.max(1, ...Object.values(pnlByDate).map(Math.abs));
@@ -1972,13 +2002,37 @@ function CalendrierTrading({ trades }) {
             );
           })}
 
+          {/* Annonces éco */}
+          {popover.ecoDay && popover.ecoDay.length > 0 && (
+            <div style={{ borderTop: "1px solid #1a1a2e", paddingTop: 8, marginTop: 4 }}>
+              <div style={{ fontSize: 10, color: G.dim, fontWeight: 700, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>📰 Annonces économiques</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                {popover.ecoDay.filter(e => e.impact === "high" || e.impact === "medium").map((e, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: e.impact === "high" ? G.red : G.amber, flexShrink: 0, display: "inline-block" }} />
+                    <span style={{ fontSize: 11, color: "#e5e7eb" }}>{e.event}</span>
+                    <span style={{ fontSize: 10, color: G.dim, marginLeft: "auto" }}>{e.country}</span>
+                  </div>
+                ))}
+                {popover.ecoDay.filter(e => e.impact !== "high" && e.impact !== "medium").length > 0 && (
+                  <div style={{ fontSize: 10, color: G.dim }}>+ {popover.ecoDay.filter(e => e.impact !== "high" && e.impact !== "medium").length} annonce(s) faible(s)</div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* P&L si trade ce jour */}
           {popover.pnl !== undefined && (
-            <div style={{ borderTop: "1px solid #1a1a2e", paddingTop: 8, marginTop: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 11, color: G.dim }}>P&L du jour</span>
-              <span style={{ fontSize: 13, fontWeight: 800, fontFamily: "monospace", color: popover.pnl >= 0 ? G.green : G.red }}>
-                {popover.pnl >= 0 ? "+" : ""}{popover.pnl.toFixed(0)}$
-              </span>
+            <div style={{ borderTop: "1px solid #1a1a2e", paddingTop: 8, marginTop: 4 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 11, color: G.dim }}>P&L du jour</span>
+                <span style={{ fontSize: 13, fontWeight: 800, fontFamily: "monospace", color: popover.pnl >= 0 ? G.green : G.red }}>
+                  {popover.pnl >= 0 ? "+" : ""}{popover.pnl.toFixed(0)}$
+                </span>
+              </div>
+              {popover.nbTrades > 0 && (
+                <div style={{ fontSize: 10, color: G.dim, marginTop: 3 }}>{popover.nbTrades} trade{popover.nbTrades > 1 ? "s" : ""} ce jour</div>
+              )}
             </div>
           )}
         </div>
@@ -2015,66 +2069,67 @@ function CalendrierTrading({ trades }) {
           if (!day) return <div key={`empty-${idx}`} />;
           const dateStr = `${viewYear}-${String(viewMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
           const pnl = pnlByDate[dateStr];
+          const nbTrades = countByDate[dateStr] || 0;
           const hols = HOLIDAYS_CACHE[dateStr] || [];
           const isClosed = hols.some(h => h.type === "closed");
           const isEarly = hols.some(h => h.type === "early");
           const isToday = dateStr === todayStr;
           const isWeekend = idx % 7 >= 5;
           const hasTrade = pnl !== undefined;
+          const ecoDay = ecoByDate[dateStr] || [];
+          const hasHigh = ecoDay.some(e => e.impact === "high");
+          const hasMed = ecoDay.some(e => e.impact === "medium");
 
-          let bg = "rgba(255,255,255,0.02)";
+          const dayColor = isWeekend ? "#374151" : "#6b7280";
           let borderColor = G.border;
-          let textColor = isWeekend ? "#374151" : "#6b7280";
+          let bg = "rgba(255,255,255,0.02)";
 
-          if (isClosed) { bg = "rgba(239,68,68,0.08)"; borderColor = "rgba(239,68,68,0.3)"; }
-          else if (isEarly) { bg = "rgba(245,158,11,0.08)"; borderColor = "rgba(245,158,11,0.3)"; }
-
-          if (hasTrade) {
-            const alpha = 0.15 + (Math.abs(pnl) / maxAbs) * 0.55;
-            bg = pnl >= 0 ? `rgba(0,229,160,${alpha})` : `rgba(239,68,68,${alpha})`;
-            borderColor = pnl >= 0 ? `rgba(0,229,160,${alpha + 0.2})` : `rgba(239,68,68,${alpha + 0.2})`;
-            textColor = pnl >= 0 ? "#00e5a0" : "#ef4444";
-          }
-
+          if (isClosed) { bg = "rgba(239,68,68,0.06)"; borderColor = "rgba(239,68,68,0.25)"; }
+          else if (isEarly) { bg = "rgba(245,158,11,0.05)"; borderColor = "rgba(245,158,11,0.25)"; }
+          if (hasTrade) borderColor = pnl >= 0 ? "rgba(0,229,160,0.45)" : "rgba(239,68,68,0.45)";
           if (isToday) borderColor = G.purple;
 
-          const hasInfo = hols.length > 0 || hasTrade;
+          const hasInfo = hols.length > 0 || hasTrade || ecoDay.length > 0;
           return (
             <div key={dateStr} style={{
               background: bg, border: `1.5px solid ${borderColor}`,
               borderRadius: 10, minHeight: 80, padding: "8px 10px",
-              display: "flex", flexDirection: "column", justifyContent: "space-between",
+              display: "flex", flexDirection: "column", gap: 3,
               cursor: hasInfo ? "pointer" : "default",
               boxShadow: isToday ? `0 0 0 2px ${G.purple}` : "none",
               transition: "filter 0.1s",
             }}
             onMouseEnter={e => {
-              if (hasTrade) e.currentTarget.style.filter = "brightness(1.2)";
-              if (hasInfo) setPopover({ hols, pnl, dateStr, x: e.clientX, y: e.clientY });
+              if (hasInfo) { e.currentTarget.style.filter = "brightness(1.15)"; setPopover({ hols, pnl, nbTrades, ecoDay, dateStr, x: e.clientX, y: e.clientY }); }
             }}
             onMouseMove={e => { if (hasInfo) setPopover(p => p ? { ...p, x: e.clientX, y: e.clientY } : null); }}
             onMouseLeave={e => { e.currentTarget.style.filter = ""; setPopover(null); }}>
-              {/* Numéro du jour + indicateurs */}
+
+              {/* Ligne 1: numéro + indicateurs fériés */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <span style={{ fontSize: 14, fontWeight: isToday ? 900 : 600, color: isToday ? G.purple : textColor, lineHeight: 1 }}>{day}</span>
+                <span style={{ fontSize: 14, fontWeight: isToday ? 900 : 600, color: isToday ? G.purple : dayColor, lineHeight: 1 }}>{day}</span>
                 <div style={{ display: "flex", gap: 3 }}>
-                  {isClosed && <span style={{ fontSize: 12 }} title="Bourse fermée">🔴</span>}
-                  {isEarly && <span style={{ fontSize: 12 }} title="Clôture anticipée">🟡</span>}
+                  {isClosed && <span style={{ fontSize: 11 }}>🔴</span>}
+                  {isEarly && <span style={{ fontSize: 11 }}>🟡</span>}
+                  {hasHigh && <span style={{ width: 7, height: 7, borderRadius: "50%", background: G.red, display: "inline-block", marginTop: 3 }} title="Annonce impact fort" />}
+                  {!hasHigh && hasMed && <span style={{ width: 7, height: 7, borderRadius: "50%", background: G.amber, display: "inline-block", marginTop: 3 }} title="Annonce impact moyen" />}
                 </div>
               </div>
-              {/* Label fériés */}
+
+              {/* Férié label */}
               {hols.length > 0 && (
                 <div style={{ fontSize: 9, color: isClosed ? G.red : G.amber, lineHeight: 1.3, fontWeight: 600 }}>
-                  {hols[0].label.length > 16 ? hols[0].label.slice(0, 15) + "…" : hols[0].label}
-                  {hols[0].exchanges.map(ex => EXCHANGE_LINKS[ex]?.flag).filter(Boolean).filter((v,i,a) => a.indexOf(v) === i).map(f => (
-                    <span key={f} style={{ marginLeft: 3 }}>{f}</span>
-                  ))}
+                  {hols[0].label.length > 14 ? hols[0].label.slice(0, 13) + "…" : hols[0].label}
                 </div>
               )}
-              {/* P&L si trade */}
+
+              {/* P&L + nb trades */}
               {hasTrade && (
-                <div style={{ fontSize: 12, fontWeight: 800, fontFamily: "monospace", color: textColor, textAlign: "right", lineHeight: 1 }}>
-                  {pnl >= 0 ? "+" : ""}{Math.abs(pnl) >= 1000 ? `${(pnl/1000).toFixed(1)}k` : pnl.toFixed(0)}$
+                <div style={{ marginTop: "auto" }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, fontFamily: "monospace", color: pnl >= 0 ? G.green : G.red, lineHeight: 1 }}>
+                    {pnl >= 0 ? "+" : ""}{Math.abs(pnl) >= 1000 ? `${(pnl/1000).toFixed(1)}k` : pnl.toFixed(0)}$
+                  </div>
+                  <div style={{ fontSize: 9, color: G.dim, marginTop: 2 }}>{nbTrades} trade{nbTrades > 1 ? "s" : ""}</div>
                 </div>
               )}
             </div>
@@ -2083,18 +2138,26 @@ function CalendrierTrading({ trades }) {
       </div>
 
       {/* Légende */}
-      <div style={{ display: "flex", gap: 16, marginTop: 14, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 14, marginTop: 14, flexWrap: "wrap", alignItems: "center" }}>
         {[
-          { color: "rgba(239,68,68,0.4)", border: "rgba(239,68,68,0.6)", label: "🔴 Bourse fermée (CME/NYSE/Euronext)" },
-          { color: "rgba(245,158,11,0.2)", border: "rgba(245,158,11,0.5)", label: "🟡 Clôture anticipée" },
-          { color: "rgba(0,229,160,0.3)", border: "rgba(0,229,160,0.6)", label: "Jour profitable" },
-          { color: "rgba(239,68,68,0.3)", border: "rgba(239,68,68,0.6)", label: "Jour perdant" },
+          { color: "rgba(239,68,68,0.4)", border: "rgba(239,68,68,0.6)", dot: false, label: "🔴 Bourse fermée" },
+          { color: "rgba(245,158,11,0.2)", border: "rgba(245,158,11,0.5)", dot: false, label: "🟡 Clôture anticipée" },
+          { color: "rgba(0,229,160,0.2)", border: "rgba(0,229,160,0.5)", dot: false, label: "Jour profitable" },
+          { color: "rgba(239,68,68,0.2)", border: "rgba(239,68,68,0.5)", dot: false, label: "Jour perdant" },
         ].map((item, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <div style={{ width: 12, height: 12, borderRadius: 3, background: item.color, border: `1px solid ${item.border}` }} />
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <div style={{ width: 10, height: 10, borderRadius: 3, background: item.color, border: `1px solid ${item.border}` }} />
             <span style={{ fontSize: 10, color: G.dim }}>{item.label}</span>
           </div>
         ))}
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: G.red, display: "inline-block" }} />
+          <span style={{ fontSize: 10, color: G.dim }}>Annonce forte</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: G.amber, display: "inline-block" }} />
+          <span style={{ fontSize: 10, color: G.dim }}>Annonce moyenne</span>
+        </div>
       </div>
     </div>
   );
