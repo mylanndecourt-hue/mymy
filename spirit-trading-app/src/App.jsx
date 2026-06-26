@@ -3158,8 +3158,13 @@ function AnalysePage({ trades, comptes, onDetail, lang = "fr" }) {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState(null);
   const [aiError, setAiError] = useState(null);
+  const [aiKey, setAiKey] = useState(() => localStorage.getItem("spirit_anthropic_key") || "");
+  const [showKeyInput, setShowKeyInput] = useState(false);
+
+  const saveAiKey = (k) => { setAiKey(k); localStorage.setItem("spirit_anthropic_key", k); };
 
   const runAiAnalysis = async () => {
+    if (!aiKey) { setShowKeyInput(true); return; }
     setAiLoading(true); setAiResult(null); setAiError(null);
     const stats = {
       totalTrades: trades.length, winRate, avgPnl: Number(avgPnl), avgRR,
@@ -3173,7 +3178,7 @@ function AnalysePage({ trades, comptes, onDetail, lang = "fr" }) {
       actifStats: actifStats.map(a => ({ actif: a.label, trades: a.count, winRate: a.wr, pnl: Math.round(a.pnl) })),
     };
     try {
-      const res = await fetch("/api/ai-analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ stats }) });
+      const res = await fetch("/api/ai-analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ stats, apiKey: aiKey }) });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setAiResult(data.text);
@@ -3241,6 +3246,36 @@ function AnalysePage({ trades, comptes, onDetail, lang = "fr" }) {
             <div style={{ height: 4, background: "#1a1a2e", borderRadius: 4, overflow: "hidden" }}>
               <div style={{ height: "100%", width: "100%", background: "linear-gradient(90deg, #818cf8, #6366f1, #818cf8)", backgroundSize: "200% 100%", borderRadius: 4, animation: "shimmer 1.5s linear infinite" }} />
             </div>
+          </div>
+        )}
+        {(showKeyInput || (!aiKey && !aiResult)) && (
+          <div style={{ marginTop: 14, background: "rgba(129,140,248,0.06)", border: "1px solid rgba(129,140,248,0.2)", borderRadius: 12, padding: "14px 16px" }}>
+            <div style={{ fontSize: 11, color: "#818cf8", fontWeight: 700, marginBottom: 8 }}>🔑 Clé API Anthropic requise</div>
+            <div style={{ fontSize: 11, color: "#555", marginBottom: 10 }}>
+              Obtiens ta clé sur <span style={{ color: "#818cf8" }}>console.anthropic.com</span> → API Keys. Elle est sauvegardée localement.
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                type="password"
+                placeholder="sk-ant-api03-..."
+                value={aiKey}
+                onChange={e => setAiKey(e.target.value)}
+                style={{ flex: 1, background: "#0a0a14", border: "1px solid #2a2a3e", borderRadius: 8, padding: "9px 12px", color: "#e5e7eb", fontSize: 12, outline: "none", fontFamily: "monospace" }}
+              />
+              <button
+                onClick={() => { saveAiKey(aiKey); setShowKeyInput(false); }}
+                disabled={!aiKey.startsWith("sk-")}
+                style={{ background: aiKey.startsWith("sk-") ? "#818cf8" : "#1a1a2e", border: "none", color: aiKey.startsWith("sk-") ? "#fff" : "#555", borderRadius: 8, padding: "0 16px", fontSize: 12, fontWeight: 700, cursor: aiKey.startsWith("sk-") ? "pointer" : "default" }}
+              >
+                Sauvegarder
+              </button>
+            </div>
+          </div>
+        )}
+        {aiKey && !showKeyInput && !aiResult && !aiLoading && (
+          <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ fontSize: 10, color: "#2a6e2a", background: "#00e5a010", borderRadius: 6, padding: "3px 8px", fontWeight: 700 }}>✓ Clé configurée</div>
+            <button onClick={() => { setShowKeyInput(true); setAiKey(""); }} style={{ fontSize: 10, color: "#555", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>Modifier</button>
           </div>
         )}
         {aiError && <div style={{ marginTop: 12, fontSize: 12, color: "#ef4444", background: "#ef444410", borderRadius: 8, padding: "10px 14px" }}>⚠️ {aiError}</div>}

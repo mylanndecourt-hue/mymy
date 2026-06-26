@@ -5,13 +5,11 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+  const { stats, apiKey: bodyKey } = req.body || {};
+  const ANTHROPIC_KEY = bodyKey || process.env.ANTHROPIC_API_KEY;
   if (!ANTHROPIC_KEY) {
-    console.error("[ai-analyze] ANTHROPIC_API_KEY is not set. Available env keys:", Object.keys(process.env).filter(k => k.startsWith("ANTHR") || k.startsWith("API")));
-    return res.status(500).json({ error: "Clé API manquante — vérifier ANTHROPIC_API_KEY dans Vercel > Settings > Environment Variables" });
+    return res.status(500).json({ error: "Clé API manquante — saisis ta clé Anthropic dans l'app" });
   }
-
-  const { stats } = req.body || {};
   if (!stats) return res.status(400).json({ error: "Données manquantes" });
 
   const prompt = `Tu es un coach de trading professionnel. Analyse ces statistiques de trading et donne des conseils personnalisés en français, structurés en 3 sections claires :
