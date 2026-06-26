@@ -5148,6 +5148,12 @@ function SessionDuJour({ sessions, setSessions }) {
             <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, marginBottom: 18 }}>🌿 Conditions du jour</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
 
+              {/* Plan de trading */}
+              <div>
+                <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>📋 Ai-je un plan de trading clair ?</div>
+                <BtnOuiNon current={session.plan_trading ?? null} onChange={v => set("plan_trading", v)} ouiColor={G.green} nonColor={G.amber} />
+              </div>
+
               {/* Sport */}
               <div>
                 <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>🏃 Sport aujourd'hui ?</div>
