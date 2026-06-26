@@ -4920,7 +4920,7 @@ function SessionDuJour({ sessions, setSessions }) {
 
   const [step, setStep] = useState(1);
   const [expanded, setExpanded] = useState(false);
-  const STEPS = ["Annonces", "État d'esprit", "Conditions", "Intention", "Checklist"];
+  const STEPS = ["Annonces", "État d'esprit", "Préparation", "Corps & Vie", "Intention", "Checklist"];
   const [newItem, setNewItem] = useState("");
   const [showAdd, setShowAdd] = useState(false);
 
@@ -5330,11 +5330,52 @@ function SessionDuJour({ sessions, setSessions }) {
       })()}
       </div>)}
 
-      {/* Conditions du jour */}
+      {/* Étape 3 — Préparation mentale & spirituelle */}
       {step === 3 && (<div>
       {(() => {
-        const sport = session.sport ?? null;
         const tierce = session.tierce ?? null;
+        const BtnOuiNon = ({ current, onChange, ouiColor, nonColor }) => (
+          <div style={{ display: "flex", gap: 6 }}>
+            {[
+              { val: "Oui", color: ouiColor || G.green },
+              { val: "Non", color: nonColor || G.red },
+            ].map(({ val, color }) => (
+              <button key={val} onClick={() => onChange(current === val ? null : val)} style={{
+                flex: 1, padding: "10px 0", borderRadius: 10, cursor: "pointer", fontSize: 13, fontWeight: 700,
+                background: current === val ? `${color}22` : "rgba(255,255,255,0.03)",
+                border: `1.5px solid ${current === val ? color : G.border}`,
+                color: current === val ? color : G.dim,
+                transition: "all 0.15s",
+              }}>{val}</button>
+            ))}
+          </div>
+        );
+        return (
+          <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px" }}>
+            <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, marginBottom: 18 }}>🧠 Préparation</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+              <div>
+                <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>📋 Ai-je un plan de trading clair ?</div>
+                <BtnOuiNon current={session.plan_trading ?? null} onChange={v => set("plan_trading", v)} ouiColor={G.green} nonColor={G.amber} />
+              </div>
+              <div>
+                <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>🙏 Temps d'intimité avec Dieu</div>
+                <BtnOuiNon current={session.intimite_dieu ?? null} onChange={v => set("intimite_dieu", v)} ouiColor={G.green} nonColor={G.amber} />
+              </div>
+              <div>
+                <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>👤 Présence d'une tierce personne dans le lieu de trade ?</div>
+                <BtnOuiNon current={tierce} onChange={v => set("tierce", v)} ouiColor={G.amber} nonColor={G.green} />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+      </div>)}
+
+      {/* Étape 4 — Corps & Hygiène de vie */}
+      {step === 4 && (<div>
+      {(() => {
+        const sport = session.sport ?? null;
         const alimentation = session.alimentation ?? null;
         const qualiteSommeil = session.qualite_sommeil ?? null;
         const heureCoucher = session.heure_coucher ?? "";
@@ -5366,34 +5407,14 @@ function SessionDuJour({ sessions, setSessions }) {
 
         return (
           <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px" }}>
-            <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, marginBottom: 18 }}>🌿 Conditions du jour</div>
+            <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, marginBottom: 18 }}>🏃 Corps & Hygiène de vie</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
 
-              {/* Plan de trading */}
-              <div>
-                <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>📋 Ai-je un plan de trading clair ?</div>
-                <BtnOuiNon current={session.plan_trading ?? null} onChange={v => set("plan_trading", v)} ouiColor={G.green} nonColor={G.amber} />
-              </div>
-
-              {/* Sport */}
               <div>
                 <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>🏃 Sport aujourd'hui ?</div>
                 <BtnOuiNon current={sport} onChange={v => set("sport", v)} ouiColor={G.green} nonColor={G.red} />
               </div>
 
-              {/* Intimité avec Dieu */}
-              <div>
-                <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>🙏 Temps d'intimité avec Dieu</div>
-                <BtnOuiNon current={session.intimite_dieu ?? null} onChange={v => set("intimite_dieu", v)} ouiColor={G.green} nonColor={G.amber} />
-              </div>
-
-              {/* Tierce personne */}
-              <div>
-                <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>👤 Présence d'une tierce personne dans le lieu de trade ?</div>
-                <BtnOuiNon current={tierce} onChange={v => set("tierce", v)} ouiColor={G.amber} nonColor={G.green} />
-              </div>
-
-              {/* Alimentation */}
               <div>
                 <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>🍽️ Alimentation</div>
                 <div style={{ display: "flex", gap: 8 }}>
@@ -5411,11 +5432,9 @@ function SessionDuJour({ sessions, setSessions }) {
                 </div>
               </div>
 
-              {/* Sommeil */}
               <div>
                 <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 10 }}>😴 Sommeil</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {/* Heure de coucher + Temps de sommeil */}
                   <div style={{ display: "flex", gap: 10 }}>
                     <div style={{ flex: 1, background: G.card, border: `2px solid ${G.border}`, borderRadius: 12, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
                       <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 0.8, whiteSpace: "nowrap", fontWeight: 700 }}>🌙 Coucher</div>
@@ -5438,12 +5457,10 @@ function SessionDuJour({ sessions, setSessions }) {
                       />
                     </div>
                   </div>
-                  {/* Écrans avant dodo */}
                   <div>
                     <div style={{ fontSize: 12, color: G.dim, marginBottom: 6 }}>📱 Écrans avant de dormir ?</div>
                     <BtnOuiNon current={ecrans} onChange={v => set("ecrans", v)} ouiColor={G.amber} nonColor={G.green} />
                   </div>
-                  {/* Qualité 1-5 boutons */}
                   <div>
                     <div style={{ fontSize: 12, color: G.dim, marginBottom: 8 }}>Qualité du sommeil</div>
                     <div style={{ display: "flex", gap: 6 }}>
@@ -5472,7 +5489,6 @@ function SessionDuJour({ sessions, setSessions }) {
                 </div>
               </div>
 
-
             </div>
           </div>
         );
@@ -5480,7 +5496,7 @@ function SessionDuJour({ sessions, setSessions }) {
       </div>)}
 
       {/* Intention */}
-      {step === 4 && (
+      {step === 5 && (
       <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px" }}>
         <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, marginBottom: 14 }}>✍️ Intention du jour</div>
         <textarea
@@ -5498,7 +5514,7 @@ function SessionDuJour({ sessions, setSessions }) {
       )}
 
       {/* Checklist */}
-      {step === 5 && (
+      {step === 6 && (
       <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2 }}>✅ Checklist pré-session</div>
@@ -5604,35 +5620,91 @@ function SessionDuJour({ sessions, setSessions }) {
         {step > 1 && (
           <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, background: "#0e0e1a", border: `1px solid ${G.border}`, color: "#888", borderRadius: 12, padding: "13px 0", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>← Retour</button>
         )}
-        {step < 5 && (
+        {step < 6 && (
           <button onClick={() => setStep(s => s + 1)} style={{ flex: 2, background: G.purple, border: "none", color: "#fff", borderRadius: 12, padding: "13px 0", fontSize: 13, fontWeight: 800, cursor: "pointer", boxShadow: `0 0 20px ${G.purple}40` }}>Suivant →</button>
         )}
       </div>
 
-      {/* Bouton de validation — apparaît quand checklist complète à l'étape 5 */}
-      {step === 5 && pct === 100 && (() => {
+      {/* Bouton de validation — apparaît quand checklist complète à l'étape 6 */}
+      {step === 6 && pct === 100 && (() => {
         const validated = !!session.validatedAt;
         const heure = session.validatedAt
           ? new Date(session.validatedAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
           : null;
 
         if (validated) {
-          return (
-            <div style={{
-              background: "linear-gradient(135deg,#001a0e,#0a0a14)",
-              border: `1.5px solid ${G.green}50`,
-              borderRadius: 20, padding: "28px 32px",
-              display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
-              boxShadow: `0 0 48px ${G.green}18`,
-            }}>
-              <div style={{ fontSize: 44 }}>🚀</div>
-              <div style={{ fontSize: 20, fontWeight: 900, color: G.green, letterSpacing: -0.5 }}>Session validée à {heure}</div>
-              <div style={{ fontSize: 13, color: "#6b7280", textAlign: "center" }}>
-                Tu t'es engagé à trader avec discipline et méthode.<br />Reste fidèle à ton plan.
+          const etatLabels = { concentré: "Concentré 🎯", déterminé: "Déterminé 💪", envie_apprendre: "Envie d'apprendre 📚", serein: "Serein 🧘", motivé: "Motivé 🔥", préoccupé: "Préoccupé 😟", pas_la_tete: "Pas la tête à ça 😶", fatigué: "Fatigué 😪", impatient: "Impatient ⚡", stressé: "Stressé 😰" };
+          const POSITIFS = ["concentré","déterminé","envie_apprendre","serein","motivé"];
+          const etats = session.etat_esprit || [];
+          const highAnnonces = (annonces || []).filter(a => a.impact === "high" || a.impact === "medium");
+          const Row = ({ icon, label, children }) => (
+            <div style={{ display: "flex", gap: 12, paddingBottom: 14, borderBottom: `1px solid ${G.border}` }}>
+              <div style={{ fontSize: 16, width: 22, flexShrink: 0 }}>{icon}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 1, fontWeight: 700, marginBottom: 5 }}>{label}</div>
+                {children}
               </div>
+            </div>
+          );
+          return (
+            <div style={{ background: "linear-gradient(135deg,#001a0e,#0a0a14)", border: `1.5px solid ${G.green}50`, borderRadius: 20, padding: "24px 20px", display: "flex", flexDirection: "column", gap: 0, boxShadow: `0 0 48px ${G.green}18` }}>
+              {/* Header */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+                <div style={{ fontSize: 32 }}>🚀</div>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: G.green }}>Session validée à {heure}</div>
+                  <div style={{ fontSize: 11, color: "#6b7280" }}>Reste fidèle à ton plan.</div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {/* Annonces */}
+                <Row icon="📢" label="Annonces du jour">
+                  {highAnnonces.length === 0
+                    ? <div style={{ fontSize: 12, color: G.dim }}>Aucune annonce majeure</div>
+                    : highAnnonces.map((a, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                          <div style={{ width: 6, height: 6, borderRadius: "50%", background: a.impact === "high" ? G.red : G.amber, flexShrink: 0 }} />
+                          <div style={{ fontSize: 12, color: G.text, fontWeight: 600 }}>{a.title || a.event}</div>
+                          {a.country && <div style={{ fontSize: 11, color: G.dim }}>{a.country}</div>}
+                        </div>
+                      ))
+                  }
+                </Row>
+
+                {/* État d'esprit */}
+                <Row icon="💭" label="État d'esprit">
+                  {etats.length === 0
+                    ? <div style={{ fontSize: 12, color: G.dim }}>Non renseigné</div>
+                    : <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {etats.map(e => {
+                          const isPos = POSITIFS.includes(e);
+                          return <span key={e} style={{ fontSize: 11, fontWeight: 700, color: isPos ? G.green : G.amber, background: isPos ? `${G.green}15` : `${G.amber}15`, borderRadius: 20, padding: "4px 10px" }}>{etatLabels[e] || e}</span>;
+                        })}
+                      </div>
+                  }
+                </Row>
+
+                {/* Plan de trading */}
+                <Row icon="📋" label="Plan de trading">
+                  <div style={{ fontSize: 12, fontWeight: 700, color: session.plan_trading === "Oui" ? G.green : session.plan_trading === "Non" ? G.amber : G.dim }}>
+                    {session.plan_trading === "Oui" ? "✓ Plan clair défini" : session.plan_trading === "Non" ? "⚠️ Pas de plan — sois prudent" : "Non renseigné"}
+                  </div>
+                </Row>
+
+                {/* Intention */}
+                {(session.intention || "").trim().length > 0 && (
+                  <Row icon="✍️" label="Intention du jour">
+                    <div style={{ fontSize: 12, color: G.text, lineHeight: 1.6, fontStyle: "italic" }}>
+                      "{session.intention.trim()}"
+                    </div>
+                  </Row>
+                )}
+              </div>
+
               <button
                 onClick={() => set("validatedAt", null)}
-                style={{ marginTop: 6, background: "none", border: `1px solid #1a1a2e`, color: "#374151", borderRadius: 10, padding: "6px 16px", fontSize: 11, cursor: "pointer" }}
+                style={{ marginTop: 20, background: "none", border: `1px solid #1a1a2e`, color: "#374151", borderRadius: 10, padding: "6px 16px", fontSize: 11, cursor: "pointer", alignSelf: "center" }}
               >
                 Annuler la validation
               </button>
