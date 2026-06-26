@@ -2693,6 +2693,9 @@ function Dashboard({ trades, comptes, onEditCompte, onNewCompte, onGoToAnalyse, 
         </div>
       </div>
 
+      {/* ── CALENDRIER DE TRADING ── */}
+      <CalendrierTrading trades={trades} />
+
       {/* ── COMPTES ── */}
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
@@ -2706,7 +2709,10 @@ function Dashboard({ trades, comptes, onEditCompte, onNewCompte, onGoToAnalyse, 
             <button onClick={onNewCompte} style={{ background: "linear-gradient(135deg,#00e5a0,#00b37a)", border: "none", color: "#06060f", borderRadius: 10, padding: "10px 20px", fontSize: 12, fontWeight: 800, cursor: "pointer" }}>{T.addAccount}</button>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 12 }}>
+          <div style={{
+            display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 12,
+            ...(comptes.length > 4 ? { maxHeight: 420, overflowY: "auto", paddingRight: 4, scrollbarWidth: "thin" } : {}),
+          }}>
             {comptes.map(c => {
               const firm = PROP_FIRMS_CATALOG[c.type] || PROP_FIRMS_CATALOG["Autre"];
               const tradeDuCompte = trades.filter(t => t.compte === c.nom);
