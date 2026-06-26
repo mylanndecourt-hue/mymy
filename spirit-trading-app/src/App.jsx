@@ -5019,6 +5019,7 @@ function SessionDuJour({ sessions, setSessions }) {
   const completionItems = [
     { label: "État d'esprit",    done: (session.etat_esprit || []).length > 0 },
     { label: "Plan de trading",  done: !!session.plan_trading },
+    { label: "Intimité avec Dieu", done: !!session.intimite_dieu },
     { label: "Sport",            done: !!session.sport },
     { label: "Tierce personne",  done: !!session.tierce },
     { label: "Alimentation",     done: !!session.alimentation },
@@ -5378,6 +5379,12 @@ function SessionDuJour({ sessions, setSessions }) {
               <div>
                 <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>🏃 Sport aujourd'hui ?</div>
                 <BtnOuiNon current={sport} onChange={v => set("sport", v)} ouiColor={G.green} nonColor={G.red} />
+              </div>
+
+              {/* Intimité avec Dieu */}
+              <div>
+                <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>🙏 Temps d'intimité avec Dieu</div>
+                <BtnOuiNon current={session.intimite_dieu ?? null} onChange={v => set("intimite_dieu", v)} ouiColor={G.green} nonColor={G.amber} />
               </div>
 
               {/* Tierce personne */}
