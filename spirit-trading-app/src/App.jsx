@@ -3814,28 +3814,46 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, lang =
       {/* Discipline */}
       <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 14 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.text, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>{T.discipline}</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-          <div>
-            <label style={lbl}>{T.prayer}</label>
-            <div style={{ display: "flex", gap: 8 }}>
-              {["Oui", "Non"].map(v => <button key={v} onClick={() => set("priere", v === "Oui")} style={{ flex: 1, background: (form.priere ? "Oui" : "Non") === v ? COLORS.cyan + "20" : COLORS.bg, border: `1px solid ${(form.priere ? "Oui" : "Non") === v ? COLORS.cyan : COLORS.border}`, color: (form.priere ? "Oui" : "Non") === v ? COLORS.cyan : COLORS.textDim, borderRadius: 8, padding: 10, fontSize: 13, cursor: "pointer" }}>{v === "Oui" ? T.yes : T.no}</button>)}
-            </div>
+        <div style={{ marginBottom: 10 }}>
+          <label style={lbl}>Intimité avec Dieu</label>
+          <div style={{ display: "flex", gap: 8 }}>
+            {["Oui", "Non"].map(v => <button key={v} onClick={() => set("priere", v === "Oui")} style={{ flex: 1, background: (form.priere ? "Oui" : "Non") === v ? COLORS.cyan + "20" : COLORS.bg, border: `1px solid ${(form.priere ? "Oui" : "Non") === v ? COLORS.cyan : COLORS.border}`, color: (form.priere ? "Oui" : "Non") === v ? COLORS.cyan : COLORS.textDim, borderRadius: 8, padding: 10, fontSize: 13, cursor: "pointer" }}>{v === "Oui" ? T.yes : T.no}</button>)}
           </div>
-          <div><label style={lbl}>{T.bedtime}</label><input type="time" value={form.heure_coucher} onChange={e => set("heure_coucher", e.target.value)} style={inp} /></div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+          <div><label style={lbl}>{T.bedtime}</label><input type="time" value={form.heure_coucher} onChange={e => set("heure_coucher", e.target.value)} style={inp} /></div>
           <div><label style={lbl}>{T.sleep}</label><input type="number" step="0.5" placeholder="7.5" value={form.sommeil} onChange={e => set("sommeil", e.target.value)} style={inp} /></div>
+        </div>
+        <div style={{ marginBottom: 10 }}>
+          <label style={lbl}>Qualité du sommeil</label>
+          <div style={{ display: "flex", gap: 6 }}>
+            {[1,2,3,4,5].map(n => {
+              const color = n <= 2 ? COLORS.red : n === 3 ? COLORS.amber : COLORS.green;
+              const active = form.qualite_sommeil >= n;
+              return (
+                <button key={n} onClick={() => set("qualite_sommeil", form.qualite_sommeil === n ? 0 : n)} style={{
+                  flex: 1, padding: "10px 0", borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 700,
+                  background: active ? color + "25" : COLORS.bg,
+                  border: `1.5px solid ${active ? color : COLORS.border}`,
+                  color: active ? color : COLORS.textDim,
+                  transition: "all 0.15s",
+                }}>{n}</button>
+              );
+            })}
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
           <div>
             <label style={lbl}>{T.screensBeforeBed}</label>
             <div style={{ display: "flex", gap: 8 }}>
               {["Non", "Oui"].map(v => <button key={v} onClick={() => set("ecrans", v === "Oui")} style={{ flex: 1, background: (form.ecrans ? "Oui" : "Non") === v ? (v === "Oui" ? COLORS.amber : COLORS.green) + "20" : COLORS.bg, border: `1px solid ${(form.ecrans ? "Oui" : "Non") === v ? (v === "Oui" ? COLORS.amber : COLORS.green) : COLORS.border}`, color: (form.ecrans ? "Oui" : "Non") === v ? (v === "Oui" ? COLORS.amber : COLORS.green) : COLORS.textDim, borderRadius: 8, padding: 10, fontSize: 13, cursor: "pointer" }}>{v === "Oui" ? T.yes : T.no}</button>)}
             </div>
           </div>
-        </div>
-        <div>
-          <label style={lbl}>{T.diet}</label>
-          <div style={{ display: "flex", gap: 8 }}>
-            {["Saine", "Neutre", "Mauvaise"].map(a => <button key={a} onClick={() => set("alimentation", a)} style={{ flex: 1, background: form.alimentation === a ? COLORS.cyan + "20" : COLORS.bg, border: `1px solid ${form.alimentation === a ? COLORS.cyan : COLORS.border}`, color: form.alimentation === a ? COLORS.cyan : COLORS.textDim, borderRadius: 8, padding: 10, fontSize: 12, cursor: "pointer", fontWeight: form.alimentation === a ? 700 : 400 }}>{a === "Saine" ? (lang === "fr" ? "Saine" : "Healthy") : a === "Neutre" ? (lang === "fr" ? "Neutre" : "Neutral") : (lang === "fr" ? "Mauvaise" : "Bad")}</button>)}
+          <div>
+            <label style={lbl}>{T.diet}</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              {["Saine", "Neutre", "Mauvaise"].map(a => <button key={a} onClick={() => set("alimentation", a)} style={{ flex: 1, background: form.alimentation === a ? COLORS.cyan + "20" : COLORS.bg, border: `1px solid ${form.alimentation === a ? COLORS.cyan : COLORS.border}`, color: form.alimentation === a ? COLORS.cyan : COLORS.textDim, borderRadius: 8, padding: 10, fontSize: 12, cursor: "pointer", fontWeight: form.alimentation === a ? 700 : 400 }}>{a === "Saine" ? "Saine" : a === "Neutre" ? "Neutre" : "Mauvaise"}</button>)}
+            </div>
           </div>
         </div>
       </div>
@@ -5046,6 +5064,53 @@ function SessionDuJour({ sessions, setSessions }) {
         );
       })()}
 
+      {/* Aujourd'hui je me sens */}
+      {(() => {
+        const ETATS = [
+          { val: "concentré",       label: "Concentré",         emoji: "🎯" },
+          { val: "déterminé",       label: "Déterminé",         emoji: "💪" },
+          { val: "envie_apprendre", label: "Envie d'apprendre", emoji: "📚" },
+          { val: "serein",          label: "Serein",            emoji: "🧘" },
+          { val: "motivé",          label: "Motivé",            emoji: "🔥" },
+          { val: "préoccupé",       label: "Préoccupé",         emoji: "😟" },
+          { val: "pas_la_tete",     label: "Pas la tête à ça",  emoji: "😶" },
+          { val: "fatigué",         label: "Fatigué",           emoji: "😪" },
+          { val: "impatient",       label: "Impatient",         emoji: "⚡" },
+          { val: "stressé",         label: "Stressé",           emoji: "😰" },
+        ];
+        const POSITIFS = ["concentré","déterminé","envie_apprendre","serein","motivé"];
+        const selected = session.etat_esprit || [];
+        const toggle = (val) => {
+          const next = selected.includes(val) ? selected.filter(v => v !== val) : [...selected, val];
+          set("etat_esprit", next);
+        };
+        return (
+          <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px" }}>
+            <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, marginBottom: 14 }}>💭 Aujourd'hui je me sens…</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {ETATS.map(e => {
+                const isSelected = selected.includes(e.val);
+                const isPos = POSITIFS.includes(e.val);
+                const color = isPos ? G.green : G.amber;
+                return (
+                  <button key={e.val} onClick={() => toggle(e.val)} style={{
+                    padding: "8px 14px", borderRadius: 20, cursor: "pointer", fontSize: 12, fontWeight: isSelected ? 700 : 400,
+                    background: isSelected ? `${color}20` : "rgba(255,255,255,0.03)",
+                    border: `1.5px solid ${isSelected ? color : G.border}`,
+                    color: isSelected ? color : G.dim,
+                    display: "flex", alignItems: "center", gap: 6,
+                    transition: "all 0.15s",
+                  }}>
+                    <span>{e.emoji}</span>
+                    <span>{e.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Conditions du jour */}
       {(() => {
         const sport = session.sport ?? null;
@@ -5082,53 +5147,6 @@ function SessionDuJour({ sessions, setSessions }) {
           <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px" }}>
             <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, marginBottom: 18 }}>🌿 Conditions du jour</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-
-              {/* État d'esprit — en premier */}
-              {(() => {
-                const ETATS = [
-                  { val: "concentré",        label: "Concentré",         emoji: "🎯" },
-                  { val: "déterminé",        label: "Déterminé",         emoji: "💪" },
-                  { val: "envie_apprendre",  label: "Envie d'apprendre", emoji: "📚" },
-                  { val: "serein",           label: "Serein",            emoji: "🧘" },
-                  { val: "motivé",           label: "Motivé",            emoji: "🔥" },
-                  { val: "préoccupé",        label: "Préoccupé",         emoji: "😟" },
-                  { val: "pas_la_tete",      label: "Pas la tête à ça",  emoji: "😶" },
-                  { val: "fatigué",          label: "Fatigué",           emoji: "😪" },
-                  { val: "impatient",        label: "Impatient",         emoji: "⚡" },
-                  { val: "stressé",          label: "Stressé",           emoji: "😰" },
-                ];
-                const POSITIFS = ["concentré","déterminé","envie_apprendre","serein","motivé"];
-                const selected = session.etat_esprit || [];
-                const toggle = (val) => {
-                  const next = selected.includes(val) ? selected.filter(v => v !== val) : [...selected, val];
-                  set("etat_esprit", next);
-                };
-                return (
-                  <div>
-                    <div style={{ fontSize: 13, color: G.text, fontWeight: 700, marginBottom: 12 }}>💭 Aujourd'hui je me sens…</div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                      {ETATS.map(e => {
-                        const isSelected = selected.includes(e.val);
-                        const isPos = POSITIFS.includes(e.val);
-                        const color = isPos ? G.green : G.amber;
-                        return (
-                          <button key={e.val} onClick={() => toggle(e.val)} style={{
-                            padding: "7px 13px", borderRadius: 20, cursor: "pointer", fontSize: 12, fontWeight: isSelected ? 700 : 400,
-                            background: isSelected ? `${color}20` : "rgba(255,255,255,0.03)",
-                            border: `1.5px solid ${isSelected ? color : G.border}`,
-                            color: isSelected ? color : G.dim,
-                            display: "flex", alignItems: "center", gap: 6,
-                            transition: "all 0.15s",
-                          }}>
-                            <span>{e.emoji}</span>
-                            <span>{e.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })()}
 
               {/* Sport */}
               <div>
@@ -5179,25 +5197,31 @@ function SessionDuJour({ sessions, setSessions }) {
                     <div style={{ fontSize: 12, color: G.dim, marginBottom: 6 }}>📱 Écrans avant de dormir ?</div>
                     <BtnOuiNon current={ecrans} onChange={v => set("ecrans", v)} ouiColor={G.amber} nonColor={G.green} />
                   </div>
-                  {/* Qualité 1-5 segments */}
+                  {/* Qualité 1-5 boutons */}
                   <div>
                     <div style={{ fontSize: 12, color: G.dim, marginBottom: 8 }}>Qualité du sommeil</div>
-                    <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                    <div style={{ display: "flex", gap: 6 }}>
                       {[1,2,3,4,5].map(n => {
                         const color = n <= 2 ? G.red : n === 3 ? G.amber : G.green;
                         const active = qualiteSommeil >= n;
                         return (
                           <button key={n} onClick={() => set("qualite_sommeil", qualiteSommeil === n ? null : n)} style={{
-                            flex: 1, height: 28, borderRadius: 6, cursor: "pointer", border: "none",
-                            background: active ? color : "rgba(255,255,255,0.06)",
+                            flex: 1, padding: "12px 0", borderRadius: 10, cursor: "pointer",
+                            fontSize: 13, fontWeight: 700,
+                            background: active ? `${color}22` : "rgba(255,255,255,0.04)",
+                            border: `1.5px solid ${active ? color : G.border}`,
+                            color: active ? color : G.dim,
                             transition: "all 0.15s",
-                          }} />
+                            boxShadow: active ? `0 0 10px ${color}30` : "none",
+                          }}>{n}</button>
                         );
                       })}
-                      <span style={{ fontSize: 12, color: G.dim, marginLeft: 8, minWidth: 24 }}>
-                        {qualiteSommeil ? `${qualiteSommeil}/5` : ""}
-                      </span>
                     </div>
+                    {qualiteSommeil && (
+                      <div style={{ fontSize: 11, color: qualiteSommeil <= 2 ? G.red : qualiteSommeil === 3 ? G.amber : G.green, marginTop: 6, textAlign: "center", fontWeight: 600 }}>
+                        {qualiteSommeil}/5 — {qualiteSommeil <= 2 ? "Mauvais" : qualiteSommeil === 3 ? "Moyen" : qualiteSommeil === 4 ? "Bon" : "Excellent"}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
