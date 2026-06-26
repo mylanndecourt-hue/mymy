@@ -5152,25 +5152,75 @@ function SessionDuJour({ sessions, setSessions }) {
                     <div style={{ fontSize: 12, color: G.dim, marginBottom: 6 }}>📱 Écrans avant de dormir ?</div>
                     <BtnOuiNon current={ecrans} onChange={v => set("ecrans", v)} ouiColor={G.amber} nonColor={G.green} />
                   </div>
-                  {/* Qualité 1-5 étoiles */}
+                  {/* Qualité 1-5 segments */}
                   <div>
-                    <div style={{ fontSize: 12, color: G.dim, marginBottom: 6 }}>⭐ Qualité du sommeil</div>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      {[1,2,3,4,5].map(n => (
-                        <button key={n} onClick={() => set("qualite_sommeil", qualiteSommeil === n ? null : n)} style={{
-                          flex: 1, padding: "10px 4px", borderRadius: 10, cursor: "pointer",
-                          background: qualiteSommeil >= n ? "rgba(245,158,11,0.18)" : "rgba(255,255,255,0.02)",
-                          border: `1.5px solid ${qualiteSommeil >= n ? G.amber : G.border}`,
-                          fontSize: 20, transition: "all 0.15s",
-                        }}>⭐</button>
-                      ))}
+                    <div style={{ fontSize: 12, color: G.dim, marginBottom: 8 }}>Qualité du sommeil</div>
+                    <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                      {[1,2,3,4,5].map(n => {
+                        const color = n <= 2 ? G.red : n === 3 ? G.amber : G.green;
+                        const active = qualiteSommeil >= n;
+                        return (
+                          <button key={n} onClick={() => set("qualite_sommeil", qualiteSommeil === n ? null : n)} style={{
+                            flex: 1, height: 28, borderRadius: 6, cursor: "pointer", border: "none",
+                            background: active ? color : "rgba(255,255,255,0.06)",
+                            transition: "all 0.15s",
+                          }} />
+                        );
+                      })}
+                      <span style={{ fontSize: 12, color: G.dim, marginLeft: 8, minWidth: 24 }}>
+                        {qualiteSommeil ? `${qualiteSommeil}/5` : ""}
+                      </span>
                     </div>
-                    {qualiteSommeil && (
-                      <div style={{ fontSize: 11, color: G.amber, marginTop: 4, textAlign: "center" }}>{qualiteSommeil}/5</div>
-                    )}
                   </div>
                 </div>
               </div>
+
+              {/* État d'esprit */}
+              {(() => {
+                const ETATS = [
+                  { val: "concentré",        label: "Concentré",        emoji: "🎯" },
+                  { val: "déterminé",        label: "Déterminé",        emoji: "💪" },
+                  { val: "envie_apprendre",  label: "Envie d'apprendre",emoji: "📚" },
+                  { val: "serein",           label: "Serein",           emoji: "🧘" },
+                  { val: "préoccupé",        label: "Préoccupé",        emoji: "😟" },
+                  { val: "pas_la_tete",      label: "Pas la tête à ça", emoji: "😶" },
+                  { val: "fatigué",          label: "Fatigué",          emoji: "😪" },
+                  { val: "impatient",        label: "Impatient",        emoji: "⚡" },
+                  { val: "motivé",           label: "Motivé",           emoji: "🔥" },
+                  { val: "stressé",          label: "Stressé",          emoji: "😰" },
+                ];
+                const POSITIFS = ["concentré","déterminé","envie_apprendre","serein","motivé"];
+                const selected = session.etat_esprit || [];
+                const toggle = (val) => {
+                  const next = selected.includes(val) ? selected.filter(v => v !== val) : [...selected, val];
+                  set("etat_esprit", next);
+                };
+                return (
+                  <div>
+                    <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 10 }}>💭 État d'esprit du moment</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {ETATS.map(e => {
+                        const isSelected = selected.includes(e.val);
+                        const isPos = POSITIFS.includes(e.val);
+                        const color = isPos ? G.green : G.amber;
+                        return (
+                          <button key={e.val} onClick={() => toggle(e.val)} style={{
+                            padding: "7px 13px", borderRadius: 20, cursor: "pointer", fontSize: 12, fontWeight: isSelected ? 700 : 400,
+                            background: isSelected ? `${color}20` : "rgba(255,255,255,0.03)",
+                            border: `1.5px solid ${isSelected ? color : G.border}`,
+                            color: isSelected ? color : G.dim,
+                            display: "flex", alignItems: "center", gap: 6,
+                            transition: "all 0.15s",
+                          }}>
+                            <span>{e.emoji}</span>
+                            <span>{e.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
 
             </div>
           </div>
