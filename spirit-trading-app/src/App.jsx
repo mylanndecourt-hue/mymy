@@ -5066,6 +5066,96 @@ function SessionDuJour({ sessions, setSessions }) {
         </div>
       </div>
 
+      {/* Conditions du jour */}
+      {(() => {
+        const sport = session.sport ?? null;
+        const tierce = session.tierce ?? null;
+        const alimentation = session.alimentation ?? null;
+        const sommeil = session.sommeil ?? null;
+
+        const BtnOuiNon = ({ val, current, onChange }) => (
+          <div style={{ display: "flex", gap: 6 }}>
+            {["Oui", "Non"].map(opt => (
+              <button key={opt} onClick={() => onChange(current === opt ? null : opt)} style={{
+                flex: 1, padding: "8px 0", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 700,
+                background: current === opt ? (opt === "Oui" ? "rgba(0,212,255,0.15)" : "rgba(239,68,68,0.12)") : "rgba(255,255,255,0.03)",
+                border: `1.5px solid ${current === opt ? (opt === "Oui" ? G.cyan : G.red) : G.border}`,
+                color: current === opt ? (opt === "Oui" ? G.cyan : G.red) : G.dim,
+                transition: "all 0.15s",
+              }}>{opt}</button>
+            ))}
+          </div>
+        );
+
+        const ALIMENTS = [
+          { val: "Saine",    emoji: "🥗", color: G.green },
+          { val: "Neutre",   emoji: "🍱", color: G.amber },
+          { val: "Mauvaise", emoji: "🍔", color: G.red },
+        ];
+        const SOMMEILS = [
+          { val: "Mauvais", emoji: "😴", color: G.red },
+          { val: "Moyen",   emoji: "🌙", color: G.amber },
+          { val: "Bon",     emoji: "⭐", color: G.green },
+        ];
+
+        return (
+          <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px" }}>
+            <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, marginBottom: 18 }}>🌿 Conditions du jour</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+              {/* Sport */}
+              <div>
+                <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>🏃 Sport aujourd'hui ?</div>
+                <BtnOuiNon val={sport} current={sport} onChange={v => set("sport", v)} />
+              </div>
+
+              {/* Tierce personne */}
+              <div>
+                <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>👤 Présence d'une tierce personne dans le lieu de trade ?</div>
+                <BtnOuiNon val={tierce} current={tierce} onChange={v => set("tierce", v)} />
+              </div>
+
+              {/* Alimentation */}
+              <div>
+                <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>🍽️ Alimentation</div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {ALIMENTS.map(a => (
+                    <button key={a.val} onClick={() => set("alimentation", alimentation === a.val ? null : a.val)} style={{
+                      flex: 1, padding: "10px 4px", borderRadius: 12, cursor: "pointer",
+                      background: alimentation === a.val ? `${a.color}18` : "rgba(255,255,255,0.02)",
+                      border: `1.5px solid ${alimentation === a.val ? a.color : G.border}`,
+                      display: "flex", flexDirection: "column", alignItems: "center", gap: 4, transition: "all 0.15s",
+                    }}>
+                      <span style={{ fontSize: 22 }}>{a.emoji}</span>
+                      <span style={{ fontSize: 10, color: alimentation === a.val ? a.color : G.dim, fontWeight: alimentation === a.val ? 700 : 400 }}>{a.val}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sommeil */}
+              <div>
+                <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 8 }}>😴 Qualité du sommeil</div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {SOMMEILS.map(s => (
+                    <button key={s.val} onClick={() => set("sommeil", sommeil === s.val ? null : s.val)} style={{
+                      flex: 1, padding: "10px 4px", borderRadius: 12, cursor: "pointer",
+                      background: sommeil === s.val ? `${s.color}18` : "rgba(255,255,255,0.02)",
+                      border: `1.5px solid ${sommeil === s.val ? s.color : G.border}`,
+                      display: "flex", flexDirection: "column", alignItems: "center", gap: 4, transition: "all 0.15s",
+                    }}>
+                      <span style={{ fontSize: 22 }}>{s.emoji}</span>
+                      <span style={{ fontSize: 10, color: sommeil === s.val ? s.color : G.dim, fontWeight: sommeil === s.val ? 700 : 400 }}>{s.val}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Intention */}
       <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px" }}>
         <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, marginBottom: 14 }}>✍️ Intention du jour</div>
