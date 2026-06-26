@@ -6347,91 +6347,93 @@ function LandingPage({ onEnter, lang }) {
         <div style={{ position:"absolute", top:"15%", left:"50%", transform:"translateX(-50%)", width:600, height:600, background:"radial-gradient(circle,#00e5a012 0%,transparent 70%)", borderRadius:"50%", animation:"glow-pulse 4s ease-in-out infinite", pointerEvents:"none" }} />
 
         {/* ── Background charts ── */}
-        <div style={{ position:"absolute", inset:0, pointerEvents:"none", overflow:"hidden", zIndex:0 }}>
+        <div style={{ position:"absolute", top:0, left:0, right:0, bottom:0, pointerEvents:"none", zIndex:0 }}>
+
           {/* Grid lines */}
-          <svg style={{ position:"absolute", inset:0, width:"100%", height:"100%" }} opacity={0.04}>
-            {Array.from({length:10}).map((_,i) => <line key={`h${i}`} x1="0" y1={`${(i/9)*100}%`} x2="100%" y2={`${(i/9)*100}%`} stroke="#fff" strokeWidth="1"/>)}
-            {Array.from({length:14}).map((_,i) => <line key={`v${i}`} x1={`${(i/13)*100}%`} y1="0" x2={`${(i/13)*100}%`} y2="100%" stroke="#fff" strokeWidth="1"/>)}
+          <svg style={{ position:"absolute", top:0, left:0, width:"100%", height:"100%" }}>
+            {Array.from({length:10}).map((_,i) => <line key={`h${i}`} x1="0" y1={`${(i/9)*100}%`} x2="100%" y2={`${(i/9)*100}%`} stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>)}
+            {Array.from({length:14}).map((_,i) => <line key={`v${i}`} x1={`${(i/13)*100}%`} y1="0" x2={`${(i/13)*100}%`} y2="100%" stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>)}
           </svg>
 
           {/* P&L curve — LEFT */}
-          <div className="bg-d1" style={{ position:"absolute", left:"1%", top:"18%", width:380, opacity:0.22 }}>
-            <div style={{ fontSize:9, color:"#00e5a0", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:6, paddingLeft:4 }}>📈 Courbe P&L cumulé</div>
-            <svg viewBox="0 0 380 110" style={{ width:"100%", height:110 }} preserveAspectRatio="none">
+          <div className="bg-d1" style={{ position:"absolute", left:"2%", top:"20%", width:360 }}>
+            <div style={{ fontSize:9, color:"#00e5a060", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:6 }}>📈 Courbe P&L cumulé</div>
+            <svg viewBox="0 0 360 100" width="360" height="100" preserveAspectRatio="none" style={{ display:"block" }}>
               <defs>
                 <linearGradient id="plg" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#00e5a0" stopOpacity="0.35"/>
+                  <stop offset="0%" stopColor="#00e5a0" stopOpacity="0.25"/>
                   <stop offset="100%" stopColor="#00e5a0" stopOpacity="0"/>
                 </linearGradient>
               </defs>
-              <path d="M0,100 C30,95 50,85 80,72 C110,60 120,68 150,52 C180,36 200,42 230,28 C260,14 280,20 310,10 C340,0 360,6 380,4 L380,110 L0,110 Z" fill="url(#plg)"/>
-              <path d="M0,100 C30,95 50,85 80,72 C110,60 120,68 150,52 C180,36 200,42 230,28 C260,14 280,20 310,10 C340,0 360,6 380,4" fill="none" stroke="#00e5a0" strokeWidth="2.5" strokeLinecap="round"/>
+              <path d="M0,95 C30,90 50,78 80,65 C110,52 120,62 150,46 C180,30 200,38 230,22 C260,8 280,15 310,6 C340,0 355,3 360,2 L360,100 L0,100 Z" fill="url(#plg)" opacity="0.5"/>
+              <path d="M0,95 C30,90 50,78 80,65 C110,52 120,62 150,46 C180,30 200,38 230,22 C260,8 280,15 310,6 C340,0 355,3 360,2" fill="none" stroke="#00e5a0" strokeWidth="2" strokeLinecap="round" opacity="0.45"/>
             </svg>
           </div>
 
-          {/* Stat cards — TOP RIGHT */}
-          <div className="bg-d2" style={{ position:"absolute", right:"2%", top:"12%", display:"flex", flexDirection:"column", gap:10, opacity:0.2 }}>
+          {/* Stat cards — RIGHT */}
+          <div className="bg-d2" style={{ position:"absolute", right:"3%", top:"15%", display:"flex", flexDirection:"column", gap:8 }}>
             {[
               { l:"WIN RATE", v:"69%", c:"#00e5a0", s:"347W / 153L" },
               { l:"P&L NET", v:"+12 840$", c:"#00e5a0", s:"500 trades" },
               { l:"R/R MOYEN", v:"1.26", c:"#818cf8", s:"respect 81%" },
             ].map(({ l, v, c, s }) => (
-              <div key={l} style={{ background:"rgba(10,10,20,0.9)", border:`1px solid ${c}30`, borderRadius:12, padding:"12px 16px", minWidth:140 }}>
-                <div style={{ fontSize:8, color:"#4b5e7a", textTransform:"uppercase", letterSpacing:1.5, marginBottom:4 }}>{l}</div>
-                <div style={{ fontSize:20, fontWeight:900, color:c, letterSpacing:-1 }}>{v}</div>
-                <div style={{ fontSize:9, color:"#4b5e7a", marginTop:2 }}>{s}</div>
+              <div key={l} style={{ background:"rgba(10,10,20,0.7)", border:`1px solid ${c}40`, borderRadius:12, padding:"10px 14px", minWidth:130, opacity:0.4 }}>
+                <div style={{ fontSize:8, color:"#4b5e7a", textTransform:"uppercase", letterSpacing:1.5, marginBottom:3 }}>{l}</div>
+                <div style={{ fontSize:18, fontWeight:900, color:c, letterSpacing:-1 }}>{v}</div>
+                <div style={{ fontSize:9, color:"#4b5e7a", marginTop:1 }}>{s}</div>
               </div>
             ))}
           </div>
 
-          {/* Bar chart — right */}
-          <div className="bg-d3" style={{ position:"absolute", right:"2%", bottom:"20%", width:260, opacity:0.17 }}>
-            <div style={{ fontSize:9, color:"#818cf8", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>P&L par setup</div>
-            <svg viewBox="0 0 260 80" style={{ width:"100%", height:80 }}>
+          {/* Bar chart — right middle */}
+          <div className="bg-d3" style={{ position:"absolute", right:"3%", bottom:"22%", width:240, opacity:0.35 }}>
+            <div style={{ fontSize:9, color:"#818cf870", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:6 }}>P&L par setup</div>
+            <svg viewBox="0 0 240 75" width="240" height="75" style={{ display:"block" }}>
               {[55,82,38,91,63,74,48,95,70,44,88,60].map((v,i) => {
-                const h = (v/100)*72;
+                const h = (v/100)*65;
                 const c = v>70?"#00e5a0":v>50?"#818cf8":"#ef4444";
-                return <rect key={i} x={i*22+1} y={80-h} width={18} height={h} rx={3} fill={c} opacity={0.75}/>;
+                return <rect key={i} x={i*20+1} y={75-h} width={16} height={h} rx={3} fill={c} opacity={0.6}/>;
               })}
             </svg>
           </div>
 
           {/* Calendar heatmap — BOTTOM LEFT */}
-          <div className="bg-d1" style={{ position:"absolute", left:"2%", bottom:"12%", width:230, opacity:0.18 }}>
-            <div style={{ fontSize:9, color:"#818cf8", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>Calendrier trading</div>
-            <svg viewBox="0 0 230 70" style={{ width:"100%", height:70 }}>
-              {Array.from({length:35}).map((_,i) => {
-                const r=Math.random(), col=i%7, row=Math.floor(i/7);
-                const c=r>0.65?"#00e5a0":r>0.4?"#818cf8":r>0.2?"#1e2d45":"#0d1520";
-                return <rect key={i} x={col*33} y={row*14} width={30} height={11} rx={3} fill={c} opacity={0.85}/>;
+          <div className="bg-d1" style={{ position:"absolute", left:"3%", bottom:"15%", width:215, opacity:0.35 }}>
+            <div style={{ fontSize:9, color:"#818cf870", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:6 }}>Calendrier trading</div>
+            <svg viewBox="0 0 210 65" width="210" height="65" style={{ display:"block" }}>
+              {[1,1,0,1,1,0,1, 0,1,1,0,1,0,0, 1,0,1,1,1,0,1, 0,1,0,0,1,1,0, 1,1,0,1,0,1,1].map((v,i) => {
+                const col=i%7, row=Math.floor(i/7);
+                const colors=["#0d1520","#1e2d45","#818cf8","#00e5a0"];
+                const ci = v===0 ? (i%3===0?1:0) : (i%5===0?3:2);
+                return <rect key={i} x={col*30} y={row*13} width={27} height={10} rx={2} fill={colors[ci]} opacity={0.7}/>;
               })}
             </svg>
           </div>
 
-          {/* Donut fiscal — BOTTOM RIGHT corner */}
-          <div className="bg-d2" style={{ position:"absolute", right:"20%", bottom:"8%", width:100, opacity:0.2 }}>
-            <div style={{ fontSize:9, color:"#f59e0b", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:6 }}>Structure fiscale</div>
-            <svg viewBox="0 0 100 100" style={{ width:100, height:100 }}>
-              <circle cx="50" cy="50" r="36" fill="none" stroke="#1e2d45" strokeWidth="14"/>
-              <circle cx="50" cy="50" r="36" fill="none" stroke="#00e5a0" strokeWidth="14" strokeDasharray="143 83" strokeDashoffset="25" strokeLinecap="round"/>
-              <circle cx="50" cy="50" r="36" fill="none" stroke="#818cf8" strokeWidth="14" strokeDasharray="57 169" strokeDashoffset="-118" strokeLinecap="round"/>
-              <circle cx="50" cy="50" r="36" fill="none" stroke="#f59e0b" strokeWidth="14" strokeDasharray="26 200" strokeDashoffset="-175" strokeLinecap="round"/>
-              <text x="50" y="55" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="800">69%</text>
+          {/* Donut fiscal — bottom right */}
+          <div className="bg-d2" style={{ position:"absolute", right:"18%", bottom:"10%", opacity:0.35 }}>
+            <div style={{ fontSize:9, color:"#f59e0b70", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:4 }}>Structure fiscale</div>
+            <svg viewBox="0 0 100 100" width="90" height="90" style={{ display:"block" }}>
+              <circle cx="50" cy="50" r="36" fill="none" stroke="#1e2d45" strokeWidth="13"/>
+              <circle cx="50" cy="50" r="36" fill="none" stroke="#00e5a0" strokeWidth="13" strokeDasharray="143 83" strokeDashoffset="25" strokeLinecap="round"/>
+              <circle cx="50" cy="50" r="36" fill="none" stroke="#818cf8" strokeWidth="13" strokeDasharray="57 169" strokeDashoffset="-118" strokeLinecap="round"/>
+              <circle cx="50" cy="50" r="36" fill="none" stroke="#f59e0b" strokeWidth="13" strokeDasharray="26 200" strokeDashoffset="-175" strokeLinecap="round"/>
+              <text x="50" y="55" textAnchor="middle" fill="#e2e8f080" fontSize="11" fontWeight="800">69%</text>
             </svg>
           </div>
 
-          {/* Second equity curve — center bottom */}
-          <div className="bg-d3" style={{ position:"absolute", left:"28%", bottom:"6%", width:280, height:80, opacity:0.12 }}>
-            <div style={{ fontSize:9, color:"#00d4ff", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:4 }}>Compte Apex #2</div>
-            <svg viewBox="0 0 280 70" style={{ width:"100%", height:70 }} preserveAspectRatio="none">
+          {/* Second equity curve — bottom center */}
+          <div className="bg-d3" style={{ position:"absolute", left:"28%", bottom:"8%", width:260 }}>
+            <div style={{ fontSize:9, color:"#00d4ff60", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:4 }}>Compte Apex #2</div>
+            <svg viewBox="0 0 260 65" width="260" height="65" preserveAspectRatio="none" style={{ display:"block" }}>
               <defs>
                 <linearGradient id="plg2" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#00d4ff" stopOpacity="0.3"/>
+                  <stop offset="0%" stopColor="#00d4ff" stopOpacity="0.2"/>
                   <stop offset="100%" stopColor="#00d4ff" stopOpacity="0"/>
                 </linearGradient>
               </defs>
-              <path d="M0,60 C40,58 60,40 100,32 C140,24 160,35 200,18 C240,4 260,12 280,8 L280,70 L0,70 Z" fill="url(#plg2)"/>
-              <path d="M0,60 C40,58 60,40 100,32 C140,24 160,35 200,18 C240,4 260,12 280,8" fill="none" stroke="#00d4ff" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M0,55 C40,53 60,36 100,28 C140,20 160,30 200,15 C240,2 255,8 260,5 L260,65 L0,65 Z" fill="url(#plg2)" opacity="0.5"/>
+              <path d="M0,55 C40,53 60,36 100,28 C140,20 160,30 200,15 C240,2 255,8 260,5" fill="none" stroke="#00d4ff" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
             </svg>
           </div>
         </div>
