@@ -5046,26 +5046,6 @@ function SessionDuJour({ sessions, setSessions }) {
         );
       })()}
 
-      {/* Humeur */}
-      <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px" }}>
-        <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, marginBottom: 16 }}>🎯 État mental au démarrage</div>
-        <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
-          {HUMEURS.map(h => (
-            <button key={h.val} onClick={() => set("humeur", humeur === h.val ? null : h.val)} style={{
-              flex: 1, background: humeur === h.val ? `${G.green}18` : "rgba(255,255,255,0.02)",
-              border: `1.5px solid ${humeur === h.val ? G.green : G.border}`,
-              borderRadius: 12, padding: "12px 4px", cursor: "pointer",
-              display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-              transition: "all 0.15s",
-              boxShadow: humeur === h.val ? `0 0 16px ${G.green}25` : "none",
-            }}>
-              <span style={{ fontSize: 24 }}>{h.emoji}</span>
-              <span style={{ fontSize: 9, color: humeur === h.val ? G.green : G.dim, fontWeight: humeur === h.val ? 700 : 400, letterSpacing: 0.5 }}>{h.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Conditions du jour */}
       {(() => {
         const sport = session.sport ?? null;
@@ -5102,6 +5082,53 @@ function SessionDuJour({ sessions, setSessions }) {
           <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px" }}>
             <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, marginBottom: 18 }}>🌿 Conditions du jour</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+
+              {/* État d'esprit — en premier */}
+              {(() => {
+                const ETATS = [
+                  { val: "concentré",        label: "Concentré",         emoji: "🎯" },
+                  { val: "déterminé",        label: "Déterminé",         emoji: "💪" },
+                  { val: "envie_apprendre",  label: "Envie d'apprendre", emoji: "📚" },
+                  { val: "serein",           label: "Serein",            emoji: "🧘" },
+                  { val: "motivé",           label: "Motivé",            emoji: "🔥" },
+                  { val: "préoccupé",        label: "Préoccupé",         emoji: "😟" },
+                  { val: "pas_la_tete",      label: "Pas la tête à ça",  emoji: "😶" },
+                  { val: "fatigué",          label: "Fatigué",           emoji: "😪" },
+                  { val: "impatient",        label: "Impatient",         emoji: "⚡" },
+                  { val: "stressé",          label: "Stressé",           emoji: "😰" },
+                ];
+                const POSITIFS = ["concentré","déterminé","envie_apprendre","serein","motivé"];
+                const selected = session.etat_esprit || [];
+                const toggle = (val) => {
+                  const next = selected.includes(val) ? selected.filter(v => v !== val) : [...selected, val];
+                  set("etat_esprit", next);
+                };
+                return (
+                  <div>
+                    <div style={{ fontSize: 13, color: G.text, fontWeight: 700, marginBottom: 12 }}>💭 Aujourd'hui je me sens…</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {ETATS.map(e => {
+                        const isSelected = selected.includes(e.val);
+                        const isPos = POSITIFS.includes(e.val);
+                        const color = isPos ? G.green : G.amber;
+                        return (
+                          <button key={e.val} onClick={() => toggle(e.val)} style={{
+                            padding: "7px 13px", borderRadius: 20, cursor: "pointer", fontSize: 12, fontWeight: isSelected ? 700 : 400,
+                            background: isSelected ? `${color}20` : "rgba(255,255,255,0.03)",
+                            border: `1.5px solid ${isSelected ? color : G.border}`,
+                            color: isSelected ? color : G.dim,
+                            display: "flex", alignItems: "center", gap: 6,
+                            transition: "all 0.15s",
+                          }}>
+                            <span>{e.emoji}</span>
+                            <span>{e.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Sport */}
               <div>
@@ -5175,52 +5202,6 @@ function SessionDuJour({ sessions, setSessions }) {
                 </div>
               </div>
 
-              {/* État d'esprit */}
-              {(() => {
-                const ETATS = [
-                  { val: "concentré",        label: "Concentré",        emoji: "🎯" },
-                  { val: "déterminé",        label: "Déterminé",        emoji: "💪" },
-                  { val: "envie_apprendre",  label: "Envie d'apprendre",emoji: "📚" },
-                  { val: "serein",           label: "Serein",           emoji: "🧘" },
-                  { val: "préoccupé",        label: "Préoccupé",        emoji: "😟" },
-                  { val: "pas_la_tete",      label: "Pas la tête à ça", emoji: "😶" },
-                  { val: "fatigué",          label: "Fatigué",          emoji: "😪" },
-                  { val: "impatient",        label: "Impatient",        emoji: "⚡" },
-                  { val: "motivé",           label: "Motivé",           emoji: "🔥" },
-                  { val: "stressé",          label: "Stressé",          emoji: "😰" },
-                ];
-                const POSITIFS = ["concentré","déterminé","envie_apprendre","serein","motivé"];
-                const selected = session.etat_esprit || [];
-                const toggle = (val) => {
-                  const next = selected.includes(val) ? selected.filter(v => v !== val) : [...selected, val];
-                  set("etat_esprit", next);
-                };
-                return (
-                  <div>
-                    <div style={{ fontSize: 12, color: G.text, fontWeight: 600, marginBottom: 10 }}>💭 État d'esprit du moment</div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                      {ETATS.map(e => {
-                        const isSelected = selected.includes(e.val);
-                        const isPos = POSITIFS.includes(e.val);
-                        const color = isPos ? G.green : G.amber;
-                        return (
-                          <button key={e.val} onClick={() => toggle(e.val)} style={{
-                            padding: "7px 13px", borderRadius: 20, cursor: "pointer", fontSize: 12, fontWeight: isSelected ? 700 : 400,
-                            background: isSelected ? `${color}20` : "rgba(255,255,255,0.03)",
-                            border: `1.5px solid ${isSelected ? color : G.border}`,
-                            color: isSelected ? color : G.dim,
-                            display: "flex", alignItems: "center", gap: 6,
-                            transition: "all 0.15s",
-                          }}>
-                            <span>{e.emoji}</span>
-                            <span>{e.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })()}
 
             </div>
           </div>
