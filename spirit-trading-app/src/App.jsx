@@ -1883,7 +1883,7 @@ function CalendrierTrading({ trades }) {
     if (cached) { setEcoByDate(JSON.parse(cached)); return; }
     (async () => {
       try {
-        const r = await fetch("/api/calendar");
+        const r = await authFetch("/api/calendar");
         if (!r.ok) return;
         const data = await r.json();
         if (!Array.isArray(data)) return;
@@ -3178,7 +3178,7 @@ function AnalysePage({ trades, comptes, onDetail, lang = "fr" }) {
       actifStats: actifStats.map(a => ({ actif: a.label, trades: a.count, winRate: a.wr, pnl: Math.round(a.pnl) })),
     };
     try {
-      const res = await fetch("/api/ai-analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ stats, apiKey: aiKey }) });
+      const res = await authFetch("/api/ai-analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ stats, apiKey: aiKey }) });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setAiResult(data.text);
@@ -4969,7 +4969,7 @@ function SessionDuJour({ sessions, setSessions }) {
     if (cached) { setAnnonces(JSON.parse(cached)); return; }
     (async () => {
       try {
-        const r = await fetch("/api/calendar");
+        const r = await authFetch("/api/calendar");
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const data = await r.json();
         if (data && data.error) throw new Error(data.error);
@@ -6598,6 +6598,18 @@ function LandingPage({ onEnter, lang }) {
 }
 
 export default function App({ user, cloudData, onDataChange, saveStatus, onLogout }) {
+  // Helper fetch authentifié — envoie le token Firebase dans Authorization
+  const authFetch = async (url, options = {}) => {
+    const headers = { ...(options.headers || {}) };
+    if (user?.getIdToken) {
+      try {
+        const token = await user.getIdToken();
+        headers["Authorization"] = `Bearer ${token}`;
+      } catch {}
+    }
+    return fetch(url, { ...options, headers });
+  };
+
   const [lang, setLang] = useState(() => localStorage.getItem("spirit_lang") || "fr");
   const T = TR[lang];
   const fr = lang === "fr";

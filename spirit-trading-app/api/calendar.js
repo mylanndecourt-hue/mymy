@@ -1,3 +1,5 @@
+import { verifyFirebaseToken } from "./_auth.js";
+
 const ALLOWED_ORIGINS = [
   "https://www.spirit-trading.com",
   "https://spirit-trading.com",
@@ -63,6 +65,12 @@ export default async function handler(req, res) {
   const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || "unknown";
   if (isRateLimited(ip)) {
     return res.status(429).json({ error: "Trop de requêtes, réessaie dans une minute." });
+  }
+
+  // Vérification Firebase token (si les variables sont configurées)
+  if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_API_KEY) {
+    const user = await verifyFirebaseToken(req.headers.authorization);
+    if (!user) return res.status(401).json({ error: "Non authentifié" });
   }
 
   const today = todayParis();
