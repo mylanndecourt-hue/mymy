@@ -5777,9 +5777,33 @@ function SessionDuJour({ sessions, setSessions }) {
   );
 }
 
-function Tarifs({ lang = "fr" }) {
+function Tarifs({ lang = "fr", user }) {
   const fr = lang === "fr";
   const G = { purple: "#818cf8", green: "#00e5a0", amber: "#f59e0b", red: "#ef4444", bg: "#06060f", card: "#0a0a14", border: "#1a1a2e", text: "#e5e7eb", dim: "#6b7280" };
+  const [loading, setLoading] = useState(null);
+  const [error, setError] = useState("");
+
+  const handleSubscribe = async (planId) => {
+    setError("");
+    setLoading(planId);
+    try {
+      const token = user?.getIdToken ? await user.getIdToken() : null;
+      const res = await fetch("/api/create-checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ plan: planId }),
+      });
+      const data = await res.json();
+      if (data.error) { setError(data.error); setLoading(null); return; }
+      window.location.href = data.url;
+    } catch (e) {
+      setError("Erreur réseau, réessaie.");
+      setLoading(null);
+    }
+  };
 
   const plans = [
     {
@@ -5896,23 +5920,35 @@ function Tarifs({ lang = "fr" }) {
             </div>
 
             {/* CTA */}
-            <button style={{
-              background: p.id === "annual" ? p.color : "transparent",
-              border: `1.5px solid ${p.color}`,
-              color: p.id === "annual" ? "#06060f" : p.color,
-              borderRadius: 12, padding: "13px 0",
-              fontSize: 12, fontWeight: 800, cursor: "pointer",
-              width: "100%", transition: "all 0.15s",
-              boxShadow: p.id === "annual" ? `0 0 24px ${p.color}40` : "none",
-            }}
-              onMouseEnter={e => { e.currentTarget.style.background = p.color; e.currentTarget.style.color = "#06060f"; }}
-              onMouseLeave={e => { if (p.id !== "annual") { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = p.color; } }}
+            <button
+              onClick={() => handleSubscribe(p.id)}
+              disabled={!!loading}
+              style={{
+                background: p.id === "annual" ? p.color : "transparent",
+                border: `1.5px solid ${p.color}`,
+                color: p.id === "annual" ? "#06060f" : p.color,
+                borderRadius: 12, padding: "13px 0",
+                fontSize: 12, fontWeight: 800,
+                cursor: loading ? "wait" : "pointer",
+                width: "100%", transition: "all 0.15s",
+                opacity: loading && loading !== p.id ? 0.5 : 1,
+                boxShadow: p.id === "annual" ? `0 0 24px ${p.color}40` : "none",
+              }}
+              onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = p.color; e.currentTarget.style.color = "#06060f"; } }}
+              onMouseLeave={e => { if (p.id !== "annual" && !loading) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = p.color; } }}
             >
-              {p.cta}
+              {loading === p.id ? "Redirection…" : p.cta}
             </button>
           </div>
         ))}
       </div>
+
+      {/* Error */}
+      {error && (
+        <div style={{ textAlign: "center", marginTop: 16, fontSize: 12, color: G.red, background: `${G.red}15`, border: `1px solid ${G.red}40`, borderRadius: 8, padding: "10px 16px" }}>
+          ⚠️ {error}
+        </div>
+      )}
 
       {/* Footer note */}
       <div style={{ textAlign: "center", marginTop: 36, fontSize: 12, color: G.dim }}>
@@ -7088,7 +7124,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
               : tab === "regles"     ? <Regles comptes={comptes} preselectedFirm={reglesPreselect} reglesPerso={reglesPerso} setReglesPerso={setReglesPerso} lang={lang} />
               : tab === "objectifs"  ? <Objectifs trades={trades} comptes={comptes} objectifs={objectifs} setObjectifs={setObjectifs} lang={lang} />
               : tab === "chemin"     ? <LeChemin chapitres={chapitres} setChapitres={setChapitres} lang={lang} />
-              : tab === "tarifs"     ? <Tarifs lang={lang} />
+              : tab === "tarifs"     ? <Tarifs lang={lang} user={user} />
               : <ROI comptes={comptes} setComptes={setComptes} trades={trades} onEditCompte={handleEditCompte} mentorQ={mentorQ} setMentorQ={setMentorQ} fraisDivers={fraisDivers} setFraisDivers={setFraisDivers} fiscal={fiscal} setFiscal={setFiscal} deviseRecue={deviseRecue} setDeviseRecue={setDeviseRecue} deviseRef={deviseRef} setDeviseRef={setDeviseRef} tauxPerso={tauxPerso} setTauxPerso={setTauxPerso} lang={lang} />
             }
           </div>
