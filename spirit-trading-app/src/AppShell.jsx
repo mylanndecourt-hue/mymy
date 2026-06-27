@@ -25,12 +25,19 @@ export default function AppShell() {
 
   // Écoute l'état d'authentification + gère le retour de redirection Google
   useEffect(() => {
+    const ALLOWED_EMAIL = "mylanndecourt@gmail.com";
     getRedirectResult(auth)
-      .then(result => { if (result?.user) setUser(result.user); })
+      .then(result => {
+        if (result?.user) {
+          if (result.user.email === ALLOWED_EMAIL) setUser(result.user);
+          else signOut(auth);
+        }
+      })
       .catch(err => {
         console.error("Redirect result error:", err.code, err.message);
       });
     const unsub = onAuthStateChanged(auth, (u) => {
+      if (u && u.email !== ALLOWED_EMAIL) { signOut(auth); return; }
       setUser(u);
       setAuthLoading(false);
     });
