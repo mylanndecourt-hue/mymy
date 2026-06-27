@@ -5798,7 +5798,8 @@ function Tarifs({ lang = "fr", user }) {
       });
       const data = await res.json();
       if (data.error) { setError(data.error); setLoading(null); return; }
-      window.location.href = data.url;
+      window.open(data.url, "_blank", "noopener,noreferrer");
+      setLoading(null);
     } catch (e) {
       setError("Erreur réseau, réessaie.");
       setLoading(null);
