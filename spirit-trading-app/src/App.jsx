@@ -6931,13 +6931,10 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
 
   const DEFAULT_TABS = [
     { id: "dashboard", icon: "📊", labelKey: "dashboard" },
-    { id: "session", icon: "🌅", labelKey: "session" },
-    { id: "journal", icon: "📋", labelKey: "journal" },
-    { id: "analyse", icon: "🔬", labelKey: "analyse" },
-    { id: "chemin", icon: "🪞", labelKey: "chemin" },
-    { id: "objectifs", icon: "🎯", labelKey: "objectifs" },
-    { id: "roi", icon: "🏛️", labelKey: "roi" },
-    { id: "regles", icon: "📜", labelKey: "regles" },
+    { id: "session",   icon: "🌅", labelKey: "session" },
+    { id: "journal",   icon: "📋", labelKey: "journal" },
+    { id: "analyse",   icon: "🔬", labelKey: "analyse" },
+    { id: "roi",       icon: "🏛️", labelKey: "roi" },
   ];
   const [tabOrder, setTabOrder] = useState(() => {
     try {
@@ -6968,14 +6965,11 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
 
 
   const MODULES = [
-    { id: "dashboard",  label: fr ? "Dashboard"  : "Dashboard"  },
-    { id: "journal",    label: fr ? "Journal"    : "Journal"    },
-    { id: "analyse",    label: fr ? "Analyse"    : "Analysis"   },
-    { id: "session",    label: fr ? "Session"    : "Session"    },
-    { id: "objectifs",  label: fr ? "Objectifs"  : "Goals"      },
-    { id: "roi",        label: fr ? "Structure & Fiscalité" : "Structure & Tax" },
-    { id: "regles",     label: fr ? "Règles"     : "Rules"      },
-    { id: "tarifs",     label: fr ? "Tarifs"     : "Pricing"    },
+    { id: "dashboard", label: fr ? "Dashboard"             : "Dashboard"        },
+    { id: "session",   label: fr ? "Session"               : "Session"          },
+    { id: "journal",   label: fr ? "Journal"               : "Journal"          },
+    { id: "analyse",   label: fr ? "Analyse"               : "Analysis"         },
+    { id: "roi",       label: fr ? "Structure & Fiscalité" : "Structure & Tax"  },
   ];
 
   const isLanding = tab === "landing";
@@ -7027,11 +7021,42 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
           <button onClick={toggleLang} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 10px", fontSize: 12, cursor: "pointer", color: "#888", fontFamily: "inherit" }}>
             {lang === "fr" ? "🇫🇷 FR" : "🇬🇧 EN"}
           </button>
-          {user && (
-            <button onClick={onLogout} title={user.email} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", color: "#666", fontSize: 12, fontFamily: "inherit" }}>
-              {user.photoURL ? <img src={user.photoURL} alt="" style={{ width: 18, height: 18, borderRadius: "50%", verticalAlign: "middle" }} /> : "👤"}
-            </button>
-          )}
+          {user && (() => {
+            const [showProfileMenu, setShowProfileMenu] = useState(false);
+            return (
+              <div style={{ position: "relative" }}>
+                <button onClick={() => setShowProfileMenu(v => !v)} title={user.email}
+                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "5px 8px", cursor: "pointer", color: "#666", fontSize: 12, fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6 }}>
+                  {user.photoURL ? <img src={user.photoURL} alt="" style={{ width: 22, height: 22, borderRadius: "50%" }} /> : <span style={{ fontSize: 18 }}>👤</span>}
+                  <span style={{ fontSize: 10, color: "#555" }}>▾</span>
+                </button>
+                {showProfileMenu && (
+                  <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#0e0e1a", border: "1px solid #1a1a2e", borderRadius: 12, padding: 8, minWidth: 200, zIndex: 500, boxShadow: "0 16px 48px rgba(0,0,0,0.6)" }}
+                    onMouseLeave={() => setShowProfileMenu(false)}>
+                    <div style={{ fontSize: 11, color: "#555", padding: "4px 12px 8px", borderBottom: "1px solid #1a1a2e", marginBottom: 4 }}>{user.email}</div>
+                    {[
+                      { icon: "💳", label: fr ? "Mon abonnement" : "My subscription", action: () => { setTab("tarifs"); setShowProfileMenu(false); } },
+                      { icon: "📜", label: fr ? "Mes règles" : "My rules", action: () => { setTab("regles"); setShowProfileMenu(false); } },
+                      { icon: "🎯", label: fr ? "Mes objectifs" : "My goals", action: () => { setTab("objectifs"); setShowProfileMenu(false); } },
+                    ].map(item => (
+                      <button key={item.label} onClick={item.action} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", background: "none", border: "none", color: "#e5e7eb", fontSize: 13, padding: "8px 12px", cursor: "pointer", borderRadius: 8, textAlign: "left", fontFamily: "inherit" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#1a1a2e"}
+                        onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                        {item.icon} {item.label}
+                      </button>
+                    ))}
+                    <div style={{ borderTop: "1px solid #1a1a2e", marginTop: 4, paddingTop: 4 }}>
+                      <button onClick={() => { setShowProfileMenu(false); onLogout(); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", background: "none", border: "none", color: "#ef4444", fontSize: 13, padding: "8px 12px", cursor: "pointer", borderRadius: 8, textAlign: "left", fontFamily: "inherit" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#1a1a2e"}
+                        onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                        🚪 {fr ? "Déconnexion" : "Logout"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Menu données */}
           {showExportMenu && (
