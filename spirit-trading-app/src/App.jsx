@@ -6662,131 +6662,207 @@ function LandingPage({ onEnter, lang }) {
   );
 }
 
-function SessionsJournal({ trades, onDetail, onNew, lang = "fr" }) {
+function SessionCalendar({ trades, sessions = {}, onDetail, onNew, onNewSession, lang = "fr" }) {
   const fr = lang === "fr";
-  const G = { green: "#00e5a0", red: "#ef4444", purple: "#818cf8", amber: "#f59e0b", bg: "#06060f", card: "#0a0a14", border: "#1a1a2e", text: "#e5e7eb", dim: "#6b7280" };
+  const G = { green: "#00e5a0", red: "#ef4444", purple: "#818cf8", amber: "#f59e0b", card: "#0a0a14", border: "#1a1a2e", text: "#e5e7eb", dim: "#6b7280", bg: "#06060f" };
 
-  // Grouper par date, trié du plus récent
+  const today = new Date().toISOString().slice(0, 10);
+  const [viewDate, setViewDate] = useState(() => {
+    // Centrer sur le mois ayant le plus de trades, sinon mois actuel
+    const allDates = trades.map(t => t.date).filter(Boolean);
+    if (allDates.length === 0) return new Date();
+    const latest = allDates.sort().pop();
+    return new Date(latest + "T12:00:00");
+  });
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+
+  const monthLabel = new Date(year, month, 1).toLocaleDateString(fr ? "fr-FR" : "en-US", { month: "long", year: "numeric" });
+
+  const prevMonth = () => setViewDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1));
+  const nextMonth = () => setViewDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1));
+
+  // Grouper trades par date
   const byDate = {};
   trades.forEach(t => {
     if (!t.date) return;
     if (!byDate[t.date]) byDate[t.date] = [];
     byDate[t.date].push(t);
   });
-  const dates = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
 
-  const [openDates, setOpenDates] = useState(() => {
-    // Ouvrir automatiquement le jour le plus récent
-    const sorted = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
-    return new Set(sorted.slice(0, 1));
-  });
+  // Générer les jours du mois (grille lun→dim)
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  // Décalage lundi=0
+  let startDow = firstDay.getDay() - 1;
+  if (startDow < 0) startDow = 6;
 
-  const toggle = (date) => setOpenDates(prev => {
-    const next = new Set(prev);
-    next.has(date) ? next.delete(date) : next.add(date);
-    return next;
-  });
+  const cells = [];
+  for (let i = 0; i < startDow; i++) cells.push(null);
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const iso = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    cells.push(iso);
+  }
+  // Compléter à multiple de 7
+  while (cells.length % 7 !== 0) cells.push(null);
 
-  const fmtDate = (d) => {
-    const dt = new Date(d + "T12:00:00");
-    return dt.toLocaleDateString(fr ? "fr-FR" : "en-US", { weekday: "long", day: "numeric", month: "long" });
+  const EMOTION_EMOJI = { "Confiant": "😊", "Serein": "😌", "Stressé": "😰", "Anxieux": "😟", "Frustré": "😤", "Euphorique": "🤩", "Impatient": "⚡", "En FOMO": "😱", "Neutre": "😐" };
+  const FOOD_EMOJI = { "Saine": "🥗", "Neutre": "🍽️", "Mauvaise": "🍔" };
+
+  const getDayData = (iso) => {
+    const dayTrades = (byDate[iso] || []).sort((a, b) => (a.heure || "").localeCompare(b.heure || ""));
+    const sess = sessions[iso] || {};
+    const pnl = dayTrades.reduce((s, t) => s + (t.pnl || 0), 0);
+    const wins = dayTrades.filter(t => (t.pnl || 0) > 0).length;
+    // Émotion : depuis session, sinon depuis trades
+    const emotions = (sess.etat_esprit || []);
+    const emotionFromTrade = dayTrades[0]?.emotion_avant ? dayTrades[0].emotion_avant.split(",")[0].trim() : null;
+    const mainEmotion = emotions[0] || emotionFromTrade;
+    // Nourriture : depuis session sinon trade
+    const food = sess.alimentation || dayTrades[0]?.alimentation;
+    const sport = !!sess.sport;
+    const sommeil = sess.qualite_sommeil || dayTrades[0]?.qualite_sommeil;
+    const hasSession = Object.keys(sess).length > 0;
+    return { dayTrades, pnl, wins, mainEmotion, food, sport, sommeil, hasSession, hasTrades: dayTrades.length > 0 };
   };
 
-  const isToday = (d) => d === new Date().toISOString().slice(0, 10);
-
-  if (dates.length === 0) {
-    return (
-      <div style={{ textAlign: "center", padding: "80px 20px", color: G.dim }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
-        <div style={{ fontSize: 16, fontWeight: 700, color: G.text, marginBottom: 8 }}>{fr ? "Aucun trade enregistré" : "No trades yet"}</div>
-        <div style={{ fontSize: 13, marginBottom: 32 }}>{fr ? "Lance une nouvelle session pour commencer à tracker." : "Start a new session to begin tracking."}</div>
-        <button onClick={onNew} style={{ background: G.green, color: "#06060f", border: "none", borderRadius: 10, padding: "12px 28px", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>
-          🌅 {fr ? "Nouvelle session" : "New session"}
-        </button>
-      </div>
-    );
-  }
+  const sel = selectedDate ? getDayData(selectedDate) : null;
+  const dayHeaders = fr ? ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"] : ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {dates.map(date => {
-        const dayTrades = byDate[date].slice().sort((a, b) => (a.heure || "").localeCompare(b.heure || ""));
-        const pnl = dayTrades.reduce((s, t) => s + (t.pnl || 0), 0);
-        const wins = dayTrades.filter(t => (t.pnl || 0) > 0).length;
-        const wr = dayTrades.length > 0 ? Math.round(wins / dayTrades.length * 100) : 0;
-        const open = openDates.has(date);
-        const today = isToday(date);
+    <div>
+      {/* Navigation mois */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <button onClick={prevMonth} style={{ background: G.card, border: `1px solid ${G.border}`, color: G.dim, borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>‹</button>
+        <div style={{ fontSize: 15, fontWeight: 800, color: G.text, textTransform: "capitalize", letterSpacing: 0.3 }}>{monthLabel}</div>
+        <button onClick={nextMonth} style={{ background: G.card, border: `1px solid ${G.border}`, color: G.dim, borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>›</button>
+      </div>
 
-        return (
-          <div key={date} style={{ background: G.card, border: `1px solid ${today ? G.green + "40" : G.border}`, borderRadius: 14, overflow: "hidden", transition: "border-color 0.15s" }}>
-            {/* Header du jour — cliquable */}
-            <button onClick={() => toggle(date)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "16px 20px", background: "none", border: "none", cursor: "pointer", color: G.text, fontFamily: "inherit", textAlign: "left" }}>
-              <div style={{ fontSize: 18 }}>{today ? "🌅" : "📅"}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: today ? G.green : "#fff", textTransform: "capitalize" }}>{fmtDate(date)}</span>
-                  {today && <span style={{ fontSize: 10, fontWeight: 800, color: G.green, background: G.green + "20", borderRadius: 20, padding: "2px 8px", letterSpacing: 1 }}>AUJOURD'HUI</span>}
+      {/* En-têtes jours */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4, marginBottom: 4 }}>
+        {dayHeaders.map(d => (
+          <div key={d} style={{ textAlign: "center", fontSize: 10, fontWeight: 700, color: G.dim, letterSpacing: 1, padding: "4px 0", textTransform: "uppercase" }}>{d}</div>
+        ))}
+      </div>
+
+      {/* Grille calendrier */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4 }}>
+        {cells.map((iso, i) => {
+          if (!iso) return <div key={i} />;
+          const { dayTrades, pnl, mainEmotion, food, sport, hasTrades, hasSession } = getDayData(iso);
+          const isToday = iso === today;
+          const isSel = iso === selectedDate;
+          const isFuture = iso > today;
+          const dayNum = parseInt(iso.slice(8));
+
+          return (
+            <button key={iso} onClick={() => setSelectedDate(isSel ? null : iso)}
+              style={{
+                background: isSel ? "#13132a" : hasTrades || hasSession ? G.card : "transparent",
+                border: `1px solid ${isSel ? G.purple : isToday ? G.green + "60" : hasTrades ? (pnl >= 0 ? G.green + "30" : G.red + "30") : hasSession ? G.border : "transparent"}`,
+                borderRadius: 10, padding: "8px 6px", cursor: hasTrades || hasSession ? "pointer" : "default",
+                fontFamily: "inherit", textAlign: "center", minHeight: 80, display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
+                opacity: isFuture ? 0.3 : 1, transition: "all 0.15s",
+              }}
+              onMouseEnter={e => { if (hasTrades || hasSession) e.currentTarget.style.borderColor = G.purple + "60"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = isSel ? G.purple : isToday ? G.green + "60" : hasTrades ? (pnl >= 0 ? G.green + "30" : G.red + "30") : hasSession ? G.border : "transparent"; }}>
+              {/* Numéro du jour */}
+              <div style={{ fontSize: 12, fontWeight: isToday ? 900 : 600, color: isToday ? G.green : hasTrades || hasSession ? G.text : G.dim }}>{dayNum}</div>
+              {/* PnL */}
+              {hasTrades && (
+                <div style={{ fontSize: 11, fontWeight: 800, color: pnl >= 0 ? G.green : G.red, lineHeight: 1 }}>
+                  {pnl >= 0 ? "+" : ""}{Math.round(pnl)}$
                 </div>
-                <div style={{ display: "flex", gap: 16, marginTop: 4, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 11, color: G.dim }}>{dayTrades.length} trade{dayTrades.length > 1 ? "s" : ""}</span>
-                  <span style={{ fontSize: 11, color: G.dim }}>Win rate {wr}%</span>
+              )}
+              {/* Nb trades */}
+              {hasTrades && (
+                <div style={{ fontSize: 9, color: G.dim, fontWeight: 600 }}>{dayTrades.length}T</div>
+              )}
+              {/* Icônes état */}
+              {(hasTrades || hasSession) && (
+                <div style={{ display: "flex", gap: 2, fontSize: 10, flexWrap: "wrap", justifyContent: "center" }}>
+                  {mainEmotion && EMOTION_EMOJI[mainEmotion] && <span title={mainEmotion}>{EMOTION_EMOJI[mainEmotion]}</span>}
+                  {sport && <span title="Sport">🏃</span>}
+                  {food && FOOD_EMOJI[food] && <span title={food}>{FOOD_EMOJI[food]}</span>}
                 </div>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                <span style={{ fontSize: 18, fontWeight: 900, color: pnl >= 0 ? G.green : G.red }}>{pnl >= 0 ? "+" : ""}{pnl.toFixed(0)}$</span>
-                <span style={{ fontSize: 14, color: G.dim, transition: "transform 0.2s", display: "inline-block", transform: open ? "rotate(90deg)" : "rotate(0deg)" }}>›</span>
-              </div>
+              )}
             </button>
+          );
+        })}
+      </div>
 
-            {/* Liste des trades */}
-            {open && (
-              <div style={{ borderTop: `1px solid ${G.border}` }}>
-                {dayTrades.map((t, i) => {
-                  const win = (t.pnl || 0) > 0;
-                  const lose = (t.pnl || 0) < 0;
-                  return (
-                    <button key={t.id} onClick={() => onDetail(t)}
-                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "12px 20px 12px 52px", background: "none", border: "none", borderBottom: i < dayTrades.length - 1 ? `1px solid ${G.border}` : "none", cursor: "pointer", color: G.text, fontFamily: "inherit", textAlign: "left", transition: "background 0.1s" }}
-                      onMouseEnter={e => e.currentTarget.style.background = "#ffffff05"}
-                      onMouseLeave={e => e.currentTarget.style.background = "none"}>
-                      {/* Indicateur win/lose */}
-                      <div style={{ width: 3, height: 28, borderRadius: 2, background: win ? G.green : lose ? G.red : G.dim, flexShrink: 0 }} />
-                      {/* Actif + direction */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 13, fontWeight: 700 }}>{t.actif || "—"}</span>
-                          <span style={{ fontSize: 10, fontWeight: 700, color: t.direction === "LONG" ? G.green : G.red, background: (t.direction === "LONG" ? G.green : G.red) + "20", borderRadius: 4, padding: "2px 6px" }}>{t.direction}</span>
-                          {t.setup && <span style={{ fontSize: 10, color: G.dim }}>{t.setup}</span>}
-                        </div>
-                        <div style={{ fontSize: 11, color: G.dim, marginTop: 2 }}>
-                          {t.heure && <span>{t.heure}</span>}
-                          {t.compte && <span style={{ marginLeft: 8 }}>{t.compte.split(" ").slice(0, 2).join(" ")}</span>}
-                        </div>
-                      </div>
-                      {/* PnL */}
-                      <div style={{ fontSize: 15, fontWeight: 800, color: win ? G.green : lose ? G.red : G.dim, flexShrink: 0 }}>
-                        {(t.pnl || 0) >= 0 ? "+" : ""}{(t.pnl || 0).toFixed(0)}$
-                      </div>
-                      {/* Respect */}
-                      <div style={{ fontSize: 10, color: t.respect === "Oui" ? G.green : t.respect === "Non" ? G.red : G.amber, flexShrink: 0 }}>
-                        {t.respect === "Oui" ? "✓" : t.respect === "Non" ? "✗" : "~"}
-                      </div>
-                      <div style={{ fontSize: 12, color: G.dim }}>›</div>
-                    </button>
-                  );
-                })}
-                {/* Bouton ajouter un trade dans cette journée */}
-                <button onClick={onNew}
-                  style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "10px 20px 10px 52px", background: "none", border: "none", cursor: "pointer", color: G.dim, fontFamily: "inherit", fontSize: 12, fontWeight: 600, transition: "color 0.15s" }}
-                  onMouseEnter={e => e.currentTarget.style.color = G.green}
-                  onMouseLeave={e => e.currentTarget.style.color = G.dim}>
-                  + {fr ? "Ajouter un trade" : "Add a trade"}
-                </button>
+      {/* Panneau détail du jour sélectionné */}
+      {selectedDate && sel && (
+        <div style={{ marginTop: 20, background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, overflow: "hidden" }}>
+          {/* Header */}
+          <div style={{ padding: "16px 20px", borderBottom: `1px solid ${G.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: G.text, textTransform: "capitalize" }}>
+                {new Date(selectedDate + "T12:00:00").toLocaleDateString(fr ? "fr-FR" : "en-US", { weekday: "long", day: "numeric", month: "long" })}
               </div>
-            )}
+              <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
+                {sel.hasTrades && <span style={{ fontSize: 11, color: G.dim }}>{sel.dayTrades.length} trade{sel.dayTrades.length > 1 ? "s" : ""}</span>}
+                {sel.hasTrades && <span style={{ fontSize: 11, fontWeight: 700, color: sel.pnl >= 0 ? G.green : G.red }}>{sel.pnl >= 0 ? "+" : ""}{Math.round(sel.pnl)}$</span>}
+                {sel.wins > 0 && sel.dayTrades.length > 0 && <span style={{ fontSize: 11, color: G.dim }}>Win {Math.round(sel.wins / sel.dayTrades.length * 100)}%</span>}
+              </div>
+            </div>
+            <button onClick={() => setSelectedDate(null)} style={{ background: "#1a1a2e", border: "none", color: G.dim, borderRadius: 8, width: 28, height: 28, cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
           </div>
-        );
-      })}
+
+          {/* Résumé session */}
+          {sel.hasSession && (
+            <div style={{ padding: "12px 20px", borderBottom: sel.hasTrades ? `1px solid ${G.border}` : "none", display: "flex", gap: 16, flexWrap: "wrap" }}>
+              {sel.mainEmotion && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: G.dim }}><span>{EMOTION_EMOJI[sel.mainEmotion] || "😐"}</span> <span style={{ color: G.text }}>{sel.mainEmotion}</span></div>}
+              {sel.sport !== undefined && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: G.dim }}>🏃 <span style={{ color: sel.sport ? G.green : G.dim }}>{sel.sport ? (fr ? "Sport ✓" : "Workout ✓") : (fr ? "Pas de sport" : "No workout")}</span></div>}
+              {sel.food && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: G.dim }}>{FOOD_EMOJI[sel.food] || "🍽️"} <span style={{ color: sel.food === "Saine" ? G.green : sel.food === "Mauvaise" ? G.red : G.amber }}>{sel.food}</span></div>}
+              {sel.sommeil > 0 && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: G.dim }}>🌙 <span style={{ color: G.text }}>{fr ? "Sommeil" : "Sleep"} {sel.sommeil}/5</span></div>}
+              {sessions[selectedDate]?.intention && <div style={{ width: "100%", fontSize: 12, color: G.dim, fontStyle: "italic" }}>"{sessions[selectedDate].intention}"</div>}
+            </div>
+          )}
+
+          {/* Trades du jour */}
+          {sel.hasTrades && (
+            <div>
+              {sel.dayTrades.map((t, i) => {
+                const win = (t.pnl || 0) > 0; const lose = (t.pnl || 0) < 0;
+                return (
+                  <button key={t.id} onClick={() => onDetail(t)}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "11px 20px", background: "none", border: "none", borderBottom: i < sel.dayTrades.length - 1 ? `1px solid ${G.border}` : "none", cursor: "pointer", color: G.text, fontFamily: "inherit", textAlign: "left", transition: "background 0.1s" }}
+                    onMouseEnter={e => e.currentTarget.style.background = "#ffffff05"}
+                    onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                    <div style={{ width: 3, height: 26, borderRadius: 2, background: win ? G.green : lose ? G.red : G.dim, flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 13, fontWeight: 700 }}>{t.actif}</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: t.direction === "LONG" ? G.green : G.red, background: (t.direction === "LONG" ? G.green : G.red) + "15", borderRadius: 4, padding: "2px 6px" }}>{t.direction}</span>
+                        {t.setup && <span style={{ fontSize: 10, color: G.dim }}>{t.setup}</span>}
+                      </div>
+                      <div style={{ fontSize: 11, color: G.dim, marginTop: 2 }}>{t.heure}{t.compte && ` · ${t.compte.split(" ").slice(0, 2).join(" ")}`}</div>
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: win ? G.green : lose ? G.red : G.dim }}>{(t.pnl || 0) >= 0 ? "+" : ""}{(t.pnl || 0).toFixed(0)}$</div>
+                    <div style={{ fontSize: 10, color: t.respect === "Oui" ? G.green : t.respect === "Non" ? G.red : G.amber }}>{t.respect === "Oui" ? "✓" : t.respect === "Non" ? "✗" : "~"}</div>
+                    <div style={{ fontSize: 12, color: G.dim }}>›</div>
+                  </button>
+                );
+              })}
+              <button onClick={onNew} style={{ width: "100%", padding: "10px 20px", background: "none", border: "none", cursor: "pointer", color: G.dim, fontFamily: "inherit", fontSize: 12, fontWeight: 600, textAlign: "left", transition: "color 0.15s" }}
+                onMouseEnter={e => e.currentTarget.style.color = G.green}
+                onMouseLeave={e => e.currentTarget.style.color = G.dim}>
+                + {fr ? "Ajouter un trade" : "Add a trade"}
+              </button>
+            </div>
+          )}
+
+          {/* Jour sans trades ni session */}
+          {!sel.hasTrades && !sel.hasSession && (
+            <div style={{ padding: "24px 20px", textAlign: "center", color: G.dim, fontSize: 13 }}>
+              {fr ? "Aucune activité ce jour." : "No activity this day."}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -7347,7 +7423,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
                           🌅 {fr ? "Nouvelle session de trading" : "New trading session"}
                         </button>
                       </div>
-                      <SessionsJournal trades={trades} onDetail={setSelectedTrade} onNew={() => navigateTo("nouveau")} lang={lang} />
+                      <SessionCalendar trades={trades} sessions={sessions} onDetail={setSelectedTrade} onNew={() => navigateTo("nouveau")} onNewSession={() => setSessionSubView("preparation")} lang={lang} />
                     </div>
                   )
               )
