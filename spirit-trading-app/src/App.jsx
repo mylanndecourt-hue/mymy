@@ -6662,6 +6662,135 @@ function LandingPage({ onEnter, lang }) {
   );
 }
 
+function SessionsJournal({ trades, onDetail, onNew, lang = "fr" }) {
+  const fr = lang === "fr";
+  const G = { green: "#00e5a0", red: "#ef4444", purple: "#818cf8", amber: "#f59e0b", bg: "#06060f", card: "#0a0a14", border: "#1a1a2e", text: "#e5e7eb", dim: "#6b7280" };
+
+  // Grouper par date, trié du plus récent
+  const byDate = {};
+  trades.forEach(t => {
+    if (!t.date) return;
+    if (!byDate[t.date]) byDate[t.date] = [];
+    byDate[t.date].push(t);
+  });
+  const dates = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
+
+  const [openDates, setOpenDates] = useState(() => {
+    // Ouvrir automatiquement le jour le plus récent
+    const sorted = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
+    return new Set(sorted.slice(0, 1));
+  });
+
+  const toggle = (date) => setOpenDates(prev => {
+    const next = new Set(prev);
+    next.has(date) ? next.delete(date) : next.add(date);
+    return next;
+  });
+
+  const fmtDate = (d) => {
+    const dt = new Date(d + "T12:00:00");
+    return dt.toLocaleDateString(fr ? "fr-FR" : "en-US", { weekday: "long", day: "numeric", month: "long" });
+  };
+
+  const isToday = (d) => d === new Date().toISOString().slice(0, 10);
+
+  if (dates.length === 0) {
+    return (
+      <div style={{ textAlign: "center", padding: "80px 20px", color: G.dim }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: G.text, marginBottom: 8 }}>{fr ? "Aucun trade enregistré" : "No trades yet"}</div>
+        <div style={{ fontSize: 13, marginBottom: 32 }}>{fr ? "Lance une nouvelle session pour commencer à tracker." : "Start a new session to begin tracking."}</div>
+        <button onClick={onNew} style={{ background: G.green, color: "#06060f", border: "none", borderRadius: 10, padding: "12px 28px", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>
+          🌅 {fr ? "Nouvelle session" : "New session"}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {dates.map(date => {
+        const dayTrades = byDate[date].slice().sort((a, b) => (a.heure || "").localeCompare(b.heure || ""));
+        const pnl = dayTrades.reduce((s, t) => s + (t.pnl || 0), 0);
+        const wins = dayTrades.filter(t => (t.pnl || 0) > 0).length;
+        const wr = dayTrades.length > 0 ? Math.round(wins / dayTrades.length * 100) : 0;
+        const open = openDates.has(date);
+        const today = isToday(date);
+
+        return (
+          <div key={date} style={{ background: G.card, border: `1px solid ${today ? G.green + "40" : G.border}`, borderRadius: 14, overflow: "hidden", transition: "border-color 0.15s" }}>
+            {/* Header du jour — cliquable */}
+            <button onClick={() => toggle(date)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "16px 20px", background: "none", border: "none", cursor: "pointer", color: G.text, fontFamily: "inherit", textAlign: "left" }}>
+              <div style={{ fontSize: 18 }}>{today ? "🌅" : "📅"}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: today ? G.green : "#fff", textTransform: "capitalize" }}>{fmtDate(date)}</span>
+                  {today && <span style={{ fontSize: 10, fontWeight: 800, color: G.green, background: G.green + "20", borderRadius: 20, padding: "2px 8px", letterSpacing: 1 }}>AUJOURD'HUI</span>}
+                </div>
+                <div style={{ display: "flex", gap: 16, marginTop: 4, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 11, color: G.dim }}>{dayTrades.length} trade{dayTrades.length > 1 ? "s" : ""}</span>
+                  <span style={{ fontSize: 11, color: G.dim }}>Win rate {wr}%</span>
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <span style={{ fontSize: 18, fontWeight: 900, color: pnl >= 0 ? G.green : G.red }}>{pnl >= 0 ? "+" : ""}{pnl.toFixed(0)}$</span>
+                <span style={{ fontSize: 14, color: G.dim, transition: "transform 0.2s", display: "inline-block", transform: open ? "rotate(90deg)" : "rotate(0deg)" }}>›</span>
+              </div>
+            </button>
+
+            {/* Liste des trades */}
+            {open && (
+              <div style={{ borderTop: `1px solid ${G.border}` }}>
+                {dayTrades.map((t, i) => {
+                  const win = (t.pnl || 0) > 0;
+                  const lose = (t.pnl || 0) < 0;
+                  return (
+                    <button key={t.id} onClick={() => onDetail(t)}
+                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "12px 20px 12px 52px", background: "none", border: "none", borderBottom: i < dayTrades.length - 1 ? `1px solid ${G.border}` : "none", cursor: "pointer", color: G.text, fontFamily: "inherit", textAlign: "left", transition: "background 0.1s" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#ffffff05"}
+                      onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                      {/* Indicateur win/lose */}
+                      <div style={{ width: 3, height: 28, borderRadius: 2, background: win ? G.green : lose ? G.red : G.dim, flexShrink: 0 }} />
+                      {/* Actif + direction */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 13, fontWeight: 700 }}>{t.actif || "—"}</span>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: t.direction === "LONG" ? G.green : G.red, background: (t.direction === "LONG" ? G.green : G.red) + "20", borderRadius: 4, padding: "2px 6px" }}>{t.direction}</span>
+                          {t.setup && <span style={{ fontSize: 10, color: G.dim }}>{t.setup}</span>}
+                        </div>
+                        <div style={{ fontSize: 11, color: G.dim, marginTop: 2 }}>
+                          {t.heure && <span>{t.heure}</span>}
+                          {t.compte && <span style={{ marginLeft: 8 }}>{t.compte.split(" ").slice(0, 2).join(" ")}</span>}
+                        </div>
+                      </div>
+                      {/* PnL */}
+                      <div style={{ fontSize: 15, fontWeight: 800, color: win ? G.green : lose ? G.red : G.dim, flexShrink: 0 }}>
+                        {(t.pnl || 0) >= 0 ? "+" : ""}{(t.pnl || 0).toFixed(0)}$
+                      </div>
+                      {/* Respect */}
+                      <div style={{ fontSize: 10, color: t.respect === "Oui" ? G.green : t.respect === "Non" ? G.red : G.amber, flexShrink: 0 }}>
+                        {t.respect === "Oui" ? "✓" : t.respect === "Non" ? "✗" : "~"}
+                      </div>
+                      <div style={{ fontSize: 12, color: G.dim }}>›</div>
+                    </button>
+                  );
+                })}
+                {/* Bouton ajouter un trade dans cette journée */}
+                <button onClick={onNew}
+                  style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "10px 20px 10px 52px", background: "none", border: "none", cursor: "pointer", color: G.dim, fontFamily: "inherit", fontSize: 12, fontWeight: 600, transition: "color 0.15s" }}
+                  onMouseEnter={e => e.currentTarget.style.color = G.green}
+                  onMouseLeave={e => e.currentTarget.style.color = G.dim}>
+                  + {fr ? "Ajouter un trade" : "Add a trade"}
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function makeAuthFetch(user) {
   return async (url, options = {}) => {
     const headers = { ...(options.headers || {}) };
@@ -7210,15 +7339,15 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
                   )
                   : (
                     <div>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: "#00e5a0", letterSpacing: 3, textTransform: "uppercase" }}>{fr ? "Mes trades" : "My trades"}</div>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "#00e5a0", letterSpacing: 3, textTransform: "uppercase" }}>{fr ? "Mes sessions" : "My sessions"}</div>
                         <button onClick={() => setSessionSubView("preparation")} style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "linear-gradient(135deg,#00e5a015,#818cf808)", border: "1px solid #00e5a030", color: "#00e5a0", borderRadius: 10, padding: "10px 20px", fontSize: 13, cursor: "pointer", fontWeight: 700, fontFamily: "inherit", transition: "all 0.15s", letterSpacing: 0.3 }}
                           onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg,#00e5a025,#818cf815)"; e.currentTarget.style.borderColor = "#00e5a060"; }}
                           onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg,#00e5a015,#818cf808)"; e.currentTarget.style.borderColor = "#00e5a030"; }}>
                           🌅 {fr ? "Nouvelle session de trading" : "New trading session"}
                         </button>
                       </div>
-                      <Journal trades={trades} onNew={() => navigateTo("nouveau")} onDetail={setSelectedTrade} initialVue={journalInitialVue} lang={lang} />
+                      <SessionsJournal trades={trades} onDetail={setSelectedTrade} onNew={() => navigateTo("nouveau")} lang={lang} />
                     </div>
                   )
               )
