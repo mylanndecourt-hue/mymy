@@ -6642,7 +6642,8 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
   const toggleLang = () => { const nl = lang === "fr" ? "en" : "fr"; setLang(nl); localStorage.setItem("spirit_lang", nl); };
   const [showLanding, setShowLanding] = useState(() => localStorage.getItem("spirit_skipped_landing") !== "1");
 
-  const VALID_TABS = ["dashboard", "session", "journal", "analyse", "roi", "nouveau", "regles", "objectifs", "tarifs", "chemin"];
+  const VALID_TABS = ["dashboard", "session", "analyse", "roi", "nouveau", "regles", "objectifs", "tarifs", "chemin"];
+  const [sessionSubView, setSessionSubView] = useState("journal"); // "journal" | "preparation"
   const getTabFromUrl = () => {
     const path = window.location.pathname.replace("/", "").toLowerCase();
     return VALID_TABS.includes(path) ? path : null;
@@ -6655,6 +6656,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
 
   const navigateTo = (newTab) => {
     setTab(newTab);
+    if (newTab !== "session") setSessionSubView("journal");
     if (newTab !== "landing") {
       window.history.pushState({}, "", `/${newTab}`);
     } else {
@@ -6759,10 +6761,10 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
       setTrades(prev => prev.map(tr => tr.id === editId ? t : tr));
       setEditingTrade(null);
       setSelectedTrade(t); // retourne sur le détail mis à jour
-      navigateTo("journal");
+      navigateTo("session");
     } else {
       setTrades(prev => [...prev, t]);
-      navigateTo("journal");
+      navigateTo("session");
     }
   };
 
@@ -6777,7 +6779,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
       setSelectedTrade(editingTrade);
       setEditingTrade(null);
     } else {
-      navigateTo("journal");
+      navigateTo("session");
     }
   };
 
@@ -6968,7 +6970,6 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
   const DEFAULT_TABS = [
     { id: "dashboard", icon: "📊", labelKey: "dashboard" },
     { id: "session",   icon: "🌅", labelKey: "session" },
-    { id: "journal",   icon: "📋", labelKey: "journal" },
     { id: "analyse",   icon: "🔬", labelKey: "analyse" },
     { id: "roi",       icon: "🏛️", labelKey: "roi" },
   ];
@@ -7003,7 +7004,6 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
   const MODULES = [
     { id: "dashboard", label: fr ? "Dashboard"             : "Dashboard"        },
     { id: "session",   label: fr ? "Session"               : "Session"          },
-    { id: "journal",   label: fr ? "Journal"               : "Journal"          },
     { id: "analyse",   label: fr ? "Analyse"               : "Analysis"         },
     { id: "roi",       label: fr ? "Structure & Fiscalité" : "Structure & Tax"  },
   ];
@@ -7152,8 +7152,32 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
               : selectedCompte && tab === "dashboard"
               ? <DetailCompte compte={selectedCompte} trades={trades} onBack={() => setSelectedCompte(null)} onEdit={() => { setSelectedCompte(null); handleEditCompte(selectedCompte); }} lang={lang} />
               : tab === "dashboard"  ? <Dashboard trades={trades} comptes={comptes} onEditCompte={handleEditCompte} onNewCompte={handleNewCompte} onGoToAnalyse={handleGoToAnalyse} onTradeDetail={setSelectedTrade} onViewCompte={setSelectedCompte} lang={lang} user={user} />
-              : tab === "session"    ? <SessionDuJour sessions={sessions} setSessions={setSessions} lang={lang} user={user} />
-              : tab === "journal"    ? <Journal trades={trades} onNew={() => setTab("nouveau")} onDetail={setSelectedTrade} initialVue={journalInitialVue} lang={lang} />
+              : tab === "session"    ? (
+                sessionSubView === "preparation"
+                  ? (
+                    <div>
+                      <button onClick={() => setSessionSubView("journal")} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "none", border: "1px solid #1a1a2e", color: "#6b7280", borderRadius: 8, padding: "7px 14px", fontSize: 12, cursor: "pointer", fontWeight: 600, fontFamily: "inherit", marginBottom: 24, transition: "all 0.15s" }}
+                        onMouseEnter={e => { e.currentTarget.style.color = "#e5e7eb"; e.currentTarget.style.borderColor = "#374151"; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = "#6b7280"; e.currentTarget.style.borderColor = "#1a1a2e"; }}>
+                        ← {fr ? "Retour au journal" : "Back to journal"}
+                      </button>
+                      <SessionDuJour sessions={sessions} setSessions={setSessions} lang={lang} user={user} />
+                    </div>
+                  )
+                  : (
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "#00e5a0", letterSpacing: 3, textTransform: "uppercase" }}>{fr ? "Mes trades" : "My trades"}</div>
+                        <button onClick={() => setSessionSubView("preparation")} style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "linear-gradient(135deg,#00e5a015,#818cf808)", border: "1px solid #00e5a030", color: "#00e5a0", borderRadius: 10, padding: "10px 20px", fontSize: 13, cursor: "pointer", fontWeight: 700, fontFamily: "inherit", transition: "all 0.15s", letterSpacing: 0.3 }}
+                          onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg,#00e5a025,#818cf815)"; e.currentTarget.style.borderColor = "#00e5a060"; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg,#00e5a015,#818cf808)"; e.currentTarget.style.borderColor = "#00e5a030"; }}>
+                          🌅 {fr ? "Nouvelle session de trading" : "New trading session"}
+                        </button>
+                      </div>
+                      <Journal trades={trades} onNew={() => navigateTo("nouveau")} onDetail={setSelectedTrade} initialVue={journalInitialVue} lang={lang} />
+                    </div>
+                  )
+              )
               : tab === "analyse"    ? <AnalysePage trades={trades} comptes={comptes} onDetail={(t) => setSelectedTrade(t)} lang={lang} user={user} />
               : tab === "nouveau"    ? <NouveauTrade onSave={handleSaveTrade} onCancel={handleCancelEdit} comptes={comptes} editTrade={editingTrade} lang={lang} />
               : tab === "ajout_compte" ? (
