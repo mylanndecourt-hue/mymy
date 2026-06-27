@@ -5844,7 +5844,7 @@ function Tarifs({ lang = "fr", user }) {
       id: "lifetime",
       badge: fr ? "⚡ Paiement unique" : "⚡ One-time",
       name: fr ? "Lifetime" : "Lifetime",
-      price: "500€",
+      price: "499,99€",
       period: fr ? " une fois" : " once",
       priceNote: fr ? "Accès à vie, pour toujours" : "Lifetime access, forever",
       color: G.amber,
@@ -5855,7 +5855,7 @@ function Tarifs({ lang = "fr", user }) {
         fr ? "Accès aux fonctionnalités bêta" : "Beta features access",
         fr ? "Badge Lifetime dans l'app" : "Lifetime badge in-app",
       ],
-      cta: fr ? "Payer une fois — 500€" : "Pay once — €500",
+      cta: fr ? "Payer une fois — 499,99€" : "Pay once — €499.99",
     },
   ];
 
