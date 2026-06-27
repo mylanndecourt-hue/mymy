@@ -6641,7 +6641,37 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
   const fr = lang === "fr";
   const toggleLang = () => { const nl = lang === "fr" ? "en" : "fr"; setLang(nl); localStorage.setItem("spirit_lang", nl); };
   const [showLanding, setShowLanding] = useState(() => localStorage.getItem("spirit_skipped_landing") !== "1");
-  const [tab, setTab] = useState(() => localStorage.getItem("spirit_skipped_landing") === "1" ? "dashboard" : "landing");
+
+  const VALID_TABS = ["dashboard", "session", "journal", "analyse", "roi", "nouveau", "regles", "objectifs", "tarifs", "chemin"];
+  const getTabFromUrl = () => {
+    const path = window.location.pathname.replace("/", "").toLowerCase();
+    return VALID_TABS.includes(path) ? path : null;
+  };
+  const [tab, setTab] = useState(() => {
+    const urlTab = getTabFromUrl();
+    if (urlTab) { localStorage.setItem("spirit_skipped_landing", "1"); return urlTab; }
+    return localStorage.getItem("spirit_skipped_landing") === "1" ? "dashboard" : "landing";
+  });
+
+  const navigateTo = (newTab) => {
+    setTab(newTab);
+    if (newTab !== "landing") {
+      window.history.pushState({}, "", `/${newTab}`);
+    } else {
+      window.history.pushState({}, "", "/");
+    }
+  };
+
+  // Gère le bouton retour du navigateur
+  useEffect(() => {
+    const handlePop = () => {
+      const urlTab = getTabFromUrl();
+      if (urlTab) setTab(urlTab);
+      else setTab("dashboard");
+    };
+    window.addEventListener("popstate", handlePop);
+    return () => window.removeEventListener("popstate", handlePop);
+  }, []);
   const [trades, setTrades] = useState(initialTrades);
   const [comptes, setComptes] = useState(initialComptes);
   const [selectedTrade, setSelectedTrade] = useState(null);
@@ -6729,17 +6759,17 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
       setTrades(prev => prev.map(tr => tr.id === editId ? t : tr));
       setEditingTrade(null);
       setSelectedTrade(t); // retourne sur le détail mis à jour
-      setTab("journal");
+      navigateTo("journal");
     } else {
       setTrades(prev => [...prev, t]);
-      setTab("journal");
+      navigateTo("journal");
     }
   };
 
   const handleEditTrade = (trade) => {
     setEditingTrade(trade);
     setSelectedTrade(null);
-    setTab("nouveau");
+    navigateTo("nouveau");
   };
 
   const handleCancelEdit = () => {
@@ -6747,7 +6777,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
       setSelectedTrade(editingTrade);
       setEditingTrade(null);
     } else {
-      setTab("journal");
+      navigateTo("journal");
     }
   };
 
@@ -6766,31 +6796,31 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
     } else {
       setComptes(prev => [...prev, { ...newC, id: Date.now(), payouts: newC.payouts || [] }]);
     }
-    setTab("dashboard");
+    navigateTo("dashboard");
   };
 
   const handleEditCompte = (compte) => {
     setEditingCompte(compte);
-    setTab("ajout_compte");
+    navigateTo("ajout_compte");
   };
 
   const handleNewCompte = () => {
     setEditingCompte(null);
-    setTab("ajout_compte");
+    navigateTo("ajout_compte");
   };
 
   const handleGoToRegles = (firmType) => {
     setReglesPreselect(firmType);
-    setTab("regles");
+    navigateTo("regles");
   };
 
   const handleGoToAnalyse = () => {
-    setTab("analyse");
+    navigateTo("analyse");
   };
 
   const handleCancelCompteEdit = () => {
     setEditingCompte(null);
-    setTab("dashboard");
+    navigateTo("dashboard");
   };
 
   // ── RESET COMPLET ──
@@ -7002,7 +7032,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 300, height: 60, display: "flex", alignItems: "center", padding: "0 32px", gap: 0, background: "rgba(6,6,15,0.92)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
 
         {/* Logo */}
-        <button onClick={() => setTab("landing")} style={{ background: "none", border: "none", cursor: "pointer", padding: "0 28px 0 0", flexShrink: 0, display: "flex", alignItems: "center", gap: 2 }}>
+        <button onClick={() => navigateTo("landing")} style={{ background: "none", border: "none", cursor: "pointer", padding: "0 28px 0 0", flexShrink: 0, display: "flex", alignItems: "center", gap: 2 }}>
           <span style={{ fontSize: 19, fontWeight: 900, letterSpacing: -1, color: "#fff" }}>spirit</span>
           <span style={{ fontSize: 19, fontWeight: 900, letterSpacing: -1, color: "#00e5a0" }}>.</span>
           <span style={{ fontSize: 19, fontWeight: 900, letterSpacing: -1, color: "#fff" }}>trading</span>
@@ -7013,7 +7043,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
         {/* Modules nav — centré */}
         <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", display: "flex", gap: 0 }}>
           {MODULES.map(m => (
-            <button key={m.id} className={`sp-nav-btn${tab === m.id ? " active" : ""}`} onClick={() => { setTab(m.id); setSelectedCompte(null); setSelectedTrade(null); }}>
+            <button key={m.id} className={`sp-nav-btn${tab === m.id ? " active" : ""}`} onClick={() => { navigateTo(m.id); setSelectedCompte(null); setSelectedTrade(null); }}>
               {m.label}
             </button>
           ))}
@@ -7041,9 +7071,9 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
                     onMouseLeave={() => setShowProfileMenu(false)}>
                     <div style={{ fontSize: 11, color: "#555", padding: "4px 12px 8px", borderBottom: "1px solid #1a1a2e", marginBottom: 4 }}>{user.email}</div>
                     {[
-                      { icon: "💳", label: fr ? "Mon abonnement" : "My subscription", action: () => { setTab("tarifs"); setShowProfileMenu(false); } },
-                      { icon: "📜", label: fr ? "Mes règles" : "My rules", action: () => { setTab("regles"); setShowProfileMenu(false); } },
-                      { icon: "🎯", label: fr ? "Mes objectifs" : "My goals", action: () => { setTab("objectifs"); setShowProfileMenu(false); } },
+                      { icon: "💳", label: fr ? "Mon abonnement" : "My subscription", action: () => { navigateTo("tarifs"); setShowProfileMenu(false); } },
+                      { icon: "📜", label: fr ? "Mes règles" : "My rules", action: () => { navigateTo("regles"); setShowProfileMenu(false); } },
+                      { icon: "🎯", label: fr ? "Mes objectifs" : "My goals", action: () => { navigateTo("objectifs"); setShowProfileMenu(false); } },
                     ].map(item => (
                       <button key={item.label} onClick={item.action} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", background: "none", border: "none", color: "#e5e7eb", fontSize: 13, padding: "8px 12px", cursor: "pointer", borderRadius: 8, textAlign: "left", fontFamily: "inherit" }}
                         onMouseEnter={e => e.currentTarget.style.background = "#1a1a2e"}
@@ -7099,7 +7129,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
         {/* ── HERO (landing) ── */}
         {isLanding && (
           <LandingPage
-            onEnter={() => setTab("dashboard")}
+            onEnter={() => navigateTo("dashboard")}
             lang={lang}
             embedded={true}
           />
