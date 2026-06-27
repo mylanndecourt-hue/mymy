@@ -6662,7 +6662,7 @@ function LandingPage({ onEnter, lang }) {
   );
 }
 
-function SessionCalendar({ trades, sessions = {}, onDetail, onNew, onNewSession, lang = "fr" }) {
+function SessionCalendar({ trades, sessions = {}, onDetail, onNew, onDayOpen, lang = "fr" }) {
   const fr = lang === "fr";
   const G = { green: "#00e5a0", red: "#ef4444", purple: "#818cf8", amber: "#f59e0b", card: "#0a0a14", border: "#1a1a2e", text: "#e5e7eb", dim: "#6b7280", bg: "#06060f" };
 
@@ -6674,7 +6674,7 @@ function SessionCalendar({ trades, sessions = {}, onDetail, onNew, onNewSession,
     const latest = allDates.sort().pop();
     return new Date(latest + "T12:00:00");
   });
-  const [selectedDate, setSelectedDate] = useState(null);
+
 
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
@@ -6728,7 +6728,6 @@ function SessionCalendar({ trades, sessions = {}, onDetail, onNew, onNewSession,
     return { dayTrades, pnl, wins, mainEmotion, food, sport, sommeil, hasSession, hasTrades: dayTrades.length > 0 };
   };
 
-  const sel = selectedDate ? getDayData(selectedDate) : null;
   const dayHeaders = fr ? ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"] : ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
   return (
@@ -6753,21 +6752,21 @@ function SessionCalendar({ trades, sessions = {}, onDetail, onNew, onNewSession,
           if (!iso) return <div key={i} />;
           const { dayTrades, pnl, mainEmotion, food, sport, hasTrades, hasSession } = getDayData(iso);
           const isToday = iso === today;
-          const isSel = iso === selectedDate;
           const isFuture = iso > today;
           const dayNum = parseInt(iso.slice(8));
+          const clickable = (hasTrades || hasSession) && !isFuture;
 
           return (
-            <button key={iso} onClick={() => setSelectedDate(isSel ? null : iso)}
+            <button key={iso} onClick={() => clickable && onDayOpen(iso)}
               style={{
-                background: isSel ? "#13132a" : hasTrades || hasSession ? G.card : "transparent",
-                border: `1px solid ${isSel ? G.purple : isToday ? G.green + "60" : hasTrades ? (pnl >= 0 ? G.green + "30" : G.red + "30") : hasSession ? G.border : "transparent"}`,
-                borderRadius: 10, padding: "8px 6px", cursor: hasTrades || hasSession ? "pointer" : "default",
+                background: hasTrades || hasSession ? G.card : "transparent",
+                border: `1px solid ${isToday ? G.green + "60" : hasTrades ? (pnl >= 0 ? G.green + "30" : G.red + "30") : hasSession ? G.border : "transparent"}`,
+                borderRadius: 10, padding: "8px 6px", cursor: clickable ? "pointer" : "default",
                 fontFamily: "inherit", textAlign: "center", minHeight: 80, display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
                 opacity: isFuture ? 0.3 : 1, transition: "all 0.15s",
               }}
-              onMouseEnter={e => { if (hasTrades || hasSession) e.currentTarget.style.borderColor = G.purple + "60"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = isSel ? G.purple : isToday ? G.green + "60" : hasTrades ? (pnl >= 0 ? G.green + "30" : G.red + "30") : hasSession ? G.border : "transparent"; }}>
+              onMouseEnter={e => { if (clickable) e.currentTarget.style.borderColor = G.purple + "60"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = isToday ? G.green + "60" : hasTrades ? (pnl >= 0 ? G.green + "30" : G.red + "30") : hasSession ? G.border : "transparent"; }}>
               {/* Numéro du jour */}
               <div style={{ fontSize: 12, fontWeight: isToday ? 900 : 600, color: isToday ? G.green : hasTrades || hasSession ? G.text : G.dim }}>{dayNum}</div>
               {/* PnL */}
@@ -6855,14 +6854,161 @@ function SessionCalendar({ trades, sessions = {}, onDetail, onNew, onNewSession,
             </div>
           )}
 
-          {/* Jour sans trades ni session */}
-          {!sel.hasTrades && !sel.hasSession && (
-            <div style={{ padding: "24px 20px", textAlign: "center", color: G.dim, fontSize: 13 }}>
-              {fr ? "Aucune activité ce jour." : "No activity this day."}
+    </div>
+  );
+}
+
+function DayDetail({ date, trades, sessions = {}, onBack, onTradeDetail, onNewTrade, lang = "fr" }) {
+  const fr = lang === "fr";
+  const G = { green: "#00e5a0", red: "#ef4444", purple: "#818cf8", amber: "#f59e0b", card: "#0a0a14", border: "#1a1a2e", text: "#e5e7eb", dim: "#6b7280" };
+  const EMOTION_EMOJI = { "Confiant": "😊", "Serein": "😌", "Stressé": "😰", "Anxieux": "😟", "Frustré": "😤", "Euphorique": "🤩", "Impatient": "⚡", "En FOMO": "😱", "Neutre": "😐" };
+  const FOOD_EMOJI = { "Saine": "🥗", "Neutre": "🍽️", "Mauvaise": "🍔" };
+  const FOOD_COLOR = { "Saine": G.green, "Neutre": G.amber, "Mauvaise": G.red };
+
+  const sess = sessions[date] || {};
+  const dayTrades = trades.filter(t => t.date === date).sort((a, b) => (a.heure || "").localeCompare(b.heure || ""));
+  const pnl = dayTrades.reduce((s, t) => s + (t.pnl || 0), 0);
+  const wins = dayTrades.filter(t => (t.pnl || 0) > 0).length;
+  const wr = dayTrades.length > 0 ? Math.round(wins / dayTrades.length * 100) : 0;
+  const avgRR = dayTrades.length > 0 ? (dayTrades.reduce((s, t) => s + (t.rr || 0), 0) / dayTrades.length).toFixed(2) : null;
+  const disciplined = dayTrades.filter(t => t.respect === "Oui").length;
+  const bestTrade = dayTrades.length > 0 ? dayTrades.reduce((a, b) => (b.pnl || 0) > (a.pnl || 0) ? b : a) : null;
+  const worstTrade = dayTrades.length > 1 ? dayTrades.reduce((a, b) => (b.pnl || 0) < (a.pnl || 0) ? b : a) : null;
+
+  const emotions = sess.etat_esprit || [];
+  const sport = !!sess.sport;
+  const food = sess.alimentation || dayTrades[0]?.alimentation;
+  const sommeil = sess.qualite_sommeil || dayTrades[0]?.qualite_sommeil;
+  const intention = sess.intention || "";
+  const plan = sess.plan_trading || "";
+
+  const buildSummary = () => {
+    const lines = [];
+    if (dayTrades.length === 0) {
+      lines.push(fr ? "Journée sans trades enregistrés." : "No trades recorded for this day.");
+    } else {
+      const intro = pnl > 0
+        ? (fr ? `Journée profitable — ${dayTrades.length} trade${dayTrades.length > 1 ? "s" : ""}, +${Math.round(pnl)}$, win rate ${wr}%.` : `Profitable day — ${dayTrades.length} trade${dayTrades.length > 1 ? "s" : ""}, +$${Math.round(pnl)}, ${wr}% win rate.`)
+        : pnl < 0
+        ? (fr ? `Journée difficile — ${dayTrades.length} trade${dayTrades.length > 1 ? "s" : ""}, ${Math.round(pnl)}$, win rate ${wr}%.` : `Tough day — ${dayTrades.length} trade${dayTrades.length > 1 ? "s" : ""}, $${Math.round(pnl)}, ${wr}% win rate.`)
+        : (fr ? `Journée neutre — ${dayTrades.length} trade${dayTrades.length > 1 ? "s" : ""}, 0$, win rate ${wr}%.` : `Break-even day — ${dayTrades.length} trades, $0.`);
+      lines.push(intro);
+      if (bestTrade && bestTrade.pnl > 0) lines.push(fr ? `Meilleur trade : ${bestTrade.actif} ${bestTrade.direction}${bestTrade.heure ? " à " + bestTrade.heure : ""} (+${Math.round(bestTrade.pnl)}$).` : `Best trade: ${bestTrade.actif} ${bestTrade.direction}${bestTrade.heure ? " at " + bestTrade.heure : ""} (+$${Math.round(bestTrade.pnl)}).`);
+      if (worstTrade && worstTrade.pnl < 0 && worstTrade.id !== bestTrade?.id) lines.push(fr ? `Trade le plus difficile : ${worstTrade.actif} ${worstTrade.direction} (${Math.round(worstTrade.pnl)}$).` : `Hardest trade: ${worstTrade.actif} ${worstTrade.direction} ($${Math.round(worstTrade.pnl)}).`);
+      if (disciplined === dayTrades.length) lines.push(fr ? "Toutes les règles respectées." : "All rules respected.");
+      else if (disciplined < dayTrades.length) lines.push(fr ? `Discipline : ${disciplined}/${dayTrades.length} trades dans les règles.` : `Discipline: ${disciplined}/${dayTrades.length} trades within rules.`);
+    }
+    const positif = (emotions.includes("Confiant") || emotions.includes("Serein")) && pnl > 0;
+    const negatif = (emotions.includes("Stressé") || emotions.includes("Anxieux") || emotions.includes("Frustré")) && pnl < 0;
+    if (positif) lines.push(fr ? `Bon état d'esprit (${emotions[0]}) — corrélé à ta performance.` : `Good mindset (${emotions[0]}) — matched your performance.`);
+    if (negatif) lines.push(fr ? `État d'esprit tendu (${emotions[0]}) — à surveiller pour la prochaine session.` : `Tense mindset (${emotions[0]}) — watch this next session.`);
+    if (food === "Mauvaise") lines.push(fr ? "Alimentation mauvaise ce jour — peut affecter la concentration." : "Poor nutrition today — may affect focus.");
+    if (food === "Saine" && sport) lines.push(fr ? "Excellente hygiène de vie ce jour." : "Excellent lifestyle habits today.");
+    if (sommeil && sommeil <= 2) lines.push(fr ? `Sommeil très court (${sommeil}/5) — attention à la fatigue décisionnelle.` : `Very poor sleep (${sommeil}/5) — watch for decision fatigue.`);
+    return lines;
+  };
+
+  const summaryLines = buildSummary();
+  const dateLabel = new Date(date + "T12:00:00").toLocaleDateString(fr ? "fr-FR" : "en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const isToday = date === new Date().toISOString().slice(0, 10);
+
+  return (
+    <div style={{ maxWidth: 760, margin: "0 auto" }}>
+      <button onClick={onBack} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "none", border: "1px solid #1a1a2e", color: "#6b7280", borderRadius: 8, padding: "7px 14px", fontSize: 12, cursor: "pointer", fontWeight: 600, fontFamily: "inherit", marginBottom: 24, transition: "all 0.15s" }}
+        onMouseEnter={e => { e.currentTarget.style.color = "#e5e7eb"; e.currentTarget.style.borderColor = "#374151"; }}
+        onMouseLeave={e => { e.currentTarget.style.color = "#6b7280"; e.currentTarget.style.borderColor = "#1a1a2e"; }}>
+        ← {fr ? "Retour au calendrier" : "Back to calendar"}
+      </button>
+
+      {/* Header */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6, flexWrap: "wrap" }}>
+          <h2 style={{ fontSize: "clamp(18px,3vw,26px)", fontWeight: 900, letterSpacing: -0.8, margin: 0, textTransform: "capitalize", color: G.text }}>{dateLabel}</h2>
+          {isToday && <span style={{ fontSize: 10, fontWeight: 800, color: G.green, background: G.green + "20", borderRadius: 20, padding: "3px 10px", letterSpacing: 1 }}>AUJOURD'HUI</span>}
+          {dayTrades.length > 0 && <span style={{ fontSize: 13, fontWeight: 800, color: pnl > 0 ? G.green : pnl < 0 ? G.red : G.dim, background: (pnl > 0 ? G.green : pnl < 0 ? G.red : G.dim) + "15", borderRadius: 8, padding: "4px 12px" }}>{pnl > 0 ? "+" : ""}{Math.round(pnl)}$</span>}
+        </div>
+        {dayTrades.length > 0 && (
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 12, color: G.dim }}>{dayTrades.length} trade{dayTrades.length > 1 ? "s" : ""}</span>
+            <span style={{ fontSize: 12, color: G.dim }}>Win rate <strong style={{ color: G.text }}>{wr}%</strong></span>
+            {avgRR && <span style={{ fontSize: 12, color: G.dim }}>R/R <strong style={{ color: G.text }}>{avgRR}</strong></span>}
+            <span style={{ fontSize: 12, color: G.dim }}>Discipline <strong style={{ color: disciplined === dayTrades.length ? G.green : G.amber }}>{disciplined}/{dayTrades.length}</strong></span>
+          </div>
+        )}
+      </div>
+
+      {/* Résumé auto */}
+      <div style={{ background: "linear-gradient(135deg,#818cf808,#00e5a005)", border: "1px solid #818cf820", borderRadius: 14, padding: "18px 20px", marginBottom: 20 }}>
+        <div style={{ fontSize: 10, fontWeight: 800, color: G.purple, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>✦ {fr ? "Résumé de ta journée" : "Day summary"}</div>
+        {summaryLines.map((line, i) => (
+          <div key={i} style={{ fontSize: 13, color: i === 0 ? G.text : G.dim, lineHeight: 1.8, marginBottom: i < summaryLines.length - 1 ? 2 : 0 }}>{line}</div>
+        ))}
+      </div>
+
+      {/* Ma journée */}
+      {(emotions.length > 0 || sport || food || sommeil || intention || plan) && (
+        <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 14, padding: "18px 20px", marginBottom: 20 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: G.dim, letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>{fr ? "Ma journée" : "My day"}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 14, marginBottom: (intention || plan) ? 14 : 0 }}>
+            {emotions.length > 0 && (
+              <div>
+                <div style={{ fontSize: 10, color: G.dim, fontWeight: 600, marginBottom: 6 }}>{fr ? "État d'esprit" : "Mindset"}</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {emotions.map(e => <span key={e} style={{ fontSize: 12, color: G.text, background: "#1a1a2e", borderRadius: 6, padding: "3px 8px" }}>{EMOTION_EMOJI[e] || ""} {e}</span>)}
+                </div>
+              </div>
+            )}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}><span>🏃</span><span style={{ color: sport ? G.green : G.dim }}>{sport ? (fr ? "Sport fait" : "Workout done") : (fr ? "Pas de sport" : "No workout")}</span></div>
+              {food && <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}><span>{FOOD_EMOJI[food] || "🍽️"}</span><span style={{ color: FOOD_COLOR[food] || G.dim }}>{fr ? "Alimentation" : "Nutrition"} : {food}</span></div>}
+              {sommeil > 0 && <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}><span>🌙</span><span style={{ color: sommeil >= 4 ? G.green : sommeil >= 3 ? G.amber : G.red }}>{fr ? "Sommeil" : "Sleep"} {sommeil}/5 {"★".repeat(sommeil)}{"☆".repeat(5 - sommeil)}</span></div>}
             </div>
-          )}
+          </div>
+          {intention && <div style={{ paddingTop: 14, borderTop: `1px solid ${G.border}`, marginTop: 4 }}><div style={{ fontSize: 10, color: G.dim, fontWeight: 600, marginBottom: 6 }}>{fr ? "Intention du jour" : "Day intention"}</div><div style={{ fontSize: 13, color: G.text, fontStyle: "italic", lineHeight: 1.6 }}>"{intention}"</div></div>}
+          {plan && <div style={{ marginTop: 12 }}><div style={{ fontSize: 10, color: G.dim, fontWeight: 600, marginBottom: 6 }}>{fr ? "Plan de trading" : "Trading plan"}</div><div style={{ fontSize: 13, color: G.text, lineHeight: 1.6 }}>{plan}</div></div>}
         </div>
       )}
+
+      {/* Trades */}
+      <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 14, overflow: "hidden" }}>
+        <div style={{ padding: "14px 20px", borderBottom: `1px solid ${G.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: G.dim, letterSpacing: 2, textTransform: "uppercase" }}>{fr ? "Mes trades" : "My trades"}</div>
+          <button onClick={onNewTrade} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: G.green + "15", border: `1px solid ${G.green}30`, color: G.green, borderRadius: 8, padding: "5px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+            + {fr ? "Ajouter" : "Add trade"}
+          </button>
+        </div>
+        {dayTrades.length === 0 ? (
+          <div style={{ padding: "32px 20px", textAlign: "center", color: G.dim, fontSize: 13 }}>{fr ? "Aucun trade ce jour." : "No trades this day."}</div>
+        ) : dayTrades.map((t, i) => {
+          const win = (t.pnl || 0) > 0; const lose = (t.pnl || 0) < 0;
+          return (
+            <button key={t.id} onClick={() => onTradeDetail(t)}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "14px 20px", background: "none", border: "none", borderBottom: i < dayTrades.length - 1 ? `1px solid ${G.border}` : "none", cursor: "pointer", color: G.text, fontFamily: "inherit", textAlign: "left", transition: "background 0.1s" }}
+              onMouseEnter={e => e.currentTarget.style.background = "#ffffff05"}
+              onMouseLeave={e => e.currentTarget.style.background = "none">
+              <div style={{ width: 4, height: 34, borderRadius: 2, background: win ? G.green : lose ? G.red : G.dim, flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 14, fontWeight: 800 }}>{t.actif}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: t.direction === "LONG" ? G.green : G.red, background: (t.direction === "LONG" ? G.green : G.red) + "15", borderRadius: 4, padding: "2px 6px" }}>{t.direction}</span>
+                  {t.setup && <span style={{ fontSize: 11, color: G.dim }}>{t.setup}</span>}
+                  <span style={{ fontSize: 10, color: t.respect === "Oui" ? G.green : t.respect === "Non" ? G.red : G.amber, fontWeight: 700 }}>{t.respect === "Oui" ? "✓ Règle" : t.respect === "Non" ? "✗ Règle" : "~ Partiel"}</span>
+                </div>
+                <div style={{ fontSize: 11, color: G.dim, marginTop: 3 }}>
+                  {t.heure && <span>{t.heure}</span>}
+                  {t.duree && <span> · {t.duree}min</span>}
+                  {t.taille && <span> · {t.taille} contrats</span>}
+                  {t.rr && <span> · R/R {t.rr}</span>}
+                  {t.compte && <span> · {t.compte.split(" ").slice(0, 2).join(" ")}</span>}
+                </div>
+                {t.lecon && <div style={{ fontSize: 11, color: G.purple, marginTop: 3, fontStyle: "italic" }}>"{t.lecon}"</div>}
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 900, color: win ? G.green : lose ? G.red : G.dim, flexShrink: 0 }}>{(t.pnl || 0) >= 0 ? "+" : ""}{(t.pnl || 0).toFixed(0)}$</div>
+              <div style={{ fontSize: 12, color: G.dim }}>›</div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -6890,7 +7036,8 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
   const [showLanding, setShowLanding] = useState(() => localStorage.getItem("spirit_skipped_landing") !== "1");
 
   const VALID_TABS = ["dashboard", "session", "analyse", "roi", "nouveau", "regles", "objectifs", "tarifs", "chemin"];
-  const [sessionSubView, setSessionSubView] = useState("journal"); // "journal" | "preparation"
+  const [sessionSubView, setSessionSubView] = useState("calendar"); // "calendar" | "preparation" | "dayDetail"
+  const [sessionDayDate, setSessionDayDate] = useState(null);
   const getTabFromUrl = () => {
     const path = window.location.pathname.replace("/", "").toLowerCase();
     return VALID_TABS.includes(path) ? path : null;
@@ -6903,7 +7050,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
 
   const navigateTo = (newTab) => {
     setTab(newTab);
-    if (newTab !== "session") setSessionSubView("journal");
+    if (newTab !== "session") setSessionSubView("calendar");
     if (newTab !== "landing") {
       window.history.pushState({}, "", `/${newTab}`);
     } else {
@@ -7405,14 +7552,16 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
                 sessionSubView === "preparation"
                   ? (
                     <div>
-                      <button onClick={() => setSessionSubView("journal")} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "none", border: "1px solid #1a1a2e", color: "#6b7280", borderRadius: 8, padding: "7px 14px", fontSize: 12, cursor: "pointer", fontWeight: 600, fontFamily: "inherit", marginBottom: 24, transition: "all 0.15s" }}
+                      <button onClick={() => setSessionSubView("calendar")} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "none", border: "1px solid #1a1a2e", color: "#6b7280", borderRadius: 8, padding: "7px 14px", fontSize: 12, cursor: "pointer", fontWeight: 600, fontFamily: "inherit", marginBottom: 24, transition: "all 0.15s" }}
                         onMouseEnter={e => { e.currentTarget.style.color = "#e5e7eb"; e.currentTarget.style.borderColor = "#374151"; }}
                         onMouseLeave={e => { e.currentTarget.style.color = "#6b7280"; e.currentTarget.style.borderColor = "#1a1a2e"; }}>
-                        ← {fr ? "Retour au journal" : "Back to journal"}
+                        ← {fr ? "Retour au calendrier" : "Back to calendar"}
                       </button>
                       <SessionDuJour sessions={sessions} setSessions={setSessions} lang={lang} user={user} />
                     </div>
                   )
+                  : sessionSubView === "dayDetail" && sessionDayDate
+                  ? <DayDetail date={sessionDayDate} trades={trades} sessions={sessions} onBack={() => setSessionSubView("calendar")} onTradeDetail={setSelectedTrade} onNewTrade={() => navigateTo("nouveau")} lang={lang} />
                   : (
                     <div>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
@@ -7423,7 +7572,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
                           🌅 {fr ? "Nouvelle session de trading" : "New trading session"}
                         </button>
                       </div>
-                      <SessionCalendar trades={trades} sessions={sessions} onDetail={setSelectedTrade} onNew={() => navigateTo("nouveau")} onNewSession={() => setSessionSubView("preparation")} lang={lang} />
+                      <SessionCalendar trades={trades} sessions={sessions} onDetail={setSelectedTrade} onNew={() => navigateTo("nouveau")} onDayOpen={(date) => { setSessionDayDate(date); setSessionSubView("dayDetail"); }} lang={lang} />
                     </div>
                   )
               )
