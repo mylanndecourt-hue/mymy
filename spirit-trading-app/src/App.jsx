@@ -6260,7 +6260,7 @@ function LandingPage({ onEnter, lang }) {
   const [activeSection, setActiveSection] = useState(0);
   const containerRef = useRef(null);
 
-  const sections = ["hero", "problem", "solution", "modules", "cta"];
+  const sections = ["hero", "problem", "solution", "modules", "pricing", "cta"];
 
   useEffect(() => {
     const el = containerRef.current;
@@ -6477,8 +6477,11 @@ function LandingPage({ onEnter, lang }) {
             <button className="land-cta" onClick={onEnter}>
               Accéder à mon espace <span style={{ fontSize:18 }}>→</span>
             </button>
+            <button className="land-cta-outline" onClick={() => scrollTo(4)}>
+              💳 {fr ? "Voir les tarifs" : "See pricing"}
+            </button>
             <button className="land-cta-outline" onClick={() => scrollTo(1)}>
-              Découvrir
+              {fr ? "Découvrir" : "Learn more"}
             </button>
           </div>
 
@@ -6584,7 +6587,46 @@ function LandingPage({ onEnter, lang }) {
         </div>
       </section>
 
-      {/* ── SECTION 5 : CTA FINAL ── */}
+      {/* ── SECTION 5 : TARIFS ── */}
+      <section className="land-section" style={{ justifyContent:"center", alignItems:"center", padding:"64px 24px", background:"#06060f" }}>
+        <div style={{ position:"relative", zIndex:1, maxWidth:760, width:"100%", textAlign:"center" }}>
+          <div style={{ fontSize:11, fontWeight:700, color:"#818cf8", letterSpacing:3, textTransform:"uppercase", marginBottom:16 }}>
+            {fr ? "Tarifs simples" : "Simple pricing"}
+          </div>
+          <h2 style={{ fontSize:"clamp(28px,5vw,52px)", fontWeight:900, letterSpacing:-2, margin:"0 0 12px", lineHeight:1.1 }}>
+            {fr ? <>Investis dans <span className="grad-text">ta progression</span></> : <>Invest in <span className="grad-text">your progress</span></>}
+          </h2>
+          <p style={{ fontSize:14, color:"#444", marginBottom:48, lineHeight:1.7 }}>
+            {fr ? "Sans engagement. Annule quand tu veux." : "No commitment. Cancel anytime."}
+          </p>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:16, maxWidth:600, margin:"0 auto 40px" }}>
+            {[
+              { badge: null,            price: fr ? "7,99€"  : "€7.99",  period: fr ? "/mois"    : "/month", note: fr ? "Sans engagement"           : "No commitment",              color: "#00e5a0", label: fr ? "Mensuel"  : "Monthly" },
+              { badge: fr ? "🔥 2 mois offerts" : "🔥 2 months free", price: fr ? "79,99€" : "€79.99", period: fr ? "/an"      : "/year",  note: fr ? "soit 6,67€/mois — économise 15,89€" : "only €6.67/mo — save €15.89", color: "#818cf8", label: fr ? "Annuel"   : "Annual"  },
+            ].map(p => (
+              <div key={p.label} style={{ background:"#0a0a14", border:`1px solid ${p.color}30`, borderRadius:16, padding:"28px 24px", textAlign:"left", position:"relative", overflow:"hidden" }}>
+                {p.badge && <div style={{ position:"absolute", top:14, right:14, background:`${p.color}20`, color:p.color, fontSize:10, fontWeight:800, padding:"3px 8px", borderRadius:20, letterSpacing:0.5 }}>{p.badge}</div>}
+                <div style={{ fontSize:11, fontWeight:700, color:p.color, letterSpacing:2, textTransform:"uppercase", marginBottom:12 }}>{p.label}</div>
+                <div style={{ display:"flex", alignItems:"baseline", gap:4, marginBottom:6 }}>
+                  <span style={{ fontSize:36, fontWeight:900, color:"#fff", letterSpacing:-1 }}>{p.price}</span>
+                  <span style={{ fontSize:13, color:"#555", fontWeight:600 }}>{p.period}</span>
+                </div>
+                <div style={{ fontSize:11, color:"#444", marginBottom:20 }}>{p.note}</div>
+                <button onClick={onEnter} style={{ width:"100%", background:`${p.color}15`, border:`1px solid ${p.color}40`, color:p.color, borderRadius:8, padding:"10px 0", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit", transition:"all 0.15s" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = `${p.color}25`; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = `${p.color}15`; }}>
+                  {fr ? "Commencer →" : "Get started →"}
+                </button>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize:12, color:"#333" }}>
+            {fr ? "✓ Accès immédiat  ·  ✓ Données privées  ·  ✓ Annulation en 1 clic" : "✓ Instant access  ·  ✓ Private data  ·  ✓ Cancel in 1 click"}
+          </p>
+        </div>
+      </section>
+
+      {/* ── SECTION 6 : CTA FINAL ── */}
       <section className="land-section" style={{ justifyContent:"center", alignItems:"center", padding:"64px 24px 0", background:"radial-gradient(ellipse 80% 60% at 50% 50%,#00e5a00a 0%,transparent 70%), #06060f", textAlign:"center" }}>
         <div style={{ position:"relative", zIndex:1, maxWidth:720 }}>
           {/* Big glow */}
@@ -6972,6 +7014,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
     { id: "session",   icon: "🌅", labelKey: "session" },
     { id: "analyse",   icon: "🔬", labelKey: "analyse" },
     { id: "roi",       icon: "🏛️", labelKey: "roi" },
+    { id: "tarifs",    icon: "💳", labelKey: "tarifs"   },
   ];
   const [tabOrder, setTabOrder] = useState(() => {
     try {
@@ -7006,6 +7049,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
     { id: "session",   label: fr ? "Session"               : "Session"          },
     { id: "analyse",   label: fr ? "Analyse"               : "Analysis"         },
     { id: "roi",       label: fr ? "Structure & Fiscalité" : "Structure & Tax"  },
+    { id: "tarifs",    label: fr ? "Tarifs"                : "Pricing"          },
   ];
 
   const isLanding = tab === "landing";
