@@ -5811,7 +5811,7 @@ function Tarifs({ lang = "fr", user }) {
       id: "monthly",
       badge: null,
       name: fr ? "Mensuel" : "Monthly",
-      price: "9,99€",
+      price: "7,99€",
       period: fr ? "/mois" : "/month",
       priceNote: fr ? "Sans engagement" : "No commitment",
       color: G.purple,
@@ -5823,15 +5823,15 @@ function Tarifs({ lang = "fr", user }) {
         fr ? "Sync cloud multi-appareils" : "Multi-device cloud sync",
         fr ? "Suivi prop firms" : "Prop firm tracking",
       ],
-      cta: fr ? "Commencer — 9,99€/mois" : "Start — €9.99/month",
+      cta: fr ? "Commencer — 7,99€/mois" : "Start — €7.99/month",
     },
     {
       id: "annual",
-      badge: fr ? "🔥 -2 mois offerts" : "🔥 2 months free",
+      badge: fr ? "🔥 2 mois offerts" : "🔥 2 months free",
       name: fr ? "Annuel" : "Annual",
-      price: "99,99€",
+      price: "79,99€",
       period: fr ? "/an" : "/year",
-      priceNote: fr ? "soit 8,33€/mois" : "€8.33/month",
+      priceNote: fr ? "soit 6,67€/mois — économise 15,89€" : "€6.67/month — save €15.89",
       color: G.green,
       features: [
         fr ? "Tout le plan Mensuel" : "Everything in Monthly",
@@ -5839,24 +5839,7 @@ function Tarifs({ lang = "fr", user }) {
         fr ? "Accès prioritaire aux nouvelles fonctionnalités" : "Priority access to new features",
         fr ? "Support prioritaire" : "Priority support",
       ],
-      cta: fr ? "Choisir l'Annuel — 99,99€/an" : "Choose Annual — €99.99/year",
-    },
-    {
-      id: "lifetime",
-      badge: fr ? "⚡ Paiement unique" : "⚡ One-time",
-      name: fr ? "Lifetime" : "Lifetime",
-      price: "499,99€",
-      period: fr ? " une fois" : " once",
-      priceNote: fr ? "Accès à vie, pour toujours" : "Lifetime access, forever",
-      color: G.amber,
-      features: [
-        fr ? "Tout le plan Annuel" : "Everything in Annual",
-        fr ? "Accès à vie sans abonnement" : "Lifetime access, no subscription",
-        fr ? "Toutes les futures mises à jour" : "All future updates included",
-        fr ? "Accès aux fonctionnalités bêta" : "Beta features access",
-        fr ? "Badge Lifetime dans l'app" : "Lifetime badge in-app",
-      ],
-      cta: fr ? "Payer une fois — 499,99€" : "Pay once — €499.99",
+      cta: fr ? "Choisir l'Annuel — 79,99€/an" : "Choose Annual — €79.99/year",
     },
   ];
 
@@ -5878,7 +5861,7 @@ function Tarifs({ lang = "fr", user }) {
       </div>
 
       {/* Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 16, maxWidth: 640, margin: "0 auto" }}>
         {plans.map(p => (
           <div key={p.id} style={{
             background: G.card,
