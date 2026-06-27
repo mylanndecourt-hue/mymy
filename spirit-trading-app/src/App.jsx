@@ -1870,7 +1870,8 @@ const HOLIDAYS_CACHE = (() => {
   return all;
 })();
 
-function CalendrierTrading({ trades }) {
+function CalendrierTrading({ trades, user }) {
+  const authFetch = makeAuthFetch(user);
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -2610,7 +2611,7 @@ function DetailCompte({ compte, trades, onBack, onEdit, lang = "fr" }) {
   );
 }
 
-function Dashboard({ trades, comptes, onEditCompte, onNewCompte, onGoToAnalyse, onTradeDetail, onViewCompte, lang = "fr" }) {
+function Dashboard({ trades, comptes, onEditCompte, onNewCompte, onGoToAnalyse, onTradeDetail, onViewCompte, lang = "fr", user }) {
   const T = TR[lang]; const fr = lang === "fr";
 
   // ── Calculs ──
@@ -2775,7 +2776,7 @@ function Dashboard({ trades, comptes, onEditCompte, onNewCompte, onGoToAnalyse, 
       </div>
 
       {/* ── CALENDRIER DE TRADING ── */}
-      <CalendrierTrading trades={trades} />
+      <CalendrierTrading trades={trades} user={user} />
 
       {/* ── COMPTES ── */}
       <div>
@@ -3020,7 +3021,8 @@ function DonutChart({ data, size = 120 }) {
   );
 }
 
-function AnalysePage({ trades, comptes, onDetail, lang = "fr" }) {
+function AnalysePage({ trades, comptes, onDetail, lang = "fr", user }) {
+  const authFetch = makeAuthFetch(user);
   const T = TR[lang]; const fr = lang === "fr";
   const MIN_TRADES = 5;
   const G = { green: "#00e5a0", red: "#ef4444", amber: "#f59e0b", purple: "#818cf8", cyan: "#00d4ff", dim: "#6b7280", muted: "#374151" };
@@ -3785,7 +3787,7 @@ function AnalysePage({ trades, comptes, onDetail, lang = "fr" }) {
           })()}
 
         {/* Calendrier de trading */}
-        <CalendrierTrading trades={trades} />
+        <CalendrierTrading trades={trades} user={user} />
 
         </div>{/* fin section performance */}
 
@@ -4939,7 +4941,8 @@ const HUMEURS = [
   { val: 5, emoji: "🔥", label: "Excellente" },
 ];
 
-function SessionDuJour({ sessions, setSessions }) {
+function SessionDuJour({ sessions, setSessions, user }) {
+  const authFetch = makeAuthFetch(user);
   const today = new Date().toISOString().slice(0, 10);
   const session = sessions?.[today] || {};
 
@@ -6617,9 +6620,8 @@ function LandingPage({ onEnter, lang }) {
   );
 }
 
-export default function App({ user, cloudData, onDataChange, saveStatus, onLogout }) {
-  // Helper fetch authentifié — envoie le token Firebase dans Authorization
-  const authFetch = async (url, options = {}) => {
+function makeAuthFetch(user) {
+  return async (url, options = {}) => {
     const headers = { ...(options.headers || {}) };
     if (user?.getIdToken) {
       try {
@@ -6629,6 +6631,10 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
     }
     return fetch(url, { ...options, headers });
   };
+}
+
+export default function App({ user, cloudData, onDataChange, saveStatus, onLogout }) {
+  const authFetch = makeAuthFetch(user);
 
   const [lang, setLang] = useState(() => localStorage.getItem("spirit_lang") || "fr");
   const T = TR[lang];
@@ -7115,10 +7121,10 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
               ? <DetailTrade trade={selectedTrade} onBack={() => setSelectedTrade(null)} onEdit={handleEditTrade} lang={lang} />
               : selectedCompte && tab === "dashboard"
               ? <DetailCompte compte={selectedCompte} trades={trades} onBack={() => setSelectedCompte(null)} onEdit={() => { setSelectedCompte(null); handleEditCompte(selectedCompte); }} lang={lang} />
-              : tab === "dashboard"  ? <Dashboard trades={trades} comptes={comptes} onEditCompte={handleEditCompte} onNewCompte={handleNewCompte} onGoToAnalyse={handleGoToAnalyse} onTradeDetail={setSelectedTrade} onViewCompte={setSelectedCompte} lang={lang} />
-              : tab === "session"    ? <SessionDuJour sessions={sessions} setSessions={setSessions} lang={lang} />
+              : tab === "dashboard"  ? <Dashboard trades={trades} comptes={comptes} onEditCompte={handleEditCompte} onNewCompte={handleNewCompte} onGoToAnalyse={handleGoToAnalyse} onTradeDetail={setSelectedTrade} onViewCompte={setSelectedCompte} lang={lang} user={user} />
+              : tab === "session"    ? <SessionDuJour sessions={sessions} setSessions={setSessions} lang={lang} user={user} />
               : tab === "journal"    ? <Journal trades={trades} onNew={() => setTab("nouveau")} onDetail={setSelectedTrade} initialVue={journalInitialVue} lang={lang} />
-              : tab === "analyse"    ? <AnalysePage trades={trades} comptes={comptes} onDetail={(t) => setSelectedTrade(t)} lang={lang} />
+              : tab === "analyse"    ? <AnalysePage trades={trades} comptes={comptes} onDetail={(t) => setSelectedTrade(t)} lang={lang} user={user} />
               : tab === "nouveau"    ? <NouveauTrade onSave={handleSaveTrade} onCancel={handleCancelEdit} comptes={comptes} editTrade={editingTrade} lang={lang} />
               : tab === "ajout_compte" ? (
                 <div style={{ display: "flex", justifyContent: "center" }}>
