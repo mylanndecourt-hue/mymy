@@ -6890,7 +6890,7 @@ function TutorialOverlay({ step, onNext, onSkip, lang = "fr", onNavigate }) {
       `}</style>
 
       {/* Overlay semi-transparent */}
-      <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 900, backdropFilter: "blur(1px)" }} onClick={onSkip} />
+      <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 900 }} onClick={onSkip} />
 
       {/* Bulle */}
       <div style={{
