@@ -4566,7 +4566,7 @@ function ROI({ comptes, setComptes, trades, onEditCompte, mentorQ, setMentorQ, f
                   <div style={{ background: infosAcre.active ? `${G.green}0f` : "rgba(255,255,255,0.02)", border: `1px solid ${infosAcre.active ? `${G.green}30` : "#1a1a2e"}`, borderRadius: 10, padding: 12 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: infosAcre.active ? 8 : 0 }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: infosAcre.active ? G.green : G.dim }}>{infosAcre.active ? "ACRE active" : "ACRE expirée"}</div>
-                      {infosAcre.active && <button onClick={() => setFiscal(f => { const a = !f.acreActif; return { ...f, acreActif: a, taux: a ? infosAcre.tauxReduit : structureData.taux }; })} style={{ background: fiscal.acreActif ? `${G.green}20` : "rgba(255,255,255,0.02)", border: `1px solid ${fiscal.acreActif ? G.green : "#1a1a2e"}`, color: fiscal.acreActif ? G.green : G.dim, borderRadius: 20, padding: "4px 10px", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>{fiscal.acreActif ? "✓ Appliquée" : "Appliquer"}</button>}
+                      {infosAcre.active && <button onClick={() => setFiscal(f => { const a = !f.acreActif; const acreReducedRate = Math.round((structureData.taux || 0) * (1 - (acreData?.taux2 || 50) / 100)); return { ...f, acreActif: a, taux: a ? acreReducedRate : structureData.taux }; })} style={{ background: fiscal.acreActif ? `${G.green}20` : "rgba(255,255,255,0.02)", border: `1px solid ${fiscal.acreActif ? G.green : "#1a1a2e"}`, color: fiscal.acreActif ? G.green : G.dim, borderRadius: 20, padding: "4px 10px", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>{fiscal.acreActif ? "✓ Appliquée" : "Appliquer"}</button>}
                     </div>
                     {infosAcre.active && <div style={{ fontSize: 10, color: G.dim, lineHeight: 1.6 }}>Exonération de <span style={{ color: G.green, fontWeight: 700 }}>{(infosAcre.tauxExoneration * 100).toFixed(0)}%</span> jusqu'au <span style={{ fontWeight: 700 }}>{infosAcre.finAcre.toLocaleDateString("fr-FR")}</span>.{fiscal.acreActif && <> Taux réduit : <span style={{ color: G.green, fontWeight: 700 }}>{infosAcre.tauxReduit.toFixed(1)}%</span>.</>}</div>}
                   </div>
@@ -5005,6 +5005,7 @@ function SessionDuJour({ sessions, setSessions, user }) {
           .sort((a, b) => (a.time || "").localeCompare(b.time || ""));
         sessionStorage.setItem(cacheKey, JSON.stringify(list));
         setAnnonces(list);
+        if (list.length > 0) set("annonces", list);
       } catch (e) {
         if (!cancelled) setAnnoncesErr("Erreur : " + e.message);
       }
@@ -6262,7 +6263,7 @@ function AjoutCompte({ onSave, onCancel, editCompte = null, onGoToRegles, lang =
   );
 }
 
-function LandingPage({ onEnter, lang }) {
+function LandingPage({ onEnter, onCheckout, lang }) {
   const fr = lang === "fr";
   const [activeSection, setActiveSection] = useState(0);
   const containerRef = useRef(null);
@@ -6601,15 +6602,15 @@ function LandingPage({ onEnter, lang }) {
             {fr ? "Tarifs simples" : "Simple pricing"}
           </div>
           <h2 style={{ fontSize:"clamp(28px,5vw,52px)", fontWeight:900, letterSpacing:-2, margin:"0 0 12px", lineHeight:1.1 }}>
-            {fr ? <>Investis dans <span className="grad-text">ta progression</span></> : <>Invest in <span className="grad-text">your progress</span></>}
+            {fr ? <>Investis dans <span className="grad-text">ta discipline</span></> : <>Invest in <span className="grad-text">your discipline</span></>}
           </h2>
           <p style={{ fontSize:14, color:"#444", marginBottom:48, lineHeight:1.7 }}>
             {fr ? "Sans engagement. Annule quand tu veux." : "No commitment. Cancel anytime."}
           </p>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:16, maxWidth:600, margin:"0 auto 40px" }}>
             {[
-              { badge: null,            price: fr ? "7,99€"  : "€7.99",  period: fr ? "/mois"    : "/month", note: fr ? "Sans engagement"           : "No commitment",              color: "#00e5a0", label: fr ? "Mensuel"  : "Monthly" },
-              { badge: fr ? "🔥 2 mois offerts" : "🔥 2 months free", price: fr ? "79,99€" : "€79.99", period: fr ? "/an"      : "/year",  note: fr ? "soit 6,67€/mois — économise 15,89€" : "only €6.67/mo — save €15.89", color: "#818cf8", label: fr ? "Annuel"   : "Annual"  },
+              { badge: null,            price: fr ? "7,99€"  : "€7.99",  period: fr ? "/mois"    : "/month", note: fr ? "Sans engagement"           : "No commitment",              color: "#00e5a0", label: fr ? "Mensuel"  : "Monthly", plan: "monthly" },
+              { badge: fr ? "🔥 2 mois offerts" : "🔥 2 months free", price: fr ? "79,99€" : "€79.99", period: fr ? "/an"      : "/year",  note: fr ? "soit 6,67€/mois — économise 15,89€" : "only €6.67/mo — save €15.89", color: "#818cf8", label: fr ? "Annuel"   : "Annual",  plan: "annual"  },
             ].map(p => (
               <div key={p.label} style={{ background:"#0a0a14", border:`1px solid ${p.color}30`, borderRadius:16, padding:"28px 24px", textAlign:"left", position:"relative", overflow:"hidden" }}>
                 {p.badge && <div style={{ position:"absolute", top:14, right:14, background:`${p.color}20`, color:p.color, fontSize:10, fontWeight:800, padding:"3px 8px", borderRadius:20, letterSpacing:0.5 }}>{p.badge}</div>}
@@ -6619,7 +6620,7 @@ function LandingPage({ onEnter, lang }) {
                   <span style={{ fontSize:13, color:"#555", fontWeight:600 }}>{p.period}</span>
                 </div>
                 <div style={{ fontSize:11, color:"#444", marginBottom:20 }}>{p.note}</div>
-                <button onClick={onEnter} style={{ width:"100%", background:`${p.color}15`, border:`1px solid ${p.color}40`, color:p.color, borderRadius:8, padding:"10px 0", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit", transition:"all 0.15s" }}
+                <button onClick={() => onCheckout ? onCheckout(p.plan) : onEnter()} style={{ width:"100%", background:`${p.color}15`, border:`1px solid ${p.color}40`, color:p.color, borderRadius:8, padding:"10px 0", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit", transition:"all 0.15s" }}
                   onMouseEnter={e => { e.currentTarget.style.background = `${p.color}25`; }}
                   onMouseLeave={e => { e.currentTarget.style.background = `${p.color}15`; }}>
                   {fr ? "Commencer →" : "Get started →"}
@@ -6732,7 +6733,10 @@ function SessionCalendar({ trades, sessions = {}, onDetail, onNew, onDayOpen, la
     const sport = !!sess.sport;
     const sommeil = sess.qualite_sommeil || dayTrades[0]?.qualite_sommeil;
     const hasSession = Object.keys(sess).length > 0;
-    return { dayTrades, pnl, wins, mainEmotion, food, sport, sommeil, hasSession, hasTrades: dayTrades.length > 0 };
+    const annonces = sess.annonces || [];
+    const annonceHigh = annonces.filter(a => a.impact === "high").length;
+    const annonceMed = annonces.filter(a => a.impact === "medium").length;
+    return { dayTrades, pnl, wins, mainEmotion, food, sport, sommeil, hasSession, hasTrades: dayTrades.length > 0, annonces, annonceHigh, annonceMed };
   };
 
   const dayHeaders = fr ? ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"] : ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
@@ -6757,7 +6761,7 @@ function SessionCalendar({ trades, sessions = {}, onDetail, onNew, onDayOpen, la
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4 }}>
         {cells.map((iso, i) => {
           if (!iso) return <div key={i} />;
-          const { dayTrades, pnl, mainEmotion, food, sport, hasTrades, hasSession } = getDayData(iso);
+          const { dayTrades, pnl, mainEmotion, food, sport, hasTrades, hasSession, annonces, annonceHigh, annonceMed } = getDayData(iso);
           const isToday = iso === today;
           const isFuture = iso > today;
           const dayNum = parseInt(iso.slice(8));
@@ -6792,6 +6796,13 @@ function SessionCalendar({ trades, sessions = {}, onDetail, onNew, onDayOpen, la
                   {mainEmotion && EMOTION_EMOJI[mainEmotion] && <span title={mainEmotion}>{EMOTION_EMOJI[mainEmotion]}</span>}
                   {sport && <span title="Sport">🏃</span>}
                   {food && FOOD_EMOJI[food] && <span title={food}>{FOOD_EMOJI[food]}</span>}
+                </div>
+              )}
+              {annonces.length > 0 && (
+                <div style={{ display: "flex", gap: 2, alignItems: "center", justifyContent: "center", marginTop: 2 }} title={`${annonces.length} annonce(s) économique(s)`}>
+                  {annonceHigh > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 1, background: "#ef444420", border: "1px solid #ef444440", borderRadius: 4, padding: "1px 4px", fontSize: 8, fontWeight: 700, color: "#ef4444" }}>📰 {annonceHigh}</span>}
+                  {annonceMed > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 1, background: "#f59e0b20", border: "1px solid #f59e0b40", borderRadius: 4, padding: "1px 4px", fontSize: 8, fontWeight: 700, color: "#f59e0b" }}>📰 {annonceMed}</span>}
+                  {annonceHigh === 0 && annonceMed === 0 && annonces.length > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 1, background: "rgba(255,255,255,0.04)", border: "1px solid #1a1a2e", borderRadius: 4, padding: "1px 4px", fontSize: 8, fontWeight: 600, color: "#6b7280" }}>📰 {annonces.length}</span>}
                 </div>
               )}
             </button>
@@ -7781,6 +7792,14 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
         {isLanding && (
           <LandingPage
             onEnter={() => navigateTo("dashboard")}
+            onCheckout={async (plan) => {
+              try {
+                const token = user?.getIdToken ? await user.getIdToken() : null;
+                const res = await fetch("/api/create-checkout", { method: "POST", headers: { "Content-Type": "application/json", ...(token ? { "Authorization": `Bearer ${token}` } : {}) }, body: JSON.stringify({ plan }) });
+                const data = await res.json();
+                if (data.url) window.location.href = data.url;
+              } catch {}
+            }}
             lang={lang}
             embedded={true}
           />
