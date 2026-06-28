@@ -6460,8 +6460,6 @@ function LandingPage({ onEnter, lang }) {
         </svg>}
 
         <div style={{ position:"relative", zIndex:1, animation:"fadeUp .9s ease forwards" }}>
-          <img src="/logo.png" alt="Spirit Trading" style={{ width:110, height:110, objectFit:"contain", marginBottom:16 }} />
-
           <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"#00e5a010", border:"1px solid #00e5a025", borderRadius:20, padding:"6px 18px", fontSize:11, fontWeight:700, color:"#00e5a0", letterSpacing:2, textTransform:"uppercase", marginBottom:32 }}>
             <span style={{ width:6, height:6, background:"#00e5a0", borderRadius:"50%", display:"inline-block", animation:"glow-pulse 2s ease-in-out infinite" }} />
             Journal de trading intelligent
