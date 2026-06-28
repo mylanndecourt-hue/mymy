@@ -7128,7 +7128,102 @@ function makeAuthFetch(user) {
   };
 }
 
-export default function App({ user, cloudData, onDataChange, saveStatus, onLogout }) {
+function MonCompte({ user, subscription, onLogout, lang = "fr" }) {
+  const fr = lang === "fr";
+  const G = { bg: "#06060f", card: "#0a0a14", border: "#1a1a2e", text: "#e5e7eb", dim: "#6b7280", green: "#00e5a0", red: "#ef4444", purple: "#818cf8" };
+
+  const planLabel = { monthly: fr ? "Mensuel" : "Monthly", annual: fr ? "Annuel" : "Annual", lifetime: fr ? "À vie" : "Lifetime", owner: fr ? "Propriétaire" : "Owner" };
+  const isOwner = subscription?.plan === "owner";
+  const expiresAt = subscription?.expiresAt && subscription.expiresAt !== "9999-12-31T00:00:00.000Z"
+    ? new Date(subscription.expiresAt).toLocaleDateString(fr ? "fr-FR" : "en-US", { day: "numeric", month: "long", year: "numeric" })
+    : null;
+  const activatedAt = subscription?.activatedAt
+    ? new Date(subscription.activatedAt).toLocaleDateString(fr ? "fr-FR" : "en-US", { day: "numeric", month: "long", year: "numeric" })
+    : null;
+
+  const Section = ({ title, children }) => (
+    <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "24px 28px", marginBottom: 16 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: G.dim, letterSpacing: 2, textTransform: "uppercase", marginBottom: 20 }}>{title}</div>
+      {children}
+    </div>
+  );
+
+  const Row = ({ label, value, valueColor }) => (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: `1px solid ${G.border}` }}>
+      <span style={{ fontSize: 13, color: G.dim }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 700, color: valueColor || G.text }}>{value}</span>
+    </div>
+  );
+
+  return (
+    <div style={{ maxWidth: 600, margin: "0 auto", padding: "32px 24px" }}>
+      <div style={{ fontSize: 24, fontWeight: 900, color: G.text, marginBottom: 28 }}>
+        {fr ? "Mon compte" : "My account"}
+      </div>
+
+      {/* Profil */}
+      <Section title={fr ? "Profil" : "Profile"}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+          {user.photoURL
+            ? <img src={user.photoURL} alt="" style={{ width: 56, height: 56, borderRadius: "50%", border: `2px solid ${G.border}` }} />
+            : <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#1a1a2e", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>👤</div>
+          }
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: G.text }}>{user.displayName || (fr ? "Utilisateur" : "User")}</div>
+            <div style={{ fontSize: 12, color: G.dim, marginTop: 2 }}>{user.email}</div>
+          </div>
+        </div>
+        <Row label="Email" value={user.email} />
+        <Row label={fr ? "Méthode de connexion" : "Sign-in method"} value={user.providerData?.[0]?.providerId === "google.com" ? "Google" : "Email / Mot de passe"} />
+      </Section>
+
+      {/* Abonnement */}
+      <Section title={fr ? "Abonnement" : "Subscription"}>
+        {subscription?.active ? (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: G.green, boxShadow: `0 0 8px ${G.green}` }} />
+              <span style={{ fontSize: 14, fontWeight: 700, color: G.green }}>{fr ? "Actif" : "Active"}</span>
+              {!isOwner && <span style={{ fontSize: 12, color: G.dim, background: "#1a1a2e", borderRadius: 6, padding: "2px 8px" }}>{planLabel[subscription.plan] || subscription.plan}</span>}
+              {isOwner && <span style={{ fontSize: 12, color: G.purple, background: G.purple + "20", borderRadius: 6, padding: "2px 8px" }}>✦ {planLabel.owner}</span>}
+            </div>
+            {activatedAt && <Row label={fr ? "Activé le" : "Activated on"} value={activatedAt} />}
+            {expiresAt && <Row label={fr ? "Renouvellement le" : "Renewal on"} value={expiresAt} />}
+            {!isOwner && (
+              <div style={{ marginTop: 20, padding: "14px 16px", background: "#1a1a2e", borderRadius: 12, fontSize: 12, color: G.dim, lineHeight: 1.7 }}>
+                {fr
+                  ? <>Pour résilier ton abonnement, contacte-nous à <strong style={{ color: G.text }}>mylanndecourt@gmail.com</strong>. Le remboursement au prorata est possible dans les 14 jours.</>
+                  : <>To cancel your subscription, contact us at <strong style={{ color: G.text }}>mylanndecourt@gmail.com</strong>. Pro-rata refund available within 14 days.</>
+                }
+              </div>
+            )}
+          </>
+        ) : (
+          <div style={{ textAlign: "center", padding: "20px 0" }}>
+            <div style={{ fontSize: 13, color: G.dim, marginBottom: 16 }}>{fr ? "Aucun abonnement actif." : "No active subscription."}</div>
+            <a href="/tarifs" style={{ display: "inline-block", padding: "10px 24px", background: G.green, color: "#06060f", borderRadius: 10, fontSize: 13, fontWeight: 800, textDecoration: "none" }}>
+              {fr ? "Voir les tarifs →" : "See pricing →"}
+            </a>
+          </div>
+        )}
+      </Section>
+
+      {/* Sécurité */}
+      <Section title={fr ? "Sécurité" : "Security"}>
+        <Row label={fr ? "Authentification" : "Authentication"} value={user.providerData?.[0]?.providerId === "google.com" ? "Google OAuth" : "Email / Password"} />
+        <div style={{ marginTop: 20 }}>
+          <button onClick={onLogout} style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: `1px solid ${G.red}30`, borderRadius: 10, padding: "10px 18px", color: G.red, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+            onMouseEnter={e => e.currentTarget.style.background = G.red + "10"}
+            onMouseLeave={e => e.currentTarget.style.background = "none"}>
+            🚪 {fr ? "Se déconnecter" : "Sign out"}
+          </button>
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+export default function App({ user, cloudData, onDataChange, saveStatus, onLogout, subscription }) {
   const authFetch = makeAuthFetch(user);
 
   const [lang, setLang] = useState(() => localStorage.getItem("spirit_lang") || "fr");
@@ -7137,7 +7232,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
   const toggleLang = () => { const nl = lang === "fr" ? "en" : "fr"; setLang(nl); localStorage.setItem("spirit_lang", nl); };
   const [showLanding, setShowLanding] = useState(() => localStorage.getItem("spirit_skipped_landing") !== "1");
 
-  const VALID_TABS = ["dashboard", "session", "analyse", "roi", "nouveau", "regles", "objectifs", "tarifs", "chemin"];
+  const VALID_TABS = ["dashboard", "session", "analyse", "roi", "nouveau", "regles", "objectifs", "tarifs", "chemin", "compte"];
   const [sessionSubView, setSessionSubView] = useState("calendar"); // "calendar" | "preparation" | "dayDetail"
 
   // Tutorial
@@ -7576,7 +7671,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
                     onMouseLeave={() => setShowProfileMenu(false)}>
                     <div style={{ fontSize: 11, color: "#555", padding: "4px 12px 8px", borderBottom: "1px solid #1a1a2e", marginBottom: 4 }}>{user.email}</div>
                     {[
-                      { icon: "💳", label: fr ? "Mon abonnement" : "My subscription", action: () => { navigateTo("tarifs"); setShowProfileMenu(false); } },
+                      { icon: "👤", label: fr ? "Mon compte" : "My account", action: () => { navigateTo("compte"); setShowProfileMenu(false); } },
                       { icon: "📜", label: fr ? "Mes règles" : "My rules", action: () => { navigateTo("regles"); setShowProfileMenu(false); } },
                       { icon: "🎯", label: fr ? "Mes objectifs" : "My goals", action: () => { navigateTo("objectifs"); setShowProfileMenu(false); } },
                     ].map(item => (
@@ -7701,6 +7796,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
               : tab === "objectifs"  ? <Objectifs trades={trades} comptes={comptes} objectifs={objectifs} setObjectifs={setObjectifs} lang={lang} />
               : tab === "chemin"     ? <LeChemin chapitres={chapitres} setChapitres={setChapitres} lang={lang} />
               : tab === "tarifs"     ? <Tarifs lang={lang} user={user} />
+              : tab === "compte"     ? <MonCompte user={user} subscription={subscription} onLogout={onLogout} lang={lang} />
               : <ROI comptes={comptes} setComptes={setComptes} trades={trades} onEditCompte={handleEditCompte} mentorQ={mentorQ} setMentorQ={setMentorQ} fraisDivers={fraisDivers} setFraisDivers={setFraisDivers} fiscal={fiscal} setFiscal={setFiscal} deviseRecue={deviseRecue} setDeviseRecue={setDeviseRecue} deviseRef={deviseRef} setDeviseRef={setDeviseRef} tauxPerso={tauxPerso} setTauxPerso={setTauxPerso} lang={lang} />
             }
           </div>

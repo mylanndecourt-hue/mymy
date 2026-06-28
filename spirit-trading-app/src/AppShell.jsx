@@ -190,7 +190,7 @@ export default function AppShell() {
     </div>
   );
 
-  return <App user={user} cloudData={cloudData} onDataChange={handleDataChange} saveStatus={saveStatus} onLogout={handleLogout} />;
+  return <App user={user} cloudData={cloudData} onDataChange={handleDataChange} saveStatus={saveStatus} onLogout={handleLogout} subscription={subscription} />;
 }
 
 // ── Auth Screen ──
