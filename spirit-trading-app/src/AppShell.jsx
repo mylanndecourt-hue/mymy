@@ -184,19 +184,28 @@ export default function AppShell() {
     </div>
   );
 
-  // Logged in but no active subscription → paywall
-  if (user && !OWNER_EMAILS.includes(user.email) && !subscription?.active) {
-    return <PaywallScreen fr={fr} user={user} onCheckout={handleCheckout} onLogout={handleLogout} loading={checkoutLoading} error={checkoutError} />;
-  }
+  // Logged in but no active subscription → preview mode (not PaywallScreen)
+  const isPreview = user && !OWNER_EMAILS.includes(user.email) && !subscription?.active;
 
   // Loading data
-  if (dataLoading || cloudData === null) return (
+  if (!isPreview && (dataLoading || cloudData === null)) return (
     <div style={{ background: COLORS.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ color: COLORS.cyan, fontSize: 14 }}>{fr ? "Chargement de tes données..." : "Loading your data..."}</div>
     </div>
   );
 
-  return <App user={user} cloudData={cloudData} onDataChange={handleDataChange} saveStatus={saveStatus} onLogout={handleLogout} subscription={subscription} />;
+  return <App
+    user={user}
+    cloudData={isPreview ? {} : cloudData}
+    onDataChange={isPreview ? () => {} : handleDataChange}
+    saveStatus={isPreview ? "preview" : saveStatus}
+    onLogout={handleLogout}
+    subscription={subscription}
+    isPreview={isPreview}
+    onCheckout={handleCheckout}
+    checkoutLoading={checkoutLoading}
+    checkoutError={checkoutError}
+  />;
 }
 
 // ── Auth Screen ──

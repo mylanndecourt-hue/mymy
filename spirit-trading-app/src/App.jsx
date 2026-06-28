@@ -7272,13 +7272,15 @@ function MonCompte({ user, subscription, onLogout, lang = "fr" }) {
   );
 }
 
-export default function App({ user, cloudData, onDataChange, saveStatus, onLogout, subscription }) {
+export default function App({ user, cloudData, onDataChange, saveStatus, onLogout, subscription, isPreview = false, onCheckout, checkoutLoading, checkoutError }) {
   const authFetch = makeAuthFetch(user);
 
   const [lang, setLang] = useState(() => localStorage.getItem("spirit_lang") || "fr");
   const T = TR[lang];
   const fr = lang === "fr";
   const isOwner = user?.email === "mylanndecourt@gmail.com";
+  const [showPaywallModal, setShowPaywallModal] = useState(false);
+  const triggerPaywall = () => { if (isPreview) { setShowPaywallModal(true); return true; } return false; };
   const toggleLang = () => { const nl = lang === "fr" ? "en" : "fr"; setLang(nl); localStorage.setItem("spirit_lang", nl); };
   const [showLanding, setShowLanding] = useState(() => localStorage.getItem("spirit_skipped_landing") !== "1");
 
@@ -7694,8 +7696,18 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
         }
       `}</style>
 
+      {/* ══ BANNIÈRE APERÇU ══ */}
+      {isPreview && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 400, background: "linear-gradient(90deg,#818cf8,#00e5a0)", padding: "8px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#06060f" }}>👁 Mode aperçu — Tes données ne sont pas sauvegardées</span>
+          <button onClick={() => setShowPaywallModal(true)} style={{ background: "#06060f", color: "#00e5a0", border: "none", borderRadius: 6, padding: "5px 14px", fontSize: 12, fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap" }}>
+            S'abonner →
+          </button>
+        </div>
+      )}
+
       {/* ══ NAVBAR UNIFIÉE ══ */}
-      <nav className="sp-mobile-nav" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 300, height: 60, display: "flex", alignItems: "center", padding: "0 32px", gap: 0, background: "rgba(6,6,15,0.92)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+      <nav className="sp-mobile-nav" style={{ position: "fixed", top: isPreview ? 36 : 0, left: 0, right: 0, zIndex: 300, height: 60, display: "flex", alignItems: "center", padding: "0 32px", gap: 0, background: "rgba(6,6,15,0.92)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
 
         {/* Logo */}
         <button onClick={() => navigateTo("landing")} style={{ background: "none", border: "none", cursor: "pointer", padding: "0 28px 0 0", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
@@ -7793,7 +7805,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
       </nav>
 
       {/* ══ CONTENU ══ */}
-      <div style={{ paddingTop: 60 }}>
+      <div style={{ paddingTop: isPreview ? 96 : 60 }}>
 
         {/* ── HERO (landing) ── */}
         {isLanding && (
@@ -7909,6 +7921,37 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
           onSkip={closeTutorial}
           onNavigate={(tabId) => { navigateTo(tabId); if (tabId === "session") setSessionSubView("calendar"); }}
         />
+      )}
+
+      {/* ══ MODAL PAYWALL (mode aperçu) ══ */}
+      {showPaywallModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: "#0a0a14", border: "1px solid #1a1a2e", borderRadius: 20, padding: "40px 36px", maxWidth: 420, width: "100%", textAlign: "center", position: "relative" }}>
+            <button onClick={() => setShowPaywallModal(false)} style={{ position: "absolute", top: 14, right: 14, background: "none", border: "none", color: "#6b7280", fontSize: 20, cursor: "pointer", lineHeight: 1 }}>✕</button>
+            <div style={{ fontSize: 36, marginBottom: 16 }}>🔒</div>
+            <h2 style={{ fontSize: 22, fontWeight: 900, color: "#fff", letterSpacing: -0.5, marginBottom: 10 }}>Fonctionnalité réservée aux abonnés</h2>
+            <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.7, marginBottom: 28 }}>Tu es en mode aperçu. Abonne-toi pour sauvegarder tes trades, tes sessions et accéder à toutes les fonctionnalités.</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+              <div style={{ background: "#0e0e1a", border: "1px solid #00e5a030", borderRadius: 12, padding: "16px 12px", textAlign: "center" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#00e5a0", letterSpacing: 2, marginBottom: 8 }}>MENSUEL</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: "#fff" }}>7,99€<span style={{ fontSize: 11, color: "#6b7280", fontWeight: 400 }}>/mois</span></div>
+                <button onClick={() => onCheckout && onCheckout("monthly")} disabled={checkoutLoading} style={{ width: "100%", marginTop: 12, background: "#00e5a015", border: "1px solid #00e5a040", color: "#00e5a0", borderRadius: 8, padding: "8px 0", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                  {checkoutLoading ? "..." : "Commencer →"}
+                </button>
+              </div>
+              <div style={{ background: "#0e0e1a", border: "1px solid #818cf830", borderRadius: 12, padding: "16px 12px", textAlign: "center", position: "relative" }}>
+                <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: "#818cf8", color: "#fff", fontSize: 9, fontWeight: 700, borderRadius: 20, padding: "2px 8px", whiteSpace: "nowrap" }}>🔥 2 mois offerts</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#818cf8", letterSpacing: 2, marginBottom: 8 }}>ANNUEL</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: "#fff" }}>79,99€<span style={{ fontSize: 11, color: "#6b7280", fontWeight: 400 }}>/an</span></div>
+                <button onClick={() => onCheckout && onCheckout("annual")} disabled={checkoutLoading} style={{ width: "100%", marginTop: 12, background: "#818cf815", border: "1px solid #818cf840", color: "#818cf8", borderRadius: 8, padding: "8px 0", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                  {checkoutLoading ? "..." : "Commencer →"}
+                </button>
+              </div>
+            </div>
+            {checkoutError && <div style={{ fontSize: 12, color: "#ef4444", marginBottom: 12 }}>{checkoutError}</div>}
+            <p style={{ fontSize: 11, color: "#374151" }}>✓ Accès immédiat · ✓ Annulation à tout moment · ✓ Données privées</p>
+          </div>
+        </div>
       )}
 
       {showImportSuccess && <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", background: "#0e0e1a", border: "1px solid #00e5a040", borderRadius: 12, padding: "12px 20px", fontSize: 13, color: "#00e5a0", fontWeight: 700, zIndex: 500, boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>✓ {fr ? "Données importées !" : "Data imported!"}</div>}
