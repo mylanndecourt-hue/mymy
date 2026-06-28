@@ -7651,10 +7651,25 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .grad-text { background: linear-gradient(135deg,#00e5a0,#818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .sp-desktop-only { display: flex; }
+        .sp-mobile-only { display: none; }
+        .sp-bottom-nav { display: none; }
+        @media (max-width: 768px) {
+          .sp-desktop-only { display: none !important; }
+          .sp-mobile-only { display: flex !important; }
+          .sp-bottom-nav { display: flex !important; position: fixed; bottom: 0; left: 0; right: 0; z-index: 300; background: rgba(6,6,15,0.97); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.07); padding: 6px 0 env(safe-area-inset-bottom, 6px); justify-content: space-around; align-items: center; }
+          .sp-bottom-nav-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; cursor: pointer; padding: 4px 8px; min-width: 52px; font-family: inherit; }
+          .sp-bottom-nav-btn span.icon { font-size: 20px; line-height: 1; }
+          .sp-bottom-nav-btn span.label { font-size: 9px; font-weight: 600; color: #4b5563; letter-spacing: 0.3px; }
+          .sp-bottom-nav-btn.active span.label { color: #00e5a0; }
+          .sp-bottom-nav-btn.active span.icon { filter: drop-shadow(0 0 6px #00e5a080); }
+          .sp-mobile-nav { padding: 0 16px !important; }
+          .sp-content { padding: 20px 16px 90px !important; }
+        }
       `}</style>
 
       {/* ══ NAVBAR UNIFIÉE ══ */}
-      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 300, height: 60, display: "flex", alignItems: "center", padding: "0 32px", gap: 0, background: "rgba(6,6,15,0.92)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+      <nav className="sp-mobile-nav" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 300, height: 60, display: "flex", alignItems: "center", padding: "0 32px", gap: 0, background: "rgba(6,6,15,0.92)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
 
         {/* Logo */}
         <button onClick={() => navigateTo("landing")} style={{ background: "none", border: "none", cursor: "pointer", padding: "0 28px 0 0", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
@@ -7664,10 +7679,10 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
           <span style={{ fontSize: 19, fontWeight: 900, letterSpacing: -1, color: "#fff" }}>trading</span>
         </button>
 
-        <div style={{ width: 1, height: 22, background: "rgba(255,255,255,0.08)", marginRight: 20 }} />
+        <div className="sp-desktop-only" style={{ width: 1, height: 22, background: "rgba(255,255,255,0.08)", marginRight: 20 }} />
 
-        {/* Modules nav — centré */}
-        <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", display: "flex", gap: 0 }}>
+        {/* Modules nav — centré (desktop uniquement) */}
+        <div className="sp-desktop-only" style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", display: "flex", gap: 0 }}>
           {MODULES.map(m => (
             <button key={m.id} className={`sp-nav-btn${tab === m.id ? " active" : ""}`} onClick={() => { navigateTo(m.id); setSelectedCompte(null); setSelectedTrade(null); }}>
               {m.label}
@@ -7676,11 +7691,11 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
         </div>
 
         {/* Actions droite */}
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0, position: "relative" }}>
-          <button onClick={() => setShowExportMenu(s => !s)} style={{ background: showExportMenu ? "rgba(0,229,160,0.1)" : "rgba(255,255,255,0.04)", border: `1px solid ${showExportMenu ? "#00e5a040" : "rgba(255,255,255,0.08)"}`, color: showExportMenu ? "#00e5a0" : "#666", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0, position: "relative", marginLeft: "auto" }}>
+          <button className="sp-desktop-only" onClick={() => setShowExportMenu(s => !s)} style={{ background: showExportMenu ? "rgba(0,229,160,0.1)" : "rgba(255,255,255,0.04)", border: `1px solid ${showExportMenu ? "#00e5a040" : "rgba(255,255,255,0.08)"}`, color: showExportMenu ? "#00e5a0" : "#666", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
             💾 {fr ? "Données" : "Data"}
           </button>
-          <button onClick={toggleLang} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 10px", fontSize: 12, cursor: "pointer", color: "#888", fontFamily: "inherit" }}>
+          <button className="sp-desktop-only" onClick={toggleLang} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 10px", fontSize: 12, cursor: "pointer", color: "#888", fontFamily: "inherit" }}>
             {lang === "fr" ? "🇫🇷 FR" : "🇬🇧 EN"}
           </button>
           {user && (() => {
@@ -7763,7 +7778,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
 
         {/* ── MODULES ── */}
         {!isLanding && (
-          <div style={{ maxWidth: 1300, margin: "0 auto", padding: "36px 32px" }}>
+          <div className="sp-content" style={{ maxWidth: 1300, margin: "0 auto", padding: "36px 32px" }}>
 
             {/* Breadcrumb */}
             <div style={{ fontSize: 11, color: "#374151", marginBottom: 28, letterSpacing: 1, textTransform: "uppercase", fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}>
@@ -7831,6 +7846,25 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
 
       {/* Notifications */}
       {/* Tutorial */}
+      {/* ══ BOTTOM NAV MOBILE ══ */}
+      {!isLanding && (
+        <nav className="sp-bottom-nav">
+          {[
+            { id: "dashboard", icon: "📊", label: "Dashboard" },
+            { id: "session",   icon: "🌅", label: "Session" },
+            { id: "nouveau",   icon: "➕", label: fr ? "Trade" : "Trade" },
+            { id: "analyse",   icon: "🔬", label: fr ? "Analyse" : "Analysis" },
+            { id: "compte",    icon: "👤", label: fr ? "Compte" : "Account" },
+          ].map(item => (
+            <button key={item.id} className={`sp-bottom-nav-btn${tab === item.id ? " active" : ""}`}
+              onClick={() => { navigateTo(item.id); setSelectedCompte(null); setSelectedTrade(null); }}>
+              <span className="icon">{item.icon}</span>
+              <span className="label">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+      )}
+
       {tutorialActive && !isLanding && (
         <TutorialOverlay
           step={tutorialStep}
