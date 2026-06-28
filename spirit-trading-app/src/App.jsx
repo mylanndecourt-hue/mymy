@@ -7658,7 +7658,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
 
         {/* Logo */}
         <button onClick={() => navigateTo("landing")} style={{ background: "none", border: "none", cursor: "pointer", padding: "0 28px 0 0", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
-          <img src="/logo.png" alt="Spirit Trading" style={{ height: 36, width: 36, objectFit: "contain" }} />
+          <img src="/logo.png" alt="Spirit Trading" style={{ height: 36, width: 36, objectFit: "cover", borderRadius: "50%" }} />
           <span style={{ fontSize: 19, fontWeight: 900, letterSpacing: -1, color: "#fff" }}>spirit</span>
           <span style={{ fontSize: 19, fontWeight: 900, letterSpacing: -1, color: "#00e5a0" }}>.</span>
           <span style={{ fontSize: 19, fontWeight: 900, letterSpacing: -1, color: "#fff" }}>trading</span>
