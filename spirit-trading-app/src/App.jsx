@@ -2750,10 +2750,17 @@ function Dashboard({ trades, comptes, onEditCompte, onNewCompte, onGoToAnalyse, 
           {trades.length >= 2 ? (
             <PnlCurve trades={trades} height={200} positive={pnlPositif} onTradeClick={t => onTradeDetail && onTradeDetail(t)} />
           ) : (
-            <div style={{ height: 200, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
-              <div style={{ fontSize: 32 }}>📊</div>
-              <div style={{ fontSize: 13, color: G.dim, textAlign: "center" }}>{fr ? "Ajoute tes premiers trades\npour voir la courbe" : "Add your first trades\nto see the curve"}</div>
-            </div>
+            <button onClick={onNewCompte} style={{ height: 200, width: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, background: "none", border: "none", cursor: "pointer", borderRadius: 12, transition: "background 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.background = "#00e5a008"}
+              onMouseLeave={e => e.currentTarget.style.background = "none"}>
+              <div style={{ fontSize: 32 }}>🏦</div>
+              <div style={{ fontSize: 13, color: G.dim, textAlign: "center", lineHeight: 1.6 }}>
+                {fr ? "Ajoute un compte prop firm\npour voir ta courbe P&L" : "Add a prop firm account\nto see your P&L curve"}
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: G.green, background: G.green + "15", border: `1px solid ${G.green}30`, borderRadius: 20, padding: "5px 14px" }}>
+                + {fr ? "Ajouter un compte" : "Add account"}
+              </div>
+            </button>
           )}
         </div>
 
