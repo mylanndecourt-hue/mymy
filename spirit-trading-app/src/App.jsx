@@ -6794,68 +6794,6 @@ function SessionCalendar({ trades, sessions = {}, onDetail, onNew, onDayOpen, la
         })}
       </div>
 
-      {/* Panneau détail du jour sélectionné */}
-      {selectedDate && sel && (
-        <div style={{ marginTop: 20, background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, overflow: "hidden" }}>
-          {/* Header */}
-          <div style={{ padding: "16px 20px", borderBottom: `1px solid ${G.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: G.text, textTransform: "capitalize" }}>
-                {new Date(selectedDate + "T12:00:00").toLocaleDateString(fr ? "fr-FR" : "en-US", { weekday: "long", day: "numeric", month: "long" })}
-              </div>
-              <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
-                {sel.hasTrades && <span style={{ fontSize: 11, color: G.dim }}>{sel.dayTrades.length} trade{sel.dayTrades.length > 1 ? "s" : ""}</span>}
-                {sel.hasTrades && <span style={{ fontSize: 11, fontWeight: 700, color: sel.pnl >= 0 ? G.green : G.red }}>{sel.pnl >= 0 ? "+" : ""}{Math.round(sel.pnl)}$</span>}
-                {sel.wins > 0 && sel.dayTrades.length > 0 && <span style={{ fontSize: 11, color: G.dim }}>Win {Math.round(sel.wins / sel.dayTrades.length * 100)}%</span>}
-              </div>
-            </div>
-            <button onClick={() => setSelectedDate(null)} style={{ background: "#1a1a2e", border: "none", color: G.dim, borderRadius: 8, width: 28, height: 28, cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-          </div>
-
-          {/* Résumé session */}
-          {sel.hasSession && (
-            <div style={{ padding: "12px 20px", borderBottom: sel.hasTrades ? `1px solid ${G.border}` : "none", display: "flex", gap: 16, flexWrap: "wrap" }}>
-              {sel.mainEmotion && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: G.dim }}><span>{EMOTION_EMOJI[sel.mainEmotion] || "😐"}</span> <span style={{ color: G.text }}>{sel.mainEmotion}</span></div>}
-              {sel.sport !== undefined && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: G.dim }}>🏃 <span style={{ color: sel.sport ? G.green : G.dim }}>{sel.sport ? (fr ? "Sport ✓" : "Workout ✓") : (fr ? "Pas de sport" : "No workout")}</span></div>}
-              {sel.food && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: G.dim }}>{FOOD_EMOJI[sel.food] || "🍽️"} <span style={{ color: sel.food === "Saine" ? G.green : sel.food === "Mauvaise" ? G.red : G.amber }}>{sel.food}</span></div>}
-              {sel.sommeil > 0 && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: G.dim }}>🌙 <span style={{ color: G.text }}>{fr ? "Sommeil" : "Sleep"} {sel.sommeil}/5</span></div>}
-              {sessions[selectedDate]?.intention && <div style={{ width: "100%", fontSize: 12, color: G.dim, fontStyle: "italic" }}>"{sessions[selectedDate].intention}"</div>}
-            </div>
-          )}
-
-          {/* Trades du jour */}
-          {sel.hasTrades && (
-            <div>
-              {sel.dayTrades.map((t, i) => {
-                const win = (t.pnl || 0) > 0; const lose = (t.pnl || 0) < 0;
-                return (
-                  <button key={t.id} onClick={() => onDetail(t)}
-                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "11px 20px", background: "none", border: "none", borderBottom: i < sel.dayTrades.length - 1 ? `1px solid ${G.border}` : "none", cursor: "pointer", color: G.text, fontFamily: "inherit", textAlign: "left", transition: "background 0.1s" }}
-                    onMouseEnter={e => e.currentTarget.style.background = "#ffffff05"}
-                    onMouseLeave={e => e.currentTarget.style.background = "none"}>
-                    <div style={{ width: 3, height: 26, borderRadius: 2, background: win ? G.green : lose ? G.red : G.dim, flexShrink: 0 }} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 13, fontWeight: 700 }}>{t.actif}</span>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: t.direction === "LONG" ? G.green : G.red, background: (t.direction === "LONG" ? G.green : G.red) + "15", borderRadius: 4, padding: "2px 6px" }}>{t.direction}</span>
-                        {t.setup && <span style={{ fontSize: 10, color: G.dim }}>{t.setup}</span>}
-                      </div>
-                      <div style={{ fontSize: 11, color: G.dim, marginTop: 2 }}>{t.heure}{t.compte && ` · ${t.compte.split(" ").slice(0, 2).join(" ")}`}</div>
-                    </div>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: win ? G.green : lose ? G.red : G.dim }}>{(t.pnl || 0) >= 0 ? "+" : ""}{(t.pnl || 0).toFixed(0)}$</div>
-                    <div style={{ fontSize: 10, color: t.respect === "Oui" ? G.green : t.respect === "Non" ? G.red : G.amber }}>{t.respect === "Oui" ? "✓" : t.respect === "Non" ? "✗" : "~"}</div>
-                    <div style={{ fontSize: 12, color: G.dim }}>›</div>
-                  </button>
-                );
-              })}
-              <button onClick={onNew} style={{ width: "100%", padding: "10px 20px", background: "none", border: "none", cursor: "pointer", color: G.dim, fontFamily: "inherit", fontSize: 12, fontWeight: 600, textAlign: "left", transition: "color 0.15s" }}
-                onMouseEnter={e => e.currentTarget.style.color = G.green}
-                onMouseLeave={e => e.currentTarget.style.color = G.dim}>
-                + {fr ? "Ajouter un trade" : "Add a trade"}
-              </button>
-            </div>
-          )}
-
     </div>
   );
 }
@@ -7149,7 +7087,7 @@ function DayDetail({ date, trades, sessions = {}, onBack, onTradeDetail, onNewTr
             <button key={t.id} onClick={() => onTradeDetail(t)}
               style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "14px 20px", background: "none", border: "none", borderBottom: i < dayTrades.length - 1 ? `1px solid ${G.border}` : "none", cursor: "pointer", color: G.text, fontFamily: "inherit", textAlign: "left", transition: "background 0.1s" }}
               onMouseEnter={e => e.currentTarget.style.background = "#ffffff05"}
-              onMouseLeave={e => e.currentTarget.style.background = "none">
+              onMouseLeave={e => e.currentTarget.style.background = "none"}>
               <div style={{ width: 4, height: 34, borderRadius: 2, background: win ? G.green : lose ? G.red : G.dim, flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
