@@ -2657,7 +2657,7 @@ function Dashboard({ trades, comptes, onEditCompte, onNewCompte, onGoToAnalyse, 
             {fr ? <>Vue d'ensemble<br /><span style={{ background: "linear-gradient(135deg,#00e5a0,#818cf8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>de ton trading.</span></> : <>Overview of<br /><span style={{ background: "linear-gradient(135deg,#00e5a0,#818cf8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>your trading.</span></>}
           </h1>
         </div>
-        <button onClick={onNewCompte} style={{ background: "linear-gradient(135deg,#00e5a0,#00b37a)", border: "none", color: "#06060f", borderRadius: 12, padding: "10px 20px", fontSize: 12, fontWeight: 800, cursor: "pointer", boxShadow: "0 0 20px rgba(0,229,160,0.25)", flexShrink: 0 }}>
+        <button data-tutorial="add-account" onClick={onNewCompte} style={{ background: "linear-gradient(135deg,#00e5a0,#00b37a)", border: "none", color: "#06060f", borderRadius: 12, padding: "10px 20px", fontSize: 12, fontWeight: 800, cursor: "pointer", boxShadow: "0 0 20px rgba(0,229,160,0.25)", flexShrink: 0 }}>
           {T.addAccount}
         </button>
       </div>
@@ -4482,7 +4482,7 @@ function ROI({ comptes, setComptes, trades, onEditCompte, mentorQ, setMentorQ, f
                 {!fiscal.actif && <div style={{ fontSize: 11, color: G.dim, marginTop: 4 }}>Si ton activité de trading passe par une structure.</div>}
               </div>
               {!fiscal.actif ? (
-                <button onClick={() => { setFiscal(f => ({ ...f, actif: true })); setEditingFiscal(true); }} style={{ background: `${G.amber}15`, border: `1px solid ${G.amber}50`, color: G.amber, borderRadius: 20, padding: "5px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                <button data-tutorial="fiscal-structure" onClick={() => { setFiscal(f => ({ ...f, actif: true })); setEditingFiscal(true); }} style={{ background: `${G.amber}15`, border: `1px solid ${G.amber}50`, color: G.amber, borderRadius: 20, padding: "5px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
                   Activer
                 </button>
               ) : (
@@ -6858,6 +6858,168 @@ function SessionCalendar({ trades, sessions = {}, onDetail, onNew, onDayOpen, la
   );
 }
 
+function TutorialOverlay({ step, onNext, onSkip, lang = "fr", onNavigate }) {
+  const fr = lang === "fr";
+  const [bubblePos, setBubblePos] = useState({ top: "50%", left: "50%", arrowDir: "none" });
+
+  const STEPS = [
+    {
+      id: "add-account",
+      tab: "dashboard",
+      num: 1,
+      icon: "🏦",
+      title: fr ? "Ajouter ton compte prop firm" : "Add your prop firm account",
+      desc: fr
+        ? "Commence par créer le compte que tu trades. C'est la base de tout — tes trades, ton PnL et tes statistiques seront liés à ce compte."
+        : "Start by creating the account you trade with. Everything — your trades, PnL and stats — will be linked to it.",
+      action: fr ? "Clique sur « Ajouter un compte prop firm »" : "Click « Add a prop firm account »",
+    },
+    {
+      id: "fiscal-structure",
+      tab: "roi",
+      num: 2,
+      icon: "🏛️",
+      title: fr ? "Configurer ta structure fiscale" : "Set up your tax structure",
+      desc: fr
+        ? "Renseigne ton pays et ta structure (auto-entrepreneur, SASU...) pour que Spirit calcule automatiquement tes impôts sur tes payouts. Optionnel, tu peux le faire plus tard."
+        : "Set your country and structure (self-employed, LLC...) so Spirit automatically calculates your taxes on payouts. Optional — you can do it later.",
+      action: fr ? "Clique sur « Activer »" : "Click « Activate »",
+    },
+    {
+      id: "new-session",
+      tab: "session",
+      num: 3,
+      icon: "🌅",
+      title: fr ? "Enregistrer ton premier trade" : "Record your first trade",
+      desc: fr
+        ? "Lance une nouvelle session de trading pour préparer ta journée (checklist, annonces, état d'esprit), puis ajoute tes trades. Tout est connecté."
+        : "Start a new trading session to prepare your day (checklist, announcements, mindset), then log your trades. Everything is connected.",
+      action: fr ? "Clique sur « Nouvelle session de trading »" : "Click « New trading session »",
+    },
+  ];
+
+  const current = STEPS[step];
+
+  useEffect(() => {
+    // Navigate to the right tab for this step
+    if (onNavigate) onNavigate(current.tab);
+  }, [step]);
+
+  useEffect(() => {
+    // Find and position bubble near the target element
+    const timeout = setTimeout(() => {
+      const el = document.querySelector(`[data-tutorial="${current.id}"]`);
+      if (!el) { setBubblePos({ top: "50%", left: "50%", arrowDir: "none", centered: true }); return; }
+      const rect = el.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const bubbleH = 260;
+      const bubbleW = 340;
+      // Prefer showing below, fallback above
+      let top, left, arrowDir;
+      if (rect.bottom + bubbleH + 20 < vh) {
+        top = rect.bottom + 16;
+        arrowDir = "up";
+      } else {
+        top = rect.top - bubbleH - 16;
+        arrowDir = "down";
+      }
+      left = Math.max(16, Math.min(rect.left + rect.width / 2 - bubbleW / 2, vw - bubbleW - 16));
+      setBubblePos({ top, left, arrowDir, centered: false, targetRect: rect });
+    }, 200);
+    return () => clearTimeout(timeout);
+  }, [step]);
+
+  if (!current) return null;
+
+  return (
+    <>
+      {/* CSS pour pulse */}
+      <style>{`
+        @keyframes tutorial-pulse {
+          0%,100% { box-shadow: 0 0 0 0 rgba(0,229,160,0.6), 0 0 0 0 rgba(0,229,160,0.3); }
+          50% { box-shadow: 0 0 0 8px rgba(0,229,160,0.15), 0 0 0 16px rgba(0,229,160,0.05); }
+        }
+        [data-tutorial="${current.id}"] {
+          animation: tutorial-pulse 1.8s ease-in-out infinite !important;
+          outline: 2px solid #00e5a0 !important;
+          outline-offset: 3px !important;
+          position: relative !important;
+          z-index: 901 !important;
+        }
+      `}</style>
+
+      {/* Overlay semi-transparent */}
+      <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 900, backdropFilter: "blur(1px)" }} onClick={onSkip} />
+
+      {/* Bulle */}
+      <div style={{
+        position: "fixed",
+        top: bubblePos.centered ? "50%" : bubblePos.top,
+        left: bubblePos.centered ? "50%" : bubblePos.left,
+        transform: bubblePos.centered ? "translate(-50%,-50%)" : "none",
+        zIndex: 902,
+        width: 340,
+        background: "#0e0e1a",
+        border: "1px solid #818cf840",
+        borderRadius: 16,
+        padding: "22px 22px 18px",
+        boxShadow: "0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(129,140,248,0.1)",
+        fontFamily: "'Inter','Segoe UI',sans-serif",
+      }}>
+        {/* Flèche vers l'élément */}
+        {!bubblePos.centered && bubblePos.arrowDir === "up" && (
+          <div style={{ position: "absolute", top: -8, left: 32, width: 0, height: 0, borderLeft: "8px solid transparent", borderRight: "8px solid transparent", borderBottom: "8px solid #818cf840" }} />
+        )}
+        {!bubblePos.centered && bubblePos.arrowDir === "down" && (
+          <div style={{ position: "absolute", bottom: -8, left: 32, width: 0, height: 0, borderLeft: "8px solid transparent", borderRight: "8px solid transparent", borderTop: "8px solid #818cf840" }} />
+        )}
+
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 32, height: 32, background: "#818cf820", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>{current.icon}</div>
+            <div>
+              <div style={{ fontSize: 10, color: "#818cf8", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase" }}>{fr ? "Étape" : "Step"} {current.num}/{STEPS.length}</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", lineHeight: 1.2 }}>{current.title}</div>
+            </div>
+          </div>
+          <button onClick={onSkip} style={{ background: "none", border: "none", color: "#374151", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "2px 4px", borderRadius: 6 }}
+            onMouseEnter={e => e.currentTarget.style.color = "#9ca3af"}
+            onMouseLeave={e => e.currentTarget.style.color = "#374151"}>✕</button>
+        </div>
+
+        {/* Barre de progression */}
+        <div style={{ display: "flex", gap: 4, marginBottom: 14 }}>
+          {STEPS.map((_, i) => (
+            <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i <= step ? "#818cf8" : "#1a1a2e", transition: "background 0.3s" }} />
+          ))}
+        </div>
+
+        {/* Description */}
+        <div style={{ fontSize: 13, color: "#9ca3af", lineHeight: 1.65, marginBottom: 12 }}>{current.desc}</div>
+
+        {/* Action */}
+        <div style={{ background: "#00e5a010", border: "1px solid #00e5a025", borderRadius: 8, padding: "8px 12px", marginBottom: 16, fontSize: 12, color: "#00e5a0", fontWeight: 600 }}>
+          👆 {current.action}
+        </div>
+
+        {/* Boutons */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <button onClick={onSkip} style={{ background: "none", border: "none", color: "#374151", fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: 0 }}
+            onMouseEnter={e => e.currentTarget.style.color = "#6b7280"}
+            onMouseLeave={e => e.currentTarget.style.color = "#374151"}>
+            {fr ? "Ignorer le tutoriel" : "Skip tutorial"}
+          </button>
+          <button onClick={onNext} style={{ background: "linear-gradient(135deg,#818cf8,#6366f1)", border: "none", color: "#fff", borderRadius: 8, padding: "8px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+            {step < STEPS.length - 1 ? (fr ? "Suivant →" : "Next →") : (fr ? "Terminer ✓" : "Done ✓")}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function DayDetail({ date, trades, sessions = {}, onBack, onTradeDetail, onNewTrade, lang = "fr" }) {
   const fr = lang === "fr";
   const G = { green: "#00e5a0", red: "#ef4444", purple: "#818cf8", amber: "#f59e0b", card: "#0a0a14", border: "#1a1a2e", text: "#e5e7eb", dim: "#6b7280" };
@@ -7037,6 +7199,12 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
 
   const VALID_TABS = ["dashboard", "session", "analyse", "roi", "nouveau", "regles", "objectifs", "tarifs", "chemin"];
   const [sessionSubView, setSessionSubView] = useState("calendar"); // "calendar" | "preparation" | "dayDetail"
+
+  // Tutorial
+  const [tutorialActive, setTutorialActive] = useState(() => localStorage.getItem("spirit_tutorial_done") !== "1");
+  const [tutorialStep, setTutorialStep] = useState(0);
+  const closeTutorial = () => { setTutorialActive(false); localStorage.setItem("spirit_tutorial_done", "1"); };
+  const nextTutorialStep = () => { if (tutorialStep < 2) setTutorialStep(s => s + 1); else closeTutorial(); };
   const [sessionDayDate, setSessionDayDate] = useState(null);
   const getTabFromUrl = () => {
     const path = window.location.pathname.replace("/", "").toLowerCase();
@@ -7566,7 +7734,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
                     <div>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
                         <div style={{ fontSize: 11, fontWeight: 700, color: "#00e5a0", letterSpacing: 3, textTransform: "uppercase" }}>{fr ? "Mes sessions" : "My sessions"}</div>
-                        <button onClick={() => setSessionSubView("preparation")} style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "linear-gradient(135deg,#00e5a015,#818cf808)", border: "1px solid #00e5a030", color: "#00e5a0", borderRadius: 10, padding: "10px 20px", fontSize: 13, cursor: "pointer", fontWeight: 700, fontFamily: "inherit", transition: "all 0.15s", letterSpacing: 0.3 }}
+                        <button data-tutorial="new-session" onClick={() => setSessionSubView("preparation")} style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "linear-gradient(135deg,#00e5a015,#818cf808)", border: "1px solid #00e5a030", color: "#00e5a0", borderRadius: 10, padding: "10px 20px", fontSize: 13, cursor: "pointer", fontWeight: 700, fontFamily: "inherit", transition: "all 0.15s", letterSpacing: 0.3 }}
                           onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg,#00e5a025,#818cf815)"; e.currentTarget.style.borderColor = "#00e5a060"; }}
                           onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg,#00e5a015,#818cf808)"; e.currentTarget.style.borderColor = "#00e5a030"; }}>
                           🌅 {fr ? "Nouvelle session de trading" : "New trading session"}
@@ -7599,6 +7767,17 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
       </div>
 
       {/* Notifications */}
+      {/* Tutorial */}
+      {tutorialActive && !isLanding && (
+        <TutorialOverlay
+          step={tutorialStep}
+          lang={lang}
+          onNext={nextTutorialStep}
+          onSkip={closeTutorial}
+          onNavigate={(tabId) => { navigateTo(tabId); if (tabId === "session") setSessionSubView("calendar"); }}
+        />
+      )}
+
       {showImportSuccess && <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", background: "#0e0e1a", border: "1px solid #00e5a040", borderRadius: 12, padding: "12px 20px", fontSize: 13, color: "#00e5a0", fontWeight: 700, zIndex: 500, boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>✓ {fr ? "Données importées !" : "Data imported!"}</div>}
       {showImportError && <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", background: "#0e0e1a", border: "1px solid #ef444440", borderRadius: 12, padding: "12px 20px", fontSize: 13, color: "#ef4444", fontWeight: 700, zIndex: 500, boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>✕ {fr ? "Erreur d'import" : "Import error"}</div>}
 
