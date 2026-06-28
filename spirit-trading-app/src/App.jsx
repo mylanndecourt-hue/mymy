@@ -7260,6 +7260,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
   const [lang, setLang] = useState(() => localStorage.getItem("spirit_lang") || "fr");
   const T = TR[lang];
   const fr = lang === "fr";
+  const isOwner = user?.email === "mylanndecourt@gmail.com";
   const toggleLang = () => { const nl = lang === "fr" ? "en" : "fr"; setLang(nl); localStorage.setItem("spirit_lang", nl); };
   const [showLanding, setShowLanding] = useState(() => localStorage.getItem("spirit_skipped_landing") !== "1");
 
@@ -7699,12 +7700,14 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
 
         {/* Actions droite */}
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0, position: "relative", marginLeft: "auto" }}>
-          <button className="sp-desktop-only" onClick={() => setShowExportMenu(s => !s)} style={{ background: showExportMenu ? "rgba(0,229,160,0.1)" : "rgba(255,255,255,0.04)", border: `1px solid ${showExportMenu ? "#00e5a040" : "rgba(255,255,255,0.08)"}`, color: showExportMenu ? "#00e5a0" : "#666", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
-            💾 {fr ? "Données" : "Data"}
-          </button>
-          <button className="sp-desktop-only" onClick={toggleLang} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 10px", fontSize: 12, cursor: "pointer", color: "#888", fontFamily: "inherit" }}>
-            {lang === "fr" ? "🇫🇷 FR" : "🇬🇧 EN"}
-          </button>
+          {isOwner && <>
+            <button className="sp-desktop-only" onClick={() => setShowExportMenu(s => !s)} style={{ background: showExportMenu ? "rgba(0,229,160,0.1)" : "rgba(255,255,255,0.04)", border: `1px solid ${showExportMenu ? "#00e5a040" : "rgba(255,255,255,0.08)"}`, color: showExportMenu ? "#00e5a0" : "#666", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
+              💾 {fr ? "Données" : "Data"}
+            </button>
+            <button className="sp-desktop-only" onClick={toggleLang} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 10px", fontSize: 12, cursor: "pointer", color: "#888", fontFamily: "inherit" }}>
+              {lang === "fr" ? "🇫🇷 FR" : "🇬🇧 EN"}
+            </button>
+          </>}
           {user && (() => {
             const [showProfileMenu, setShowProfileMenu] = useState(false);
             return (
