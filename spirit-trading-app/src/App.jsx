@@ -6460,6 +6460,8 @@ function LandingPage({ onEnter, lang }) {
         </svg>}
 
         <div style={{ position:"relative", zIndex:1, animation:"fadeUp .9s ease forwards" }}>
+          <img src="/logo.png" alt="Spirit Trading" style={{ width:110, height:110, objectFit:"contain", marginBottom:16 }} />
+
           <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"#00e5a010", border:"1px solid #00e5a025", borderRadius:20, padding:"6px 18px", fontSize:11, fontWeight:700, color:"#00e5a0", letterSpacing:2, textTransform:"uppercase", marginBottom:32 }}>
             <span style={{ width:6, height:6, background:"#00e5a0", borderRadius:"50%", display:"inline-block", animation:"glow-pulse 2s ease-in-out infinite" }} />
             Journal de trading intelligent
@@ -7596,7 +7598,8 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 300, height: 60, display: "flex", alignItems: "center", padding: "0 32px", gap: 0, background: "rgba(6,6,15,0.92)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
 
         {/* Logo */}
-        <button onClick={() => navigateTo("landing")} style={{ background: "none", border: "none", cursor: "pointer", padding: "0 28px 0 0", flexShrink: 0, display: "flex", alignItems: "center", gap: 2 }}>
+        <button onClick={() => navigateTo("landing")} style={{ background: "none", border: "none", cursor: "pointer", padding: "0 28px 0 0", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
+          <img src="/logo.png" alt="Spirit Trading" style={{ height: 36, width: 36, objectFit: "contain" }} />
           <span style={{ fontSize: 19, fontWeight: 900, letterSpacing: -1, color: "#fff" }}>spirit</span>
           <span style={{ fontSize: 19, fontWeight: 900, letterSpacing: -1, color: "#00e5a0" }}>.</span>
           <span style={{ fontSize: 19, fontWeight: 900, letterSpacing: -1, color: "#fff" }}>trading</span>
