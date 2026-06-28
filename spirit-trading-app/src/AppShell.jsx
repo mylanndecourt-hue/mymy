@@ -46,6 +46,9 @@ export default function AppShell() {
   const [subscription, setSubscription] = useState(null); // null | { plan, active, ... }
   const [subLoading, setSubLoading] = useState(false);
 
+  // Landing vs auth form
+  const [showAuth, setShowAuth] = useState(false);
+
   // Auth form state
   const [authMode, setAuthMode] = useState("login"); // "login" | "signup" | "reset"
   const [email, setEmail] = useState("");
@@ -168,8 +171,11 @@ export default function AppShell() {
     </div>
   );
 
-  // Not logged in → auth screen
-  if (!user) return <AuthScreen fr={fr} authMode={authMode} setAuthMode={setAuthMode} email={email} setEmail={setEmail} password={password} setPassword={setPassword} confirmPassword={confirmPassword} setConfirmPassword={setConfirmPassword} authError={authError} authSuccess={authSuccess} authBusy={authBusy} onEmailAuth={handleEmailAuth} onGoogle={handleGoogleLogin} />;
+  // Not logged in → landing page first, then auth form
+  if (!user) {
+    if (!showAuth) return <LandingShell fr={fr} onEnter={() => setShowAuth(true)} />;
+    return <AuthScreen fr={fr} authMode={authMode} setAuthMode={setAuthMode} email={email} setEmail={setEmail} password={password} setPassword={setPassword} confirmPassword={confirmPassword} setConfirmPassword={setConfirmPassword} authError={authError} authSuccess={authSuccess} authBusy={authBusy} onEmailAuth={handleEmailAuth} onGoogle={handleGoogleLogin} onBack={() => setShowAuth(false)} />;
+  }
 
   // Logged in but checking subscription
   if (subLoading) return (
@@ -194,15 +200,18 @@ export default function AppShell() {
 }
 
 // ── Auth Screen ──
-function AuthScreen({ fr, authMode, setAuthMode, email, setEmail, password, setPassword, confirmPassword, setConfirmPassword, authError, authSuccess, authBusy, onEmailAuth, onGoogle }) {
+function AuthScreen({ fr, authMode, setAuthMode, email, setEmail, password, setPassword, confirmPassword, setConfirmPassword, authError, authSuccess, authBusy, onEmailAuth, onGoogle, onBack }) {
   const titles = { login: fr ? "Connexion" : "Sign in", signup: fr ? "Créer un compte" : "Create account", reset: fr ? "Mot de passe oublié" : "Reset password" };
 
   return (
     <div style={{ background: "#06060f", minHeight: "100vh", fontFamily: "'Inter','Segoe UI',system-ui,sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 24px" }}>
-      {/* Logo */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32 }}>
-        <img src="/logo.png" alt="Spirit Trading" style={{ width: 48, height: 48, objectFit: "contain" }} />
-        <div style={{ fontSize: 15, fontWeight: 800, color: "#e2e8f0", letterSpacing: 1 }}>SPIRIT<span style={{ color: "#00e5a0" }}>.</span>TRADING</div>
+      {/* Logo + retour */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", maxWidth: 360, marginBottom: 24 }}>
+        <button onClick={onBack} style={{ background: "none", border: "none", color: "#4b5e7a", cursor: "pointer", fontSize: 13, fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6 }}>← {fr ? "Retour" : "Back"}</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <img src="/logo.png" alt="" style={{ width: 28, height: 28, objectFit: "cover", borderRadius: "50%" }} />
+          <div style={{ fontSize: 13, fontWeight: 800, color: "#e2e8f0", letterSpacing: 1 }}>SPIRIT<span style={{ color: "#00e5a0" }}>.</span>TRADING</div>
+        </div>
       </div>
 
       <div style={{ background: "rgba(17,24,37,0.9)", backdropFilter: "blur(16px)", border: "1px solid rgba(30,45,69,0.8)", borderRadius: 20, padding: "32px 36px", width: "100%", maxWidth: 360 }}>
@@ -311,6 +320,115 @@ function PaywallScreen({ fr, user, onCheckout, onLogout, loading, error }) {
         <button onClick={onLogout} style={{ marginTop: 20, background: "none", border: "none", color: "#4b5e7a", cursor: "pointer", fontSize: 12 }}>
           {fr ? "Se déconnecter" : "Sign out"}
         </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Landing Shell (page d'accueil pour visiteurs non connectés) ──
+function LandingShell({ fr, onEnter }) {
+  return (
+    <div style={{ background: "#06060f", minHeight: "100vh", fontFamily: "'Inter','Segoe UI',system-ui,sans-serif", color: "#fff", display: "flex", flexDirection: "column" }}>
+      <style>{`
+        @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+        .ls-fade1 { animation: fadeUp 0.7s ease both 0.1s; }
+        .ls-fade2 { animation: fadeUp 0.7s ease both 0.25s; }
+        .ls-fade3 { animation: fadeUp 0.7s ease both 0.4s; }
+        .ls-fade4 { animation: fadeUp 0.7s ease both 0.55s; }
+        @keyframes glow { 0%,100% { opacity:0.6; } 50% { opacity:1; } }
+      `}</style>
+
+      {/* Navbar */}
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", background: "rgba(6,6,15,0.9)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <img src="/logo.png" alt="" style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover" }} />
+          <span style={{ fontSize: 14, fontWeight: 900, color: "#fff", letterSpacing: -0.5 }}>spirit<span style={{ color: "#00e5a0" }}>.</span>trading</span>
+        </div>
+        <button onClick={onEnter} style={{ background: "#00e5a0", color: "#06060f", border: "none", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 800, cursor: "pointer" }}>
+          {fr ? "Connexion" : "Sign in"}
+        </button>
+      </nav>
+
+      {/* Hero */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 24px 40px", textAlign: "center" }}>
+
+        {/* Badge */}
+        <div className="ls-fade1" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#00e5a010", border: "1px solid #00e5a025", borderRadius: 20, padding: "6px 16px", fontSize: 11, fontWeight: 700, color: "#00e5a0", letterSpacing: 2, textTransform: "uppercase", marginBottom: 28 }}>
+          <span style={{ width: 6, height: 6, background: "#00e5a0", borderRadius: "50%", display: "inline-block", animation: "glow 2s ease-in-out infinite" }} />
+          {fr ? "Journal de trading intelligent" : "Smart trading journal"}
+        </div>
+
+        {/* Titre */}
+        <h1 className="ls-fade2" style={{ fontSize: "clamp(36px,10vw,72px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: -2, margin: "0 0 20px" }}>
+          <span style={{ background: "linear-gradient(135deg,#00e5a0,#818cf8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            {fr ? "Le journal" : "The journal"}
+          </span><br />
+          <span style={{ color: "#fff" }}>{fr ? "du trader prop firm." : "for prop firm traders."}</span>
+        </h1>
+
+        {/* Sous-titre */}
+        <p className="ls-fade2" style={{ fontSize: "clamp(14px,4vw,17px)", color: "#6b7280", lineHeight: 1.8, maxWidth: 480, margin: "0 auto 40px" }}>
+          {fr ? <>Conçu pour les traders prop firm. Passe le funded, garde-le.<br /><span style={{ color: "#00e5a0", fontWeight: 600 }}>Comprends tes patterns perdants — et arrête.</span></> : <>Built for prop firm traders. Get funded, keep it.<br /><span style={{ color: "#00e5a0", fontWeight: 600 }}>Understand your losing patterns — and stop.</span></>}
+        </p>
+
+        {/* CTAs */}
+        <div className="ls-fade3" style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", maxWidth: 320 }}>
+          <button onClick={onEnter} style={{ padding: "16px", background: "#00e5a0", color: "#06060f", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
+            {fr ? "Accéder à mon espace →" : "Access my space →"}
+          </button>
+          <button onClick={onEnter} style={{ padding: "14px", background: "none", color: "#fff", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+            {fr ? "Créer un compte gratuit" : "Create a free account"}
+          </button>
+        </div>
+
+        {/* Stats */}
+        <div className="ls-fade4" style={{ display: "flex", gap: 32, marginTop: 52, flexWrap: "wrap", justifyContent: "center" }}>
+          {[["500+", fr ? "trades analysés" : "trades analyzed"], ["15+", fr ? "prop firms" : "prop firms"], ["☁️", fr ? "Cloud sync" : "Cloud sync"]].map(([v, l]) => (
+            <div key={l} style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 20, fontWeight: 900, color: "#fff" }}>{v}</div>
+              <div style={{ fontSize: 10, color: "#4b5e7a", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginTop: 2 }}>{l}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Features cards */}
+        <div className="ls-fade4" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 48, width: "100%", maxWidth: 480 }}>
+          {[
+            { icon: "📊", title: fr ? "Dashboard" : "Dashboard", desc: fr ? "Vue d'ensemble de tes performances" : "Overview of your performance" },
+            { icon: "🌅", title: fr ? "Sessions" : "Sessions", desc: fr ? "Calendrier de tes journées de trading" : "Calendar of your trading days" },
+            { icon: "🔬", title: fr ? "Analyse" : "Analysis", desc: fr ? "Statistiques approfondies" : "In-depth statistics" },
+            { icon: "🏛️", title: fr ? "Fiscalité" : "Tax", desc: fr ? "Structure & optimisation fiscale" : "Structure & tax optimization" },
+          ].map(f => (
+            <div key={f.title} style={{ background: "#0a0a14", border: "1px solid #1a1a2e", borderRadius: 14, padding: "16px 14px", textAlign: "left" }}>
+              <div style={{ fontSize: 22, marginBottom: 8 }}>{f.icon}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#e5e7eb", marginBottom: 4 }}>{f.title}</div>
+              <div style={{ fontSize: 11, color: "#6b7280", lineHeight: 1.5 }}>{f.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Tarifs aperçu */}
+        <div className="ls-fade4" style={{ marginTop: 48, width: "100%", maxWidth: 480 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>{fr ? "Tarifs simples" : "Simple pricing"}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div style={{ background: "#0a0a14", border: "1px solid #1a1a2e", borderRadius: 14, padding: "20px 16px", textAlign: "center" }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#00e5a0", letterSpacing: 2, marginBottom: 8 }}>MENSUEL</div>
+              <div style={{ fontSize: 26, fontWeight: 900, color: "#fff" }}>7,99€<span style={{ fontSize: 12, fontWeight: 400, color: "#6b7280" }}>/mois</span></div>
+            </div>
+            <div style={{ background: "#0a0a14", border: "1px solid #818cf830", borderRadius: 14, padding: "20px 16px", textAlign: "center", position: "relative" }}>
+              <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: "#818cf8", color: "#fff", fontSize: 9, fontWeight: 700, borderRadius: 20, padding: "2px 8px", whiteSpace: "nowrap" }}>🔥 {fr ? "2 mois offerts" : "2 months free"}</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#818cf8", letterSpacing: 2, marginBottom: 8 }}>ANNUEL</div>
+              <div style={{ fontSize: 26, fontWeight: 900, color: "#fff" }}>79,99€<span style={{ fontSize: 12, fontWeight: 400, color: "#6b7280" }}>/an</span></div>
+            </div>
+          </div>
+          <button onClick={onEnter} style={{ width: "100%", marginTop: 12, padding: "14px", background: "none", color: "#00e5a0", border: "1px solid #00e5a030", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+            {fr ? "Commencer maintenant →" : "Get started →"}
+          </button>
+        </div>
+
+        <div style={{ marginTop: 40, fontSize: 11, color: "#374151", paddingBottom: 32 }}>
+          ✓ {fr ? "Annulation à tout moment · Données privées · Sync cloud" : "Cancel anytime · Private data · Cloud sync"}
+        </div>
       </div>
     </div>
   );
