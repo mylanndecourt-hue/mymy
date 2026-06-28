@@ -344,9 +344,14 @@ function LandingShell({ fr, onEnter }) {
           <img src="/logo.png" alt="" style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover" }} />
           <span style={{ fontSize: 14, fontWeight: 900, color: "#fff", letterSpacing: -0.5 }}>spirit<span style={{ color: "#00e5a0" }}>.</span>trading</span>
         </div>
-        <button onClick={onEnter} style={{ background: "#00e5a0", color: "#06060f", border: "none", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 800, cursor: "pointer" }}>
-          {fr ? "Connexion" : "Sign in"}
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button onClick={onEnter} style={{ background: "transparent", color: "#e5e7eb", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "7px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+            {fr ? "Se connecter" : "Log in"}
+          </button>
+          <button onClick={onEnter} style={{ background: "#00e5a0", color: "#06060f", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 800, cursor: "pointer" }}>
+            {fr ? "S'inscrire" : "Sign up"}
+          </button>
+        </div>
       </nav>
 
       {/* Hero */}

@@ -6364,9 +6364,16 @@ function LandingPage({ onEnter, onCheckout, lang }) {
               onMouseEnter={e => e.target.style.color="#fff"} onMouseLeave={e => e.target.style.color="#666"}>{label}</span>
           ))}
         </div>
-        <button className="land-cta" onClick={onEnter} style={{ padding:"10px 22px", fontSize:13, borderRadius:8 }}>
-          {fr ? "Accéder à l'app" : "Open app"} <span>→</span>
-        </button>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <button onClick={onEnter} style={{ padding:"9px 20px", fontSize:13, fontWeight:700, background:"transparent", border:"1px solid rgba(255,255,255,0.15)", color:"#e5e7eb", borderRadius:8, cursor:"pointer", fontFamily:"inherit", transition:"all 0.15s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(255,255,255,0.35)"; e.currentTarget.style.color="#fff"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(255,255,255,0.15)"; e.currentTarget.style.color="#e5e7eb"; }}>
+            {fr ? "Se connecter" : "Log in"}
+          </button>
+          <button className="land-cta" onClick={onEnter} style={{ padding:"9px 20px", fontSize:13, borderRadius:8 }}>
+            {fr ? "S'inscrire" : "Sign up"}
+          </button>
+        </div>
       </nav>
 
       {/* DOT NAV */}
