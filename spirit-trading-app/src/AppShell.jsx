@@ -414,7 +414,7 @@ function LandingShell({ fr, onEnter }) {
 
         {/* Tarifs aperçu */}
         <div className="ls-fade4" style={{ marginTop: 48, width: "100%", maxWidth: 480 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>{fr ? "Tarifs simples" : "Simple pricing"}</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>{fr ? "Investis dans ta discipline" : "Invest in your discipline"}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div style={{ background: "#0a0a14", border: "1px solid #1a1a2e", borderRadius: 14, padding: "20px 16px", textAlign: "center" }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: "#00e5a0", letterSpacing: 2, marginBottom: 8 }}>MENSUEL</div>
