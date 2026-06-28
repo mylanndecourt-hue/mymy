@@ -7132,6 +7132,26 @@ function MonCompte({ user, subscription, onLogout, lang = "fr" }) {
   const fr = lang === "fr";
   const G = { bg: "#06060f", card: "#0a0a14", border: "#1a1a2e", text: "#e5e7eb", dim: "#6b7280", green: "#00e5a0", red: "#ef4444", purple: "#818cf8" };
 
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [portalError, setPortalError] = useState("");
+
+  const handleManageBilling = async () => {
+    if (!subscription?.stripeCustomerId) return;
+    setPortalLoading(true); setPortalError("");
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/create-portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ customerId: subscription.stripeCustomerId }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+      else setPortalError(data.error || "Erreur");
+    } catch { setPortalError(fr ? "Erreur réseau" : "Network error"); }
+    setPortalLoading(false);
+  };
+
   const planLabel = { monthly: fr ? "Mensuel" : "Monthly", annual: fr ? "Annuel" : "Annual", lifetime: fr ? "À vie" : "Lifetime", owner: fr ? "Propriétaire" : "Owner" };
   const isOwner = subscription?.plan === "owner";
   const expiresAt = subscription?.expiresAt && subscription.expiresAt !== "9999-12-31T00:00:00.000Z"
@@ -7189,12 +7209,18 @@ function MonCompte({ user, subscription, onLogout, lang = "fr" }) {
             </div>
             {activatedAt && <Row label={fr ? "Activé le" : "Activated on"} value={activatedAt} />}
             {expiresAt && <Row label={fr ? "Renouvellement le" : "Renewal on"} value={expiresAt} />}
-            {!isOwner && (
-              <div style={{ marginTop: 20, padding: "14px 16px", background: "#1a1a2e", borderRadius: 12, fontSize: 12, color: G.dim, lineHeight: 1.7 }}>
-                {fr
-                  ? <>Pour résilier ton abonnement, contacte-nous à <strong style={{ color: G.text }}>mylanndecourt@gmail.com</strong>. Le remboursement au prorata est possible dans les 14 jours.</>
-                  : <>To cancel your subscription, contact us at <strong style={{ color: G.text }}>mylanndecourt@gmail.com</strong>. Pro-rata refund available within 14 days.</>
-                }
+            {!isOwner && subscription?.stripeCustomerId && (
+              <div style={{ marginTop: 20 }}>
+                <button onClick={handleManageBilling} disabled={portalLoading}
+                  style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: `1px solid ${G.border}`, borderRadius: 10, padding: "11px 18px", color: G.text, fontSize: 13, fontWeight: 700, cursor: portalLoading ? "wait" : "pointer", fontFamily: "inherit", transition: "all 0.15s" }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = "#ffffff40"}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = G.border}>
+                  💳 {portalLoading ? "..." : fr ? "Gérer mon abonnement & facturation" : "Manage subscription & billing"}
+                </button>
+                <div style={{ fontSize: 11, color: G.dim, marginTop: 8, lineHeight: 1.6 }}>
+                  {fr ? "Annuler, changer de plan, télécharger les factures via le portail Stripe sécurisé." : "Cancel, change plan, download invoices via the secure Stripe portal."}
+                </div>
+                {portalError && <div style={{ fontSize: 12, color: G.red, marginTop: 8 }}>{portalError}</div>}
               </div>
             )}
           </>

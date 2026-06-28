@@ -33,7 +33,7 @@ async function verifyStripeSignature(rawBody, signature, secret) {
   return computed === expectedSig;
 }
 
-async function saveToFirestore(uid, plan, sessionId) {
+async function saveToFirestore(uid, plan, sessionId, customerId) {
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const serviceKey = process.env.FIREBASE_SERVICE_KEY; // JSON stringifié
   if (!projectId || !serviceKey) return;
@@ -47,11 +47,12 @@ async function saveToFirestore(uid, plan, sessionId) {
 
   const data = {
     fields: {
-      plan:        { stringValue: plan },
-      sessionId:   { stringValue: sessionId },
-      activatedAt: { stringValue: new Date().toISOString() },
-      expiresAt:   { stringValue: (planExpiry[plan] || planExpiry.monthly)() },
-      active:      { booleanValue: true },
+      plan:             { stringValue: plan },
+      sessionId:        { stringValue: sessionId },
+      stripeCustomerId: { stringValue: customerId || "" },
+      activatedAt:      { stringValue: new Date().toISOString() },
+      expiresAt:        { stringValue: (planExpiry[plan] || planExpiry.monthly)() },
+      active:           { booleanValue: true },
     }
   };
 
@@ -118,10 +119,11 @@ export default async function handler(req, res) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
-    const uid  = session.metadata?.firebase_uid;
-    const plan = session.metadata?.plan;
+    const uid        = session.metadata?.firebase_uid;
+    const plan       = session.metadata?.plan;
+    const customerId = session.customer;
     if (uid && plan) {
-      await saveToFirestore(uid, plan, session.id);
+      await saveToFirestore(uid, plan, session.id, customerId);
     }
   }
 
