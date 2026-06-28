@@ -7570,6 +7570,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
     { id: "analyse",   icon: "🔬", labelKey: "analyse" },
     { id: "roi",       icon: "🏛️", labelKey: "roi" },
     { id: "tarifs",    icon: "💳", labelKey: "tarifs"   },
+    { id: "compte",    icon: "👤", labelKey: "compte"   },
   ];
   const [tabOrder, setTabOrder] = useState(() => {
     try {
@@ -7605,6 +7606,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
     { id: "analyse",   label: fr ? "Analyse"               : "Analysis"         },
     { id: "roi",       label: fr ? "Structure & Fiscalité" : "Structure & Tax"  },
     { id: "tarifs",    label: fr ? "Tarifs"                : "Pricing"          },
+    { id: "compte",    label: fr ? "Mon compte"            : "My account"       },
   ];
 
   const isLanding = tab === "landing";
