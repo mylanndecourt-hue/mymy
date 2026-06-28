@@ -1,72 +1,94 @@
 import { useState, useEffect, useCallback } from "react";
-import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from "firebase/auth";
+import {
+  onAuthStateChanged, signInWithPopup, getRedirectResult, signOut,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail,
+} from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, googleProvider, db } from "./firebase.js";
 import App from "./App.jsx";
 
 const COLORS = {
   bg: "#0a0e1a", surface: "#111827", card: "#1a2235", border: "#1e2d45",
-  cyan: "#00d4ff", text: "#e2e8f0", textDim: "#94a3b8", muted: "#4b5e7a",
+  cyan: "#00d4ff", green: "#00e5a0", text: "#e2e8f0", dim: "#94a3b8", muted: "#4b5e7a",
 };
 
-// Délai de debounce pour l'écriture Firestore (ms)
-const SAVE_DEBOUNCE = 2000;
+// Emails propriétaires — accès permanent sans paiement
+const OWNER_EMAILS = ["mylanndecourt@gmail.com"];
 
+const SAVE_DEBOUNCE = 2000;
 let saveTimer = null;
+
+async function getSubscriptionStatus(uid) {
+  try {
+    const ref = doc(db, "users", uid, "subscription", "status");
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return null;
+    const data = snap.data();
+    if (!data.active) return null;
+    if (data.expiresAt && data.expiresAt !== "9999-12-31T00:00:00.000Z") {
+      if (new Date(data.expiresAt) < new Date()) return null;
+    }
+    return data;
+  } catch {
+    return null;
+  }
+}
 
 export default function AppShell() {
   const lang = localStorage.getItem("spirit_lang") || "fr";
   const fr = lang === "fr";
+
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [cloudData, setCloudData] = useState(null);
   const [dataLoading, setDataLoading] = useState(false);
-  const [saveStatus, setSaveStatus] = useState("idle"); // "idle" | "saving" | "saved"
+  const [saveStatus, setSaveStatus] = useState("idle");
+  const [subscription, setSubscription] = useState(null); // null | { plan, active, ... }
+  const [subLoading, setSubLoading] = useState(false);
 
-  // Écoute l'état d'authentification + gère le retour de redirection Google
+  // Auth form state
+  const [authMode, setAuthMode] = useState("login"); // "login" | "signup" | "reset"
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [authSuccess, setAuthSuccess] = useState("");
+  const [authBusy, setAuthBusy] = useState(false);
+
+  // Checkout state
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
+
   useEffect(() => {
-    const ALLOWED_EMAIL = "mylanndecourt@gmail.com";
-    getRedirectResult(auth)
-      .then(result => {
-        if (result?.user) {
-          if (result.user.email === ALLOWED_EMAIL) setUser(result.user);
-          else signOut(auth);
-        }
-      })
-      .catch(err => {
-        console.error("Redirect result error:", err.code, err.message);
-      });
-    const unsub = onAuthStateChanged(auth, (u) => {
-      if (u && u.email !== ALLOWED_EMAIL) { signOut(auth); return; }
+    getRedirectResult(auth).catch(() => {});
+    const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       setAuthLoading(false);
+      if (!u) { setSubscription(null); return; }
+      // Owners get free access
+      if (OWNER_EMAILS.includes(u.email)) { setSubscription({ active: true, plan: "owner" }); return; }
+      // Check subscription
+      setSubLoading(true);
+      const sub = await getSubscriptionStatus(u.uid);
+      setSubscription(sub);
+      setSubLoading(false);
     });
     return unsub;
   }, []);
 
-  // Charge les données depuis Firestore quand l'utilisateur se connecte
+  // Load Firestore data when user is confirmed active
+  const isActive = user && (OWNER_EMAILS.includes(user.email) || subscription?.active);
+
   useEffect(() => {
-    if (!user) {
-      setCloudData(null);
-      return;
-    }
+    if (!isActive) { setCloudData(null); return; }
     setDataLoading(true);
     const ref = doc(db, "users", user.uid, "journal", "data");
     getDoc(ref).then((snap) => {
-      if (snap.exists()) {
-        setCloudData(snap.data());
-      } else {
-        setCloudData({}); // données vides = l'app utilisera ses initialStates
-      }
+      setCloudData(snap.exists() ? snap.data() : {});
       setDataLoading(false);
-    }).catch((err) => {
-      console.error("Erreur chargement Firestore:", err);
-      setCloudData({});
-      setDataLoading(false);
-    });
-  }, [user]);
+    }).catch(() => { setCloudData({}); setDataLoading(false); });
+  }, [isActive, user?.uid]);
 
-  // Fonction de sauvegarde avec debounce
   const handleDataChange = useCallback((data) => {
     if (!user) return;
     setSaveStatus("saving");
@@ -77,254 +99,219 @@ export default function AppShell() {
         await setDoc(ref, data, { merge: false });
         setSaveStatus("saved");
         setTimeout(() => setSaveStatus("idle"), 2000);
-      } catch (err) {
-        console.error("Erreur sauvegarde Firestore:", err);
-        setSaveStatus("idle");
-      }
+      } catch { setSaveStatus("idle"); }
     }, SAVE_DEBOUNCE);
   }, [user]);
 
-  const handleLogin = () => {
+  const handleLogout = async () => { await signOut(auth); };
+
+  // ── Auth handlers ──
+  const handleGoogleLogin = () => {
+    setAuthError("");
     signInWithPopup(auth, googleProvider).catch(err => {
-      console.error("Erreur connexion:", err.code, err.message);
+      setAuthError(err.message);
     });
-
   };
 
-  const handleLogout = async () => {
-    await signOut(auth);
+  const handleEmailAuth = async (e) => {
+    e.preventDefault();
+    setAuthError(""); setAuthSuccess(""); setAuthBusy(true);
+    try {
+      if (authMode === "login") {
+        await signInWithEmailAndPassword(auth, email, password);
+      } else if (authMode === "signup") {
+        if (password !== confirmPassword) { setAuthError(fr ? "Les mots de passe ne correspondent pas." : "Passwords do not match."); setAuthBusy(false); return; }
+        if (password.length < 6) { setAuthError(fr ? "Mot de passe trop court (6 caractères min)." : "Password too short (min 6 chars)."); setAuthBusy(false); return; }
+        await createUserWithEmailAndPassword(auth, email, password);
+      } else if (authMode === "reset") {
+        await sendPasswordResetEmail(auth, email);
+        setAuthSuccess(fr ? "Email de réinitialisation envoyé !" : "Reset email sent!");
+        setAuthBusy(false); return;
+      }
+    } catch (err) {
+      const msg = {
+        "auth/user-not-found": fr ? "Aucun compte avec cet email." : "No account with this email.",
+        "auth/wrong-password": fr ? "Mot de passe incorrect." : "Wrong password.",
+        "auth/email-already-in-use": fr ? "Cet email est déjà utilisé." : "Email already in use.",
+        "auth/invalid-email": fr ? "Adresse email invalide." : "Invalid email address.",
+        "auth/too-many-requests": fr ? "Trop de tentatives. Réessaie plus tard." : "Too many attempts. Try later.",
+        "auth/invalid-credential": fr ? "Email ou mot de passe incorrect." : "Incorrect email or password.",
+      }[err.code] || err.message;
+      setAuthError(msg);
+    }
+    setAuthBusy(false);
   };
 
-  // Écran de chargement auth
-  if (authLoading) {
-    return (
-      <div style={{ background: COLORS.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ color: COLORS.cyan, fontSize: 14 }}>{fr ? "Chargement..." : "Loading..."}</div>
-      </div>
-    );
+  // ── Stripe checkout ──
+  const handleCheckout = async (plan) => {
+    if (!user) return;
+    setCheckoutLoading(true); setCheckoutError("");
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ plan }),
+      });
+      const data = await res.json();
+      if (data.url) { window.location.href = data.url; }
+      else setCheckoutError(data.error || "Erreur Stripe");
+    } catch { setCheckoutError(fr ? "Erreur réseau" : "Network error"); }
+    setCheckoutLoading(false);
+  };
+
+  // ── Screens ──
+
+  if (authLoading) return (
+    <div style={{ background: COLORS.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ color: COLORS.cyan, fontSize: 14 }}>{fr ? "Chargement..." : "Loading..."}</div>
+    </div>
+  );
+
+  // Not logged in → auth screen
+  if (!user) return <AuthScreen fr={fr} authMode={authMode} setAuthMode={setAuthMode} email={email} setEmail={setEmail} password={password} setPassword={setPassword} confirmPassword={confirmPassword} setConfirmPassword={setConfirmPassword} authError={authError} authSuccess={authSuccess} authBusy={authBusy} onEmailAuth={handleEmailAuth} onGoogle={handleGoogleLogin} />;
+
+  // Logged in but checking subscription
+  if (subLoading) return (
+    <div style={{ background: COLORS.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ color: COLORS.cyan, fontSize: 14 }}>{fr ? "Vérification de ton abonnement..." : "Checking subscription..."}</div>
+    </div>
+  );
+
+  // Logged in but no active subscription → paywall
+  if (user && !OWNER_EMAILS.includes(user.email) && !subscription?.active) {
+    return <PaywallScreen fr={fr} user={user} onCheckout={handleCheckout} onLogout={handleLogout} loading={checkoutLoading} error={checkoutError} />;
   }
 
-  // Landing page + connexion
-  if (!user) {
-    const PnlCurve = () => {
-      const pts = [0,8,5,15,12,25,20,18,32,28,38,35,45,42,55,50,60,58,68,72,80,76,88,92,100];
-      const h = 120, w = 400;
-      const path = pts.map((v,i) => `${i === 0 ? "M" : "L"}${(i/(pts.length-1))*w},${h - (v/100)*h}`).join(" ");
-      const fill = `${path} L${w},${h} L0,${h} Z`;
-      return (
-        <svg viewBox={`0 0 ${w} ${h}`} style={{ width: "100%", height: "100%" }} preserveAspectRatio="none">
-          <defs>
-            <linearGradient id="grd" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#00e5a0" stopOpacity="0.3"/>
-              <stop offset="100%" stopColor="#00e5a0" stopOpacity="0"/>
-            </linearGradient>
-          </defs>
-          <path d={fill} fill="url(#grd)" />
-          <path d={path} fill="none" stroke="#00e5a0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      );
-    };
+  // Loading data
+  if (dataLoading || cloudData === null) return (
+    <div style={{ background: COLORS.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ color: COLORS.cyan, fontSize: 14 }}>{fr ? "Chargement de tes données..." : "Loading your data..."}</div>
+    </div>
+  );
 
-    const BarChart = () => {
-      const bars = [45,72,38,88,55,91,63,74,82,48,95,67];
-      const max = 100;
-      return (
-        <svg viewBox="0 0 260 90" style={{ width: "100%", height: "100%" }}>
-          {bars.map((v,i) => {
-            const h = (v/max)*80;
-            const color = v > 70 ? "#00e5a0" : v > 50 ? "#818cf8" : "#ef4444";
-            return <rect key={i} x={i*22+1} y={90-h} width={18} height={h} rx={4} fill={color} opacity={0.7}/>;
-          })}
-        </svg>
-      );
-    };
+  return <App user={user} cloudData={cloudData} onDataChange={handleDataChange} saveStatus={saveStatus} onLogout={handleLogout} />;
+}
 
-    const CalHeatmap = () => {
-      const cells = Array.from({length:35}, (_,i) => ({ v: Math.random() }));
-      return (
-        <svg viewBox="0 0 175 70" style={{ width: "100%", height: "100%" }}>
-          {cells.map((c,i) => {
-            const col = i % 7, row = Math.floor(i/7);
-            const color = c.v > 0.7 ? "#00e5a0" : c.v > 0.4 ? "#818cf8" : c.v > 0.2 ? "#1e2d45" : "#0d1520";
-            return <rect key={i} x={col*26} y={row*14} width={23} height={11} rx={3} fill={color} opacity={0.8}/>;
-          })}
-        </svg>
-      );
-    };
-
-    const DonutChart = () => (
-      <svg viewBox="0 0 100 100" style={{ width: "100%", height: "100%" }}>
-        <circle cx="50" cy="50" r="38" fill="none" stroke="#1e2d45" strokeWidth="16"/>
-        <circle cx="50" cy="50" r="38" fill="none" stroke="#00e5a0" strokeWidth="16" strokeDasharray="150 89" strokeDashoffset="25" strokeLinecap="round"/>
-        <circle cx="50" cy="50" r="38" fill="none" stroke="#818cf8" strokeWidth="16" strokeDasharray="60 179" strokeDashoffset="-125" strokeLinecap="round"/>
-        <circle cx="50" cy="50" r="38" fill="none" stroke="#f59e0b" strokeWidth="16" strokeDasharray="29 210" strokeDashoffset="-185" strokeLinecap="round"/>
-        <text x="50" y="54" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="800">69%</text>
-      </svg>
-    );
-
-    const StatCard = ({ label, val, color, sub }) => (
-      <div style={{ background: "rgba(17,24,37,0.9)", border: `1px solid ${color}30`, borderRadius: 12, padding: "14px 16px", minWidth: 110 }}>
-        <div style={{ fontSize: 9, color: "#4b5e7a", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 }}>{label}</div>
-        <div style={{ fontSize: 22, fontWeight: 900, color, letterSpacing: -1 }}>{val}</div>
-        {sub && <div style={{ fontSize: 10, color: "#4b5e7a", marginTop: 2 }}>{sub}</div>}
-      </div>
-    );
-
-    return (
-      <div style={{ background: "#06060f", minHeight: "100vh", fontFamily: "'Inter','Segoe UI',system-ui,sans-serif", color: "#fff", overflow: "hidden", position: "relative" }}>
-        <style>{`
-          @keyframes drift { 0%{transform:translateY(0)} 50%{transform:translateY(-18px)} 100%{transform:translateY(0)} }
-          @keyframes drift2 { 0%{transform:translateY(0)} 50%{transform:translateY(14px)} 100%{transform:translateY(0)} }
-          @keyframes fadein { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-          @keyframes drawline { from{stroke-dashoffset:1000} to{stroke-dashoffset:0} }
-          .drift1 { animation: drift 8s ease-in-out infinite; }
-          .drift2 { animation: drift2 11s ease-in-out infinite; }
-          .drift3 { animation: drift 14s ease-in-out infinite 2s; }
-          .fi1 { animation: fadein 0.7s ease both 0.1s; }
-          .fi2 { animation: fadein 0.7s ease both 0.25s; }
-          .fi3 { animation: fadein 0.7s ease both 0.4s; }
-          .fi4 { animation: fadein 0.7s ease both 0.55s; }
-        `}</style>
-
-        {/* ── Arrière-plan graphiques ── */}
-        <div style={{ position: "fixed", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
-          {/* Radial glow center */}
-          <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,212,255,0.04) 0%, transparent 70%)" }} />
-
-          {/* P&L curve — left */}
-          <div className="drift1" style={{ position: "absolute", left: "3%", top: "15%", width: 360, height: 120, opacity: 0.18 }}>
-            <div style={{ fontSize: 9, color: "#00e5a0", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Courbe P&L cumulé</div>
-            <PnlCurve />
-          </div>
-
-          {/* Stat cards — top right */}
-          <div className="drift2" style={{ position: "absolute", right: "4%", top: "8%", display: "flex", gap: 10, opacity: 0.22 }}>
-            <StatCard label="Win Rate" val="69%" color="#00e5a0" sub="347W / 153L" />
-            <StatCard label="P&L Net" val="+12 840$" color="#00e5a0" sub="500 trades" />
-          </div>
-
-          {/* Bar chart — right side */}
-          <div className="drift3" style={{ position: "absolute", right: "3%", top: "35%", width: 280, opacity: 0.16 }}>
-            <div style={{ fontSize: 9, color: "#818cf8", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>P&L par setup</div>
-            <BarChart />
-          </div>
-
-          {/* Heatmap calendar — bottom left */}
-          <div className="drift1" style={{ position: "absolute", left: "3%", bottom: "14%", width: 220, opacity: 0.18 }}>
-            <div style={{ fontSize: 9, color: "#818cf8", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>Calendrier trading</div>
-            <CalHeatmap />
-          </div>
-
-          {/* Donut fiscal — bottom right */}
-          <div className="drift2" style={{ position: "absolute", right: "5%", bottom: "10%", width: 110, opacity: 0.2 }}>
-            <div style={{ fontSize: 9, color: "#f59e0b", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Structure fiscale</div>
-            <DonutChart />
-          </div>
-
-          {/* Extra stat cards — bottom center */}
-          <div className="drift3" style={{ position: "absolute", left: "5%", top: "55%", display: "flex", gap: 10, opacity: 0.15 }}>
-            <StatCard label="R/R Moyen" val="1.26" color="#818cf8" />
-            <StatCard label="Respect plan" val="81%" color="#818cf8" />
-          </div>
-
-          {/* Second P&L curve — bottom */}
-          <div className="drift2" style={{ position: "absolute", left: "30%", bottom: "8%", width: 300, height: 90, opacity: 0.12 }}>
-            <div style={{ fontSize: 9, color: "#00d4ff", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Compte Topstep #2</div>
-            <PnlCurve />
-          </div>
-
-          {/* Grid lines overlay */}
-          <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} opacity={0.03}>
-            {Array.from({length:12}).map((_,i) => <line key={i} x1="0" y1={`${(i/11)*100}%`} x2="100%" y2={`${(i/11)*100}%`} stroke="#fff" strokeWidth="1"/>)}
-            {Array.from({length:8}).map((_,i) => <line key={i} x1={`${(i/7)*100}%`} y1="0" x2={`${(i/7)*100}%`} y2="100%" stroke="#fff" strokeWidth="1"/>)}
-          </svg>
-        </div>
-
-        {/* ── Contenu centré ── */}
-        <div style={{ position: "relative", zIndex: 10, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 24px" }}>
-          {/* Logo */}
-          <div className="fi1" style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32 }}>
-            <div style={{ fontSize: 28 }}>🕊️</div>
-            <div style={{ fontSize: 13, fontWeight: 800, color: "#e2e8f0", letterSpacing: 1 }}>SPIRIT<span style={{ color: "#00d4ff" }}>.</span>TRADING</div>
-          </div>
-
-          {/* Badge */}
-          <div className="fi1" style={{ background: "rgba(0,212,255,0.08)", border: "1px solid rgba(0,212,255,0.2)", borderRadius: 20, padding: "5px 14px", fontSize: 11, color: "#00d4ff", fontWeight: 700, letterSpacing: 1, marginBottom: 20 }}>
-            {fr ? "Journal intelligent pour traders prop firm" : "Smart journal for prop firm traders"}
-          </div>
-
-          {/* Title */}
-          <div className="fi2" style={{ textAlign: "center", marginBottom: 16 }}>
-            <div style={{ fontSize: 46, fontWeight: 900, lineHeight: 1.1, letterSpacing: -2 }}>
-              <span style={{ background: "linear-gradient(135deg,#00e5a0,#00d4ff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                {fr ? "Le journal" : "The journal"}
-              </span>
-              <br />
-              <span style={{ color: "#e2e8f0" }}>{fr ? "du trader prop firm." : "for prop firm traders."}</span>
-            </div>
-          </div>
-
-          {/* Subtitle */}
-          <div className="fi2" style={{ fontSize: 14, color: "#94a3b8", textAlign: "center", maxWidth: 380, lineHeight: 1.7, marginBottom: 36 }}>
-            {fr
-              ? <>Conçu pour les traders prop firm. Passe le funded, garde-le.<br /><span style={{ color: "#00e5a0", fontWeight: 600 }}>Comprends tes patterns perdants — et arrête.</span></>
-              : <>Built for prop firm traders. Get funded, keep it.<br /><span style={{ color: "#00e5a0", fontWeight: 600 }}>Understand your losing patterns — and stop.</span></>
-            }
-          </div>
-
-          {/* Login card */}
-          <div className="fi3" style={{ background: "rgba(17,24,37,0.85)", backdropFilter: "blur(16px)", border: "1px solid rgba(30,45,69,0.8)", borderRadius: 20, padding: "32px 36px", textAlign: "center", width: 320 }}>
-            <button
-              onClick={handleLogin}
-              style={{
-                width: "100%", padding: "14px 24px",
-                background: "linear-gradient(135deg, rgba(0,212,255,0.15), rgba(0,229,160,0.15))",
-                border: "1px solid rgba(0,212,255,0.4)", borderRadius: 12,
-                color: "#00d4ff", fontSize: 14, fontWeight: 700, cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-                transition: "all 0.2s",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,212,255,0.2)"; e.currentTarget.style.borderColor = "rgba(0,212,255,0.7)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(0,212,255,0.15), rgba(0,229,160,0.15))"; e.currentTarget.style.borderColor = "rgba(0,212,255,0.4)"; }}
-            >
-              <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/><path fill="#34A853" d="M6.3 14.7l7 5.1C15.1 16.5 19.2 14 24 14c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 16.3 2 9.7 7.4 6.3 14.7z"/><path fill="#FBBC05" d="M24 46c5.9 0 10.9-2 14.5-5.3l-6.7-5.5C29.7 36.8 27 37.6 24 37.6c-5.8 0-10.8-3.9-12.6-9.3l-7 5.4C7.8 41.2 15.3 46 24 46z"/><path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.8 2.3-2.2 4.2-4.1 5.6l6.7 5.5C42.4 36.2 46 30.6 46 24c0-1.3-.2-2.7-.5-4z"/></svg>
-              {fr ? "Continuer avec Google" : "Continue with Google"}
-            </button>
-            <div style={{ fontSize: 10, color: "#4b5e7a", marginTop: 16, lineHeight: 1.7 }}>
-              {fr ? "☁️ Données sauvegardées dans le cloud · Accès multi-appareils" : "☁️ Cloud-synced data · Multi-device access"}
-            </div>
-          </div>
-
-          {/* Stats strip */}
-          <div className="fi4" style={{ display: "flex", gap: 32, marginTop: 40, opacity: 0.6 }}>
-            {[["500+","trades analysés"],["15+","prop firms"],["IA","coach intégré"],["☁️","cloud sync"]].map(([v,l]) => (
-              <div key={l} style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 16, fontWeight: 900, color: "#e2e8f0" }}>{v}</div>
-                <div style={{ fontSize: 10, color: "#4b5e7a" }}>{l}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Chargement des données cloud
-  if (dataLoading || cloudData === null) {
-    return (
-      <div style={{ background: COLORS.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ color: COLORS.cyan, fontSize: 14 }}>{fr ? "Chargement de tes données..." : "Loading your data..."}</div>
-      </div>
-    );
-  }
+// ── Auth Screen ──
+function AuthScreen({ fr, authMode, setAuthMode, email, setEmail, password, setPassword, confirmPassword, setConfirmPassword, authError, authSuccess, authBusy, onEmailAuth, onGoogle }) {
+  const titles = { login: fr ? "Connexion" : "Sign in", signup: fr ? "Créer un compte" : "Create account", reset: fr ? "Mot de passe oublié" : "Reset password" };
 
   return (
-    <App
-      user={user}
-      cloudData={cloudData}
-      onDataChange={handleDataChange}
-      saveStatus={saveStatus}
-      onLogout={handleLogout}
-    />
+    <div style={{ background: "#06060f", minHeight: "100vh", fontFamily: "'Inter','Segoe UI',system-ui,sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 24px" }}>
+      {/* Logo */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32 }}>
+        <img src="/logo.png" alt="Spirit Trading" style={{ width: 48, height: 48, objectFit: "contain" }} />
+        <div style={{ fontSize: 15, fontWeight: 800, color: "#e2e8f0", letterSpacing: 1 }}>SPIRIT<span style={{ color: "#00e5a0" }}>.</span>TRADING</div>
+      </div>
+
+      <div style={{ background: "rgba(17,24,37,0.9)", backdropFilter: "blur(16px)", border: "1px solid rgba(30,45,69,0.8)", borderRadius: 20, padding: "32px 36px", width: "100%", maxWidth: 360 }}>
+        <div style={{ fontSize: 20, fontWeight: 800, color: "#e2e8f0", marginBottom: 24, textAlign: "center" }}>{titles[authMode]}</div>
+
+        <form onSubmit={onEmailAuth} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <input
+            type="email" placeholder={fr ? "Adresse email" : "Email address"}
+            value={email} onChange={e => setEmail(e.target.value)} required
+            style={{ padding: "12px 14px", background: "#0d1520", border: "1px solid #1e2d45", borderRadius: 10, color: "#e2e8f0", fontSize: 14, fontFamily: "inherit", outline: "none" }}
+          />
+          {authMode !== "reset" && (
+            <input
+              type="password" placeholder={fr ? "Mot de passe" : "Password"}
+              value={password} onChange={e => setPassword(e.target.value)} required
+              style={{ padding: "12px 14px", background: "#0d1520", border: "1px solid #1e2d45", borderRadius: 10, color: "#e2e8f0", fontSize: 14, fontFamily: "inherit", outline: "none" }}
+            />
+          )}
+          {authMode === "signup" && (
+            <input
+              type="password" placeholder={fr ? "Confirmer le mot de passe" : "Confirm password"}
+              value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required
+              style={{ padding: "12px 14px", background: "#0d1520", border: "1px solid #1e2d45", borderRadius: 10, color: "#e2e8f0", fontSize: 14, fontFamily: "inherit", outline: "none" }}
+            />
+          )}
+
+          {authError && <div style={{ fontSize: 12, color: "#ef4444", background: "#ef444415", border: "1px solid #ef444430", borderRadius: 8, padding: "8px 12px" }}>{authError}</div>}
+          {authSuccess && <div style={{ fontSize: 12, color: "#00e5a0", background: "#00e5a015", border: "1px solid #00e5a030", borderRadius: 8, padding: "8px 12px" }}>{authSuccess}</div>}
+
+          <button type="submit" disabled={authBusy} style={{ padding: "13px", background: "#00e5a0", color: "#06060f", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 800, cursor: authBusy ? "wait" : "pointer", marginTop: 4 }}>
+            {authBusy ? "..." : authMode === "login" ? (fr ? "Se connecter" : "Sign in") : authMode === "signup" ? (fr ? "Créer mon compte" : "Create account") : (fr ? "Envoyer le lien" : "Send reset link")}
+          </button>
+        </form>
+
+        {/* Divider */}
+        {authMode !== "reset" && (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0" }}>
+              <div style={{ flex: 1, height: 1, background: "#1e2d45" }} />
+              <span style={{ fontSize: 11, color: "#4b5e7a" }}>ou</span>
+              <div style={{ flex: 1, height: 1, background: "#1e2d45" }} />
+            </div>
+            <button onClick={onGoogle} style={{ width: "100%", padding: "12px", background: "none", border: "1px solid #1e2d45", borderRadius: 10, color: "#94a3b8", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/><path fill="#34A853" d="M6.3 14.7l7 5.1C15.1 16.5 19.2 14 24 14c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 16.3 2 9.7 7.4 6.3 14.7z"/><path fill="#FBBC05" d="M24 46c5.9 0 10.9-2 14.5-5.3l-6.7-5.5C29.7 36.8 27 37.6 24 37.6c-5.8 0-10.8-3.9-12.6-9.3l-7 5.4C7.8 41.2 15.3 46 24 46z"/><path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.8 2.3-2.2 4.2-4.1 5.6l6.7 5.5C42.4 36.2 46 30.6 46 24c0-1.3-.2-2.7-.5-4z"/></svg>
+              Google
+            </button>
+          </>
+        )}
+
+        {/* Toggle links */}
+        <div style={{ marginTop: 20, textAlign: "center", fontSize: 12, color: "#4b5e7a", display: "flex", flexDirection: "column", gap: 8 }}>
+          {authMode === "login" && <>
+            <button onClick={() => setAuthMode("signup")} style={{ background: "none", border: "none", color: "#00e5a0", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>{fr ? "Créer un compte →" : "Create an account →"}</button>
+            <button onClick={() => setAuthMode("reset")} style={{ background: "none", border: "none", color: "#4b5e7a", cursor: "pointer", fontSize: 11 }}>{fr ? "Mot de passe oublié ?" : "Forgot password?"}</button>
+          </>}
+          {authMode === "signup" && <button onClick={() => setAuthMode("login")} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: 12 }}>{fr ? "Déjà un compte ? Se connecter" : "Already have an account? Sign in"}</button>}
+          {authMode === "reset" && <button onClick={() => setAuthMode("login")} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: 12 }}>{fr ? "← Retour à la connexion" : "← Back to sign in"}</button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Paywall Screen ──
+function PaywallScreen({ fr, user, onCheckout, onLogout, loading, error }) {
+  return (
+    <div style={{ background: "#06060f", minHeight: "100vh", fontFamily: "'Inter','Segoe UI',system-ui,sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 24px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32 }}>
+        <img src="/logo.png" alt="Spirit Trading" style={{ width: 48, height: 48, objectFit: "contain" }} />
+        <div style={{ fontSize: 15, fontWeight: 800, color: "#e2e8f0", letterSpacing: 1 }}>SPIRIT<span style={{ color: "#00e5a0" }}>.</span>TRADING</div>
+      </div>
+
+      <div style={{ background: "rgba(17,24,37,0.9)", backdropFilter: "blur(16px)", border: "1px solid rgba(30,45,69,0.8)", borderRadius: 20, padding: "40px 36px", width: "100%", maxWidth: 480, textAlign: "center" }}>
+        <div style={{ fontSize: 32, marginBottom: 12 }}>🔒</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: "#e2e8f0", marginBottom: 8 }}>{fr ? "Accès premium requis" : "Premium access required"}</div>
+        <div style={{ fontSize: 14, color: "#94a3b8", marginBottom: 32, lineHeight: 1.7 }}>
+          {fr ? <>Connecté en tant que <strong style={{ color: "#e2e8f0" }}>{user.email}</strong>.<br />Choisis un plan pour accéder à l'application.</> : <>Signed in as <strong style={{ color: "#e2e8f0" }}>{user.email}</strong>.<br />Choose a plan to access the app.</>}
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+          {/* Mensuel */}
+          <div style={{ background: "#0d1520", border: "1px solid #1e2d45", borderRadius: 16, padding: "24px 20px" }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#00e5a0", letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Mensuel</div>
+            <div style={{ fontSize: 28, fontWeight: 900, color: "#e2e8f0" }}>7,99€<span style={{ fontSize: 13, fontWeight: 400, color: "#94a3b8" }}>/mois</span></div>
+            <div style={{ fontSize: 11, color: "#4b5e7a", marginBottom: 20 }}>{fr ? "Sans engagement" : "No commitment"}</div>
+            <button onClick={() => onCheckout("monthly")} disabled={loading} style={{ width: "100%", padding: "11px", background: "#00e5a0", color: "#06060f", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: loading ? "wait" : "pointer" }}>
+              {loading ? "..." : fr ? "Commencer →" : "Start →"}
+            </button>
+          </div>
+          {/* Annuel */}
+          <div style={{ background: "#0d1520", border: "1px solid #818cf830", borderRadius: 16, padding: "24px 20px", position: "relative" }}>
+            <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: "#818cf8", color: "#fff", fontSize: 10, fontWeight: 700, borderRadius: 20, padding: "3px 10px", whiteSpace: "nowrap" }}>🔥 {fr ? "2 mois offerts" : "2 months free"}</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#818cf8", letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Annuel</div>
+            <div style={{ fontSize: 28, fontWeight: 900, color: "#e2e8f0" }}>79,99€<span style={{ fontSize: 13, fontWeight: 400, color: "#94a3b8" }}>/an</span></div>
+            <div style={{ fontSize: 11, color: "#4b5e7a", marginBottom: 20 }}>6,67€/mois</div>
+            <button onClick={() => onCheckout("annual")} disabled={loading} style={{ width: "100%", padding: "11px", background: "#818cf8", color: "#fff", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: loading ? "wait" : "pointer" }}>
+              {loading ? "..." : fr ? "Commencer →" : "Start →"}
+            </button>
+          </div>
+        </div>
+
+        {error && <div style={{ fontSize: 12, color: "#ef4444", marginBottom: 16 }}>{error}</div>}
+
+        <div style={{ fontSize: 11, color: "#4b5e7a" }}>✓ {fr ? "Accès immédiat · Annulation en 1 clic · Données privées" : "Instant access · Cancel anytime · Private data"}</div>
+
+        <button onClick={onLogout} style={{ marginTop: 20, background: "none", border: "none", color: "#4b5e7a", cursor: "pointer", fontSize: 12 }}>
+          {fr ? "Se déconnecter" : "Sign out"}
+        </button>
+      </div>
+    </div>
   );
 }
