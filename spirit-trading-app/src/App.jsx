@@ -620,7 +620,7 @@ const PROP_FIRMS_CATALOG = {
     nom: "Topstep", couleur: "#00d4ff", emoji: "🏦", logo: "/firms/topstep.png", siteUrl: "https://www.topstep.com", reglesUrl: "https://support.topstep.com/hc/en-us/categories/4408836624791-Rules-Policies", discordUrl: "https://discord.com/invite/topstep",
     description: "Futures prop firm · XFA",
     typesCompte: [
-      { id: "combine", label: "Trading Combine", desc: "Évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", label: "Atteindre le profit target pour passer en XFA" } },
+      { id: "combine", label: "Trading Combine", desc: "Évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", montants: { 50000: 3000, 100000: 6000, 150000: 9000 }, label: "Atteindre le profit target pour passer en XFA" } },
       { id: "xfa", label: "Express Funded", desc: "Financé (XFA)", couleurBadge: "#00e5a0", payoutRegles: { type: "jours_gagnants", nombre: 5, minParJour: 150, label: "5 jours gagnants à +$150 min (non consécutifs)" } },
       { id: "live", label: "Live Funded", desc: "Compte live", couleurBadge: "#00d4ff", payoutRegles: { type: "libre", label: "Payout hebdomadaire — aucun jour minimum requis" } },
     ],
@@ -664,7 +664,7 @@ const PROP_FIRMS_CATALOG = {
     description: "EOD Evaluation",
     tailles: [25000, 50000, 75000, 100000, 150000, 250000, 300000],
     typesCompte: [
-      { id: "eval", label: "EOD Evaluation", desc: "Évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", label: "Atteindre le profit target EOD pour passer en PA" } },
+      { id: "eval", label: "EOD Evaluation", desc: "Évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", montants: { 25000: 1500, 50000: 2500, 75000: 2750, 100000: 3000, 150000: 5000, 250000: 6500, 300000: 7500 }, label: "Atteindre le profit target EOD pour passer en PA" } },
       { id: "pa", label: "Performance Account", desc: "Financé (PA)", couleurBadge: "#00e5a0", payoutRegles: { type: "jours_gagnants", nombre: 10, minParJour: 0, label: "10 jours de trading minimum — pas de montant minimum par jour" } },
       { id: "live", label: "Live Prop", desc: "Compte live réel", couleurBadge: "#a78bfa", payoutRegles: { type: "libre", label: "Payout libre sur le compte live" } },
     ],
@@ -776,7 +776,7 @@ const PROP_FIRMS_CATALOG = {
     description: "Futures · Challenge & Funded",
     tailles: [25000, 50000, 100000, 150000],
     typesCompte: [
-      { id: "challenge", label: "Challenge", desc: "Évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", label: "Atteindre le profit target pour passer en Funded" } },
+      { id: "challenge", label: "Challenge", desc: "Évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", montants: { 25000: 1500, 50000: 3000, 100000: 6000, 150000: 9000 }, label: "Atteindre le profit target pour passer en Funded" } },
       { id: "funded", label: "Funded Account", desc: "Compte financé", couleurBadge: "#00e5a0", payoutRegles: { type: "jours_trading", nombre: 10, label: "10 jours de trading minimum avant le premier payout" } },
     ],
     reglesFondamentales: [
@@ -793,7 +793,7 @@ const PROP_FIRMS_CATALOG = {
     description: "Futures · Sim & Live",
     tailles: [50000, 100000, 150000, 200000],
     typesCompte: [
-      { id: "eval", label: "Evaluation", desc: "Phase d'évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", label: "Atteindre le profit target pour passer en Funded" } },
+      { id: "eval", label: "Evaluation", desc: "Phase d'évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", montants: { 50000: 3000, 100000: 6000, 150000: 9000, 200000: 12000 }, label: "Atteindre le profit target pour passer en Funded" } },
       { id: "funded", label: "Funded (Sim)", desc: "Compte financé sim", couleurBadge: "#00e5a0", payoutRegles: { type: "jours_trading", nombre: 10, label: "10 jours de trading minimum avant le premier payout" } },
       { id: "live", label: "Live Account", desc: "Compte live réel", couleurBadge: "#06b6d4", payoutRegles: { type: "libre", label: "Payout libre sur le compte live" } },
     ],
@@ -812,7 +812,7 @@ const PROP_FIRMS_CATALOG = {
     description: "Futures · Evaluation & Funded",
     tailles: [10000, 25000, 50000, 100000, 150000, 200000],
     typesCompte: [
-      { id: "eval", label: "Evaluation", desc: "Phase d'évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", label: "Atteindre le profit target pour passer en Funded" } },
+      { id: "eval", label: "Evaluation", desc: "Phase d'évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", montants: { 10000: 1000, 25000: 2500, 50000: 5000, 100000: 10000, 150000: 15000, 200000: 20000 }, label: "Atteindre le profit target pour passer en Funded" } },
       { id: "funded", label: "Funded", desc: "Compte financé", couleurBadge: "#8b5cf6", payoutRegles: { type: "profit_target", montant: 500, label: "Profit minimum de $500 avant de demander un payout" } },
     ],
     reglesFondamentales: [
@@ -830,8 +830,8 @@ const PROP_FIRMS_CATALOG = {
     description: "Futures · Gauntlet Mini & Pro",
     tailles: [25000, 50000, 100000, 150000, 200000],
     typesCompte: [
-      { id: "gauntlet_mini", label: "Gauntlet Mini™", desc: "Évaluation rapide", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", label: "Atteindre le profit target pour passer en Funded" } },
-      { id: "gauntlet", label: "Gauntlet™", desc: "Évaluation complète", couleurBadge: "#10b981", payoutRegles: { type: "profit_target", label: "Atteindre le profit target + nombre de jours min" } },
+      { id: "gauntlet_mini", label: "Gauntlet Mini™", desc: "Évaluation rapide", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", montants: { 50000: 3000, 100000: 6000, 150000: 9000, 200000: 11000 }, label: "Atteindre le profit target pour passer en Funded" } },
+      { id: "gauntlet", label: "Gauntlet™", desc: "Évaluation complète", couleurBadge: "#10b981", payoutRegles: { type: "profit_target", montants: { 25000: 1750, 50000: 3000, 100000: 6000 }, label: "Atteindre le profit target + nombre de jours min" } },
       { id: "funded", label: "Funded (Vera)", desc: "Compte financé via Vera Trading", couleurBadge: "#00e5a0", payoutRegles: { type: "libre", label: "Payout libre via Vera Trading — split 80/20" } },
     ],
     reglesFondamentales: [
@@ -849,7 +849,7 @@ const PROP_FIRMS_CATALOG = {
     description: "Futures · Simple & Transparent",
     tailles: [10000, 25000, 50000, 100000, 150000, 200000],
     typesCompte: [
-      { id: "eval", label: "Evaluation", desc: "Phase d'évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", label: "Atteindre le profit target pour passer en Funded" } },
+      { id: "eval", label: "Evaluation", desc: "Phase d'évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", montants: { 50000: 3000, 100000: 6000, 150000: 9000 }, label: "Atteindre le profit target pour passer en Funded" } },
       { id: "funded", label: "Funded", desc: "Compte financé", couleurBadge: "#ec4899", payoutRegles: { type: "jours_gagnants", nombre: 10, minParJour: 0, label: "10 jours gagnants minimum avant le premier payout" } },
     ],
     reglesFondamentales: [
@@ -867,7 +867,7 @@ const PROP_FIRMS_CATALOG = {
     description: "Futures · EOD Drawdown",
     tailles: [50000, 100000, 150000, 200000, 300000],
     typesCompte: [
-      { id: "eval", label: "Evaluation", desc: "Phase d'évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", label: "Atteindre le profit target EOD pour passer en PA" } },
+      { id: "eval", label: "Evaluation", desc: "Phase d'évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", montants: { 50000: 3000, 100000: 6000, 150000: 9000, 200000: 12000, 300000: 18000 }, label: "Atteindre le profit target EOD pour passer en PA" } },
       { id: "pa", label: "Performance Account", desc: "Compte financé", couleurBadge: "#00e5a0", payoutRegles: { type: "jours_gagnants", nombre: 10, minParJour: 0, label: "10 jours de trading minimum — EOD trailing drawdown verrouillé à $0 après 1er payout" } },
     ],
     reglesFondamentales: [
@@ -883,7 +883,7 @@ const PROP_FIRMS_CATALOG = {
     description: "Futures · Flexible Rules",
     tailles: [25000, 50000, 100000, 150000],
     typesCompte: [
-      { id: "eval", label: "Evaluation", desc: "Phase d'évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", label: "Atteindre le profit target pour passer en Funded" } },
+      { id: "eval", label: "Evaluation", desc: "Phase d'évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", montants: { 25000: 1500, 50000: 3000, 100000: 6000, 150000: 9000 }, label: "Atteindre le profit target pour passer en Funded" } },
       { id: "funded", label: "Funded", desc: "Compte financé", couleurBadge: "#34d399", payoutRegles: { type: "libre", label: "Payout hebdomadaire — aucun jour minimum requis" } },
     ],
     reglesFondamentales: [
@@ -899,8 +899,8 @@ const PROP_FIRMS_CATALOG = {
     description: "Futures · Multi-step eval",
     tailles: [25000, 50000, 100000, 200000],
     typesCompte: [
-      { id: "eval_1", label: "Step 1", desc: "Première évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", label: "Atteindre le profit target Step 1" } },
-      { id: "eval_2", label: "Step 2", desc: "Deuxième évaluation", couleurBadge: "#f97316", payoutRegles: { type: "profit_target", label: "Atteindre le profit target Step 2 pour passer en Funded" } },
+      { id: "eval_1", label: "Step 1", desc: "Première évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", montants: { 25000: 2000, 50000: 4000, 100000: 8000, 200000: 16000 }, label: "Atteindre le profit target Step 1" } },
+      { id: "eval_2", label: "Step 2", desc: "Deuxième évaluation", couleurBadge: "#f97316", payoutRegles: { type: "profit_target", montants: { 25000: 1250, 50000: 2500, 100000: 5000, 200000: 10000 }, label: "Atteindre le profit target Step 2 pour passer en Funded" } },
       { id: "funded", label: "Funded", desc: "Compte financé", couleurBadge: "#6366f1", payoutRegles: { type: "libre", label: "Payout libre — aucun jour minimum requis" } },
     ],
     reglesFondamentales: [
@@ -916,7 +916,7 @@ const PROP_FIRMS_CATALOG = {
     description: "Prop firm personnalisée",
     tailles: [10000, 25000, 50000, 100000, 150000, 200000],
     typesCompte: [
-      { id: "eval", label: "Évaluation", desc: "Phase d'évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", label: "Atteindre le profit target de l'évaluation" } },
+      { id: "eval", label: "Évaluation", desc: "Phase d'évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", montantPct: 0.06, label: "Atteindre le profit target de l'évaluation (estimé à 6%)" } },
       { id: "funded", label: "Financé", desc: "Compte financé", couleurBadge: "#818cf8", payoutRegles: { type: "libre", label: "Règles de payout personnalisées" } },
       { id: "live", label: "Live", desc: "Compte live", couleurBadge: "#00e5a0", payoutRegles: { type: "libre", label: "Payout libre sur compte live" } },
     ],
@@ -2453,8 +2453,11 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, lang = "
     ? firm.typesCompte[currentTypeIdx + 1]
     : null;
   const isEval = regles?.type === "profit_target" || regles?.type === "jours_gagnants" || regles?.type === "jours_trading";
+  const targetMontant = regles?.montant
+    || (regles?.montants ? (regles.montants[compte.taille] ?? null) : null)
+    || (regles?.montantPct ? Math.round(compte.taille * regles.montantPct) : null);
   const evalReached = isEval && nextType && (
-    (regles.type === "profit_target" && regles.montant && pnlCompte >= regles.montant) ||
+    (regles.type === "profit_target" && targetMontant && pnlCompte >= targetMontant) ||
     (regles.type === "jours_gagnants" && regles.nombre && joursValides >= regles.nombre) ||
     (regles.type === "jours_trading" && regles.nombre && tradeDuCompte.length >= regles.nombre)
   );
@@ -2473,7 +2476,7 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, lang = "
             <div>
               <div style={{ fontSize: 16, fontWeight: 900, color: firm.couleur, letterSpacing: -0.3 }}>Objectif atteint ! Félicitations 🎉</div>
               <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 3 }}>
-                {regles.type === "profit_target" && `+${pnlCompte.toFixed(0)}$ sur objectif ${regles.montant}$`}
+                {regles.type === "profit_target" && `+${pnlCompte.toFixed(0)}$ sur objectif ${targetMontant}$`}
                 {regles.type === "jours_gagnants" && `${joursValides} jours validés sur ${regles.nombre} requis`}
                 {regles.type === "jours_trading" && `${tradeDuCompte.length} jours tradés sur ${regles.nombre} requis`}
               </div>
@@ -2538,6 +2541,93 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, lang = "
         ))}
       </div>
 
+      {/* ══ GRAPHIQUE PnL CUMULATIF ══ */}
+      {tradeDuCompte.length > 0 && (() => {
+        const sorted = [...tradeDuCompte].sort((a, b) => a.date > b.date ? 1 : a.date < b.date ? -1 : 0);
+        const cumul = [];
+        let running = 0;
+        sorted.forEach(t => { running += (t.pnl || 0); cumul.push(running); });
+        const W = 600, H = 180, PAD = { t: 20, r: 20, b: 30, l: 52 };
+        const iW = W - PAD.l - PAD.r, iH = H - PAD.t - PAD.b;
+        const allVals = [...cumul, 0, targetMontant ? targetMontant * 1.05 : null].filter(v => v !== null);
+        const minVal = Math.min(...allVals);
+        const maxVal = Math.max(...allVals);
+        const range = maxVal - minVal || 1;
+        const xOf = i => PAD.l + (i / (cumul.length - 1 || 1)) * iW;
+        const yOf = v => PAD.t + iH - ((v - minVal) / range) * iH;
+        const pts = cumul.map((v, i) => `${xOf(i)},${yOf(v)}`).join(" ");
+        const zeroY = yOf(0);
+        const targetY = targetMontant ? yOf(targetMontant) : null;
+        const lastX = xOf(cumul.length - 1);
+        const lastY = yOf(cumul[cumul.length - 1]);
+        const firmColor = firm.couleur || "#00e5a0";
+        const lastPnl = cumul[cumul.length - 1];
+        return (
+          <div style={{ background: "linear-gradient(135deg,#0e0e1a,#0a0a14)", border: "1px solid #1a1a2e", borderRadius: 16, padding: "20px 24px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, fontWeight: 700 }}>P&L Cumulatif</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: lastPnl >= 0 ? G.green : G.red }}>{lastPnl >= 0 ? "+" : ""}{lastPnl.toFixed(0)}$</div>
+            </div>
+            <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block", overflow: "visible" }}>
+              <defs>
+                <linearGradient id={`pnl-fill-${compte.id}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={lastPnl >= 0 ? G.green : G.red} stopOpacity="0.25" />
+                  <stop offset="100%" stopColor={lastPnl >= 0 ? G.green : G.red} stopOpacity="0.02" />
+                </linearGradient>
+                <clipPath id={`clip-above-${compte.id}`}>
+                  <rect x={PAD.l} y={PAD.t} width={iW} height={Math.max(0, zeroY - PAD.t)} />
+                </clipPath>
+                <clipPath id={`clip-below-${compte.id}`}>
+                  <rect x={PAD.l} y={zeroY} width={iW} height={Math.max(0, PAD.t + iH - zeroY)} />
+                </clipPath>
+              </defs>
+              {/* Grid lines */}
+              {[0, 0.25, 0.5, 0.75, 1].map(f => {
+                const y = PAD.t + iH * f;
+                const val = maxVal - f * range;
+                return (
+                  <g key={f}>
+                    <line x1={PAD.l} y1={y} x2={PAD.l + iW} y2={y} stroke="#1a1a2e" strokeWidth="1" />
+                    <text x={PAD.l - 6} y={y + 4} textAnchor="end" fontSize="9" fill="#4b5563">{val >= 0 ? "+" : ""}{Math.round(val)}</text>
+                  </g>
+                );
+              })}
+              {/* Zero line */}
+              {zeroY >= PAD.t && zeroY <= PAD.t + iH && (
+                <line x1={PAD.l} y1={zeroY} x2={PAD.l + iW} y2={zeroY} stroke="#374151" strokeWidth="1.5" strokeDasharray="4,4" />
+              )}
+              {/* Target line */}
+              {targetY !== null && targetY >= PAD.t && targetY <= PAD.t + iH && (
+                <g>
+                  <line x1={PAD.l} y1={targetY} x2={PAD.l + iW} y2={targetY} stroke={firmColor} strokeWidth="1.5" strokeDasharray="6,4" opacity="0.7" />
+                  <rect x={PAD.l + iW - 68} y={targetY - 11} width={66} height={14} rx={3} fill="#0a0a14" />
+                  <text x={PAD.l + iW - 4} y={targetY + 2} textAnchor="end" fontSize="9" fill={firmColor} fontWeight="700">Target ${targetMontant}</text>
+                </g>
+              )}
+              {/* Fill above zero */}
+              <polygon points={`${PAD.l},${zeroY} ${cumul.map((v, i) => `${xOf(i)},${yOf(v)}`).join(" ")} ${lastX},${zeroY}`}
+                fill="#00e5a0" opacity="0.08" clipPath={`url(#clip-above-${compte.id})`} />
+              {/* Fill below zero */}
+              <polygon points={`${PAD.l},${zeroY} ${cumul.map((v, i) => `${xOf(i)},${yOf(v)}`).join(" ")} ${lastX},${zeroY}`}
+                fill="#ef4444" opacity="0.12" clipPath={`url(#clip-below-${compte.id})`} />
+              {/* Line */}
+              {cumul.length > 1 ? (
+                <polyline points={pts} fill="none" stroke={lastPnl >= 0 ? G.green : G.red} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+              ) : (
+                <circle cx={xOf(0)} cy={yOf(cumul[0])} r="4" fill={lastPnl >= 0 ? G.green : G.red} />
+              )}
+              {/* Last dot */}
+              <circle cx={lastX} cy={lastY} r="4" fill={lastPnl >= 0 ? G.green : G.red} />
+              <circle cx={lastX} cy={lastY} r="7" fill="none" stroke={lastPnl >= 0 ? G.green : G.red} strokeWidth="1.5" opacity="0.4" />
+              {/* X axis labels */}
+              {[0, Math.floor((cumul.length - 1) / 2), cumul.length - 1].filter((v, i, arr) => arr.indexOf(v) === i && v >= 0).map(i => (
+                <text key={i} x={xOf(i)} y={H - 6} textAnchor="middle" fontSize="9" fill="#4b5563">T{i + 1}</text>
+              ))}
+            </svg>
+          </div>
+        );
+      })()}
+
       {/* Stats + règles */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
 
@@ -2579,14 +2669,14 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, lang = "
               )}
               {regles.type === "profit_target" && (
                 <>
-                  <div style={{ fontSize: 12, color: "#aaa" }}>Objectif profit : <span style={{ color: firm.couleur, fontWeight: 700 }}>${regles.montant || "—"}</span></div>
+                  <div style={{ fontSize: 12, color: "#aaa" }}>Objectif profit : <span style={{ color: firm.couleur, fontWeight: 700 }}>${targetMontant || "—"}</span></div>
                   <div style={{ marginTop: 8 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                       <div style={{ fontSize: 11, color: G.dim }}>Progression</div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: pnlPos ? G.green : G.red }}>{pnlPos ? "+" : ""}{pnlCompte.toFixed(0)}$ / ${regles.montant || "?"}</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: pnlPos ? G.green : G.red }}>{pnlPos ? "+" : ""}{pnlCompte.toFixed(0)}$ / ${targetMontant || "?"}</div>
                     </div>
                     <div style={{ height: 6, background: "#1a1a2e", borderRadius: 3, overflow: "hidden" }}>
-                      <div style={{ width: `${Math.min(100, Math.max(0, (pnlCompte / (regles.montant || 1)) * 100))}%`, height: "100%", background: firm.couleur, borderRadius: 3, transition: "width 0.5s" }} />
+                      <div style={{ width: `${Math.min(100, Math.max(0, (pnlCompte / (targetMontant || 1)) * 100))}%`, height: "100%", background: firm.couleur, borderRadius: 3, transition: "width 0.5s" }} />
                     </div>
                   </div>
                 </>
@@ -3863,14 +3953,14 @@ function AnalysePage({ trades, comptes, onDetail, lang = "fr", user }) {
   );
 }
 
-function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, lang = "fr" }) {
+function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaultDate = null, lang = "fr" }) {
   const T = TR[lang];
   const defaultCompte = comptes.length > 0 ? comptes[0].nom : "";
   const [form, setForm] = useState(() => {
     if (editTrade) {
     }
     return {
-      date: new Date().toISOString().split("T")[0], heure: "09:30", duree: "",
+      date: defaultDate || new Date().toISOString().split("T")[0], heure: "09:30", duree: "",
       compte: defaultCompte, actif: "Nasdaq", direction: "LONG", setup: "Breakout", taille: "",
       pnl: "", rr: "", respect: "Oui", regle_violee: "", notes_tech: "",
       priere: false, heure_coucher: "", sommeil: "", ecrans: false, qualite_sommeil: 3,
@@ -7405,6 +7495,8 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [selectedCompte, setSelectedCompte] = useState(null);
   const [editingTrade, setEditingTrade] = useState(null); // trade en cours d'édition, ou null
+  const [newTradeDefaultDate, setNewTradeDefaultDate] = useState(null); // date pré-remplie pour nouveau trade depuis session
+  const [showTradeDateModal, setShowTradeDateModal] = useState(false);
   const [editingCompte, setEditingCompte] = useState(null); // compte en cours d'édition, ou null
   const [reglesPreselect, setReglesPreselect] = useState(null); // prop firm à présélectionner dans l'onglet Règles
   const [journalInitialVue, setJournalInitialVue] = useState("liste"); // permet d'ouvrir Journal directement sur Analyse
@@ -7955,18 +8047,45 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
                     <div>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
                         <div style={{ fontSize: 11, fontWeight: 700, color: "#00e5a0", letterSpacing: 3, textTransform: "uppercase" }}>{fr ? "Mes sessions" : "My sessions"}</div>
-                        <button data-tutorial="new-session" onClick={() => setSessionSubView("preparation")} style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "linear-gradient(135deg,#00e5a015,#818cf808)", border: "1px solid #00e5a030", color: "#00e5a0", borderRadius: 10, padding: "10px 20px", fontSize: 13, cursor: "pointer", fontWeight: 700, fontFamily: "inherit", transition: "all 0.15s", letterSpacing: 0.3 }}
-                          onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg,#00e5a025,#818cf815)"; e.currentTarget.style.borderColor = "#00e5a060"; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg,#00e5a015,#818cf808)"; e.currentTarget.style.borderColor = "#00e5a030"; }}>
-                          🌅 {fr ? "Nouvelle session de trading" : "New trading session"}
-                        </button>
+                        <div style={{ display: "flex", gap: 10 }}>
+                          <button onClick={() => { setNewTradeDefaultDate(new Date().toISOString().split("T")[0]); setShowTradeDateModal(true); }} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "linear-gradient(135deg,#818cf815,#818cf808)", border: "1px solid #818cf830", color: "#818cf8", borderRadius: 10, padding: "10px 20px", fontSize: 13, cursor: "pointer", fontWeight: 700, fontFamily: "inherit", transition: "all 0.15s", letterSpacing: 0.3 }}
+                            onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg,#818cf825,#818cf815)"; e.currentTarget.style.borderColor = "#818cf860"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg,#818cf815,#818cf808)"; e.currentTarget.style.borderColor = "#818cf830"; }}>
+                            ➕ {fr ? "Nouveau trade" : "New trade"}
+                          </button>
+                          <button data-tutorial="new-session" onClick={() => setSessionSubView("preparation")} style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "linear-gradient(135deg,#00e5a015,#818cf808)", border: "1px solid #00e5a030", color: "#00e5a0", borderRadius: 10, padding: "10px 20px", fontSize: 13, cursor: "pointer", fontWeight: 700, fontFamily: "inherit", transition: "all 0.15s", letterSpacing: 0.3 }}
+                            onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg,#00e5a025,#818cf815)"; e.currentTarget.style.borderColor = "#00e5a060"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg,#00e5a015,#818cf808)"; e.currentTarget.style.borderColor = "#00e5a030"; }}>
+                            🌅 {fr ? "Nouvelle session de trading" : "New trading session"}
+                          </button>
+                        </div>
                       </div>
+                      {showTradeDateModal && (
+                        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+                          <div style={{ background: "#0a0a14", border: "1px solid #818cf840", borderRadius: 20, padding: "36px 32px", maxWidth: 380, width: "100%" }}>
+                            <div style={{ fontSize: 20, fontWeight: 900, color: "#fff", marginBottom: 6 }}>➕ {fr ? "Nouveau trade" : "New trade"}</div>
+                            <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 24 }}>{fr ? "Sélectionne le jour du trade" : "Select the trade date"}</div>
+                            <label style={{ fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>{fr ? "Date" : "Date"}</label>
+                            <input type="date" value={newTradeDefaultDate || ""} onChange={e => setNewTradeDefaultDate(e.target.value)}
+                              style={{ background: "#0e0e1a", border: "1px solid #1a1a2e", color: "#fff", borderRadius: 8, padding: "10px 12px", fontSize: 14, width: "100%", boxSizing: "border-box", fontFamily: "inherit", marginBottom: 24 }} />
+                            <div style={{ display: "flex", gap: 10 }}>
+                              <button onClick={() => setShowTradeDateModal(false)} style={{ flex: 1, background: "none", border: "1px solid #1a1a2e", color: "#6b7280", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                                {fr ? "Annuler" : "Cancel"}
+                              </button>
+                              <button onClick={() => { setShowTradeDateModal(false); setEditingTrade(null); navigateTo("nouveau"); }} disabled={!newTradeDefaultDate}
+                                style={{ flex: 2, background: "#818cf8", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "inherit", opacity: newTradeDefaultDate ? 1 : 0.4 }}>
+                                {fr ? "Continuer →" : "Continue →"}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       <SessionCalendar trades={trades} sessions={sessions} onDetail={setSelectedTrade} onNew={() => navigateTo("nouveau")} onDayOpen={(date) => { setSessionDayDate(date); setSessionSubView("dayDetail"); }} lang={lang} />
                     </div>
                   )
               )
               : tab === "analyse"    ? <AnalysePage trades={trades} comptes={comptes} onDetail={(t) => setSelectedTrade(t)} lang={lang} user={user} />
-              : tab === "nouveau"    ? <NouveauTrade onSave={handleSaveTrade} onCancel={handleCancelEdit} comptes={comptes} editTrade={editingTrade} lang={lang} />
+              : tab === "nouveau"    ? <NouveauTrade onSave={handleSaveTrade} onCancel={handleCancelEdit} comptes={comptes} editTrade={editingTrade} defaultDate={newTradeDefaultDate} lang={lang} />
               : tab === "ajout_compte" ? (
                 <div style={{ display: "flex", justifyContent: "center" }}>
                   <div style={{ background: "#0a0a14", border: "1px solid #1a1a2e", borderRadius: 20, position: "relative", overflow: "hidden", width: 1040 }}>
