@@ -1622,10 +1622,20 @@ function PnlCurve({ trades, height = 180, positive, onTradeClick }) {
           </g>
         ))}
         <line x1={PAD_L} y1={zeroY} x2={W - PAD_R} y2={zeroY} stroke="#4b5e7a" strokeWidth="0.8" strokeDasharray="3,3" opacity="0.7" />
-        <path d={fillPath} fill="url(#fillPosI)" clipPath="url(#clipPosI)" />
-        <path d={fillPath} fill="url(#fillNegI)" clipPath="url(#clipNegI)" />
-        <path d={linePath} fill="none" stroke={GREEN} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" clipPath="url(#clipPosI)" />
-        <path d={linePath} fill="none" stroke={RED} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" clipPath="url(#clipNegI)" />
+        {cumul.length === 1 ? (
+          <>
+            <line x1={pts[0][0]} y1={zeroY} x2={pts[0][0]} y2={pts[0][1]} stroke={cumul[0] >= 0 ? GREEN : RED} strokeWidth="2" strokeDasharray="4,3" opacity="0.5" />
+            <circle cx={pts[0][0]} cy={pts[0][1]} r={6} fill={cumul[0] >= 0 ? GREEN : RED} stroke="#06060f" strokeWidth="2" />
+            <circle cx={pts[0][0]} cy={pts[0][1]} r={12} fill={cumul[0] >= 0 ? GREEN : RED} opacity="0.15" />
+          </>
+        ) : (
+          <>
+            <path d={fillPath} fill="url(#fillPosI)" clipPath="url(#clipPosI)" />
+            <path d={fillPath} fill="url(#fillNegI)" clipPath="url(#clipNegI)" />
+            <path d={linePath} fill="none" stroke={GREEN} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" clipPath="url(#clipPosI)" />
+            <path d={linePath} fill="none" stroke={RED} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" clipPath="url(#clipNegI)" />
+          </>
+        )}
         {xLabels.map((t, i) => (
           <text key={i} x={t.x} y={H - 4} textAnchor="middle" fontSize="9" fill="#4b5e7a">{t.label}</text>
         ))}
