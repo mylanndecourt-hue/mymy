@@ -1550,7 +1550,7 @@ function PnlCurve({ trades, height = 180, positive, onTradeClick }) {
     return () => ro.disconnect();
   }, []);
 
-  if (trades.length < 2) return null;
+  if (trades.length < 1) return null;
 
   const cumul = [];
   let sum = 0;
@@ -1565,7 +1565,7 @@ function PnlCurve({ trades, height = 180, positive, onTradeClick }) {
   const minVal = -absMax, maxVal = absMax, range = maxVal - minVal;
 
   const pts = cumul.map((v, i) => [
-    PAD_L + (i / (cumul.length - 1)) * chartW,
+    PAD_L + (cumul.length > 1 ? (i / (cumul.length - 1)) : 0.5) * chartW,
     PAD_T + (1 - (v - minVal) / range) * chartH,
   ]);
   const zeroY = PAD_T + (1 - (0 - minVal) / range) * chartH;
@@ -1579,10 +1579,12 @@ function PnlCurve({ trades, height = 180, positive, onTradeClick }) {
   });
 
   const xTickCount = Math.min(5, cumul.length);
-  const xLabels = Array.from({ length: xTickCount }, (_, i) => {
-    const idx = Math.round(i * (cumul.length - 1) / (xTickCount - 1));
-    return { label: `#${idx + 1}`, x: PAD_L + (idx / (cumul.length - 1)) * chartW };
-  });
+  const xLabels = cumul.length === 1
+    ? [{ label: "#1", x: PAD_L + chartW * 0.5 }]
+    : Array.from({ length: xTickCount }, (_, i) => {
+        const idx = Math.round(i * (cumul.length - 1) / (xTickCount - 1));
+        return { label: `#${idx + 1}`, x: PAD_L + (idx / (cumul.length - 1)) * chartW };
+      });
 
   const GREEN = "#22c55e", RED = "#ef4444";
   const hovTrade = hoverIdx !== null ? trades[hoverIdx] : null;
@@ -2895,18 +2897,15 @@ function Dashboard({ trades, comptes, onEditCompte, onNewCompte, onGoToAnalyse, 
               </div>
             )}
           </div>
-          {trades.length >= 2 ? (
+          {trades.length >= 1 ? (
             <PnlCurve trades={trades} height={200} positive={pnlPositif} onTradeClick={t => onTradeDetail && onTradeDetail(t)} />
           ) : (
             <button onClick={onNewCompte} style={{ height: 200, width: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, background: "none", border: "none", cursor: "pointer", borderRadius: 12, transition: "background 0.2s" }}
               onMouseEnter={e => e.currentTarget.style.background = "#00e5a008"}
               onMouseLeave={e => e.currentTarget.style.background = "none"}>
-              <div style={{ fontSize: 32 }}>🏦</div>
+              <div style={{ fontSize: 32 }}>📈</div>
               <div style={{ fontSize: 13, color: G.dim, textAlign: "center", lineHeight: 1.6 }}>
-                {fr ? "Ajoute un compte prop firm\npour voir ta courbe P&L" : "Add a prop firm account\nto see your P&L curve"}
-              </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: G.green, background: G.green + "15", border: `1px solid ${G.green}30`, borderRadius: 20, padding: "5px 14px" }}>
-                + {fr ? "Ajouter un compte" : "Add account"}
+                {fr ? "Ajoute ton premier trade\npour voir ta courbe P&L" : "Add your first trade\nto see your P&L curve"}
               </div>
             </button>
           )}
