@@ -2427,7 +2427,7 @@ function CalendrierPnL({ trades }) {
   );
 }
 
-function DetailCompte({ compte, trades, onBack, onEdit, lang = "fr" }) {
+function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, lang = "fr" }) {
   const fr = lang === "fr";
   const firm = PROP_FIRMS_CATALOG[compte.type] || PROP_FIRMS_CATALOG["Autre"];
   const tradeDuCompte = trades.filter(t => t.compte === compte.nom);
@@ -2447,10 +2447,68 @@ function DetailCompte({ compte, trades, onBack, onEdit, lang = "fr" }) {
   const typeData = firm.typesCompte?.find(tc => tc.id === compte.typeCompte);
   const regles = typeData?.payoutRegles;
 
+  // Détection validation éval
+  const currentTypeIdx = firm.typesCompte?.findIndex(tc => tc.id === compte.typeCompte) ?? -1;
+  const nextType = currentTypeIdx >= 0 && currentTypeIdx < (firm.typesCompte?.length ?? 0) - 1
+    ? firm.typesCompte[currentTypeIdx + 1]
+    : null;
+  const isEval = regles?.type === "profit_target" || regles?.type === "jours_gagnants" || regles?.type === "jours_trading";
+  const evalReached = isEval && nextType && (
+    (regles.type === "profit_target" && regles.montant && pnlCompte >= regles.montant) ||
+    (regles.type === "jours_gagnants" && regles.nombre && joursValides >= regles.nombre) ||
+    (regles.type === "jours_trading" && regles.nombre && tradeDuCompte.length >= regles.nombre)
+  );
+  const [showValidModal, setShowValidModal] = useState(false);
+
   const recentTrades = [...tradeDuCompte].sort((a, b) => b.date > a.date ? 1 : -1).slice(0, 5);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+      {/* ══ BANNIÈRE FÉLICITATIONS ══ */}
+      {evalReached && (
+        <div style={{ background: `linear-gradient(135deg, ${firm.couleur}18, ${firm.couleur}08)`, border: `1px solid ${firm.couleur}50`, borderRadius: 16, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, animation: "glow-pulse 3s ease-in-out infinite" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ fontSize: 40, lineHeight: 1 }}>🏆</div>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 900, color: firm.couleur, letterSpacing: -0.3 }}>Objectif atteint ! Félicitations 🎉</div>
+              <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 3 }}>
+                {regles.type === "profit_target" && `+${pnlCompte.toFixed(0)}$ sur objectif ${regles.montant}$`}
+                {regles.type === "jours_gagnants" && `${joursValides} jours validés sur ${regles.nombre} requis`}
+                {regles.type === "jours_trading" && `${tradeDuCompte.length} jours tradés sur ${regles.nombre} requis`}
+              </div>
+              <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>Tu peux maintenant passer en <span style={{ color: firm.couleur, fontWeight: 700 }}>{nextType.label}</span></div>
+            </div>
+          </div>
+          <button onClick={() => setShowValidModal(true)} style={{ background: firm.couleur, color: "#06060f", border: "none", borderRadius: 10, padding: "12px 22px", fontSize: 13, fontWeight: 900, cursor: "pointer", whiteSpace: "nowrap", boxShadow: `0 0 20px ${firm.couleur}40` }}>
+            Valider le compte →
+          </button>
+        </div>
+      )}
+
+      {/* ══ MODAL VALIDATION ══ */}
+      {showValidModal && nextType && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: "#0a0a14", border: `1px solid ${firm.couleur}40`, borderRadius: 20, padding: "40px 36px", maxWidth: 460, width: "100%", textAlign: "center" }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🎊</div>
+            <h2 style={{ fontSize: 24, fontWeight: 900, color: "#fff", letterSpacing: -0.5, marginBottom: 8 }}>Compte validé !</h2>
+            <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.7, marginBottom: 8 }}>
+              Ton évaluation <strong style={{ color: firm.couleur }}>{typeData?.label}</strong> est réussie.
+            </p>
+            <p style={{ fontSize: 14, color: "#9ca3af", lineHeight: 1.7, marginBottom: 28 }}>
+              Un nouveau compte <strong style={{ color: firm.couleur }}>{nextType.label}</strong> va être créé automatiquement pour <strong>{firm.nom}</strong>.
+            </p>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button onClick={() => setShowValidModal(false)} style={{ flex: 1, background: "none", border: "1px solid #1a1a2e", color: "#6b7280", borderRadius: 10, padding: "12px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                Annuler
+              </button>
+              <button onClick={() => { onValidateEval && onValidateEval(compte, nextType); setShowValidModal(false); }} style={{ flex: 2, background: firm.couleur, color: "#06060f", border: "none", borderRadius: 10, padding: "12px", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "inherit", boxShadow: `0 0 20px ${firm.couleur}40` }}>
+                ✓ Créer le compte {nextType.label}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
@@ -7858,7 +7916,26 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
             {selectedTrade
               ? <DetailTrade trade={selectedTrade} onBack={() => setSelectedTrade(null)} onEdit={handleEditTrade} lang={lang} />
               : selectedCompte && tab === "dashboard"
-              ? <DetailCompte compte={selectedCompte} trades={trades} onBack={() => setSelectedCompte(null)} onEdit={() => { setSelectedCompte(null); handleEditCompte(selectedCompte); }} lang={lang} />
+              ? <DetailCompte compte={selectedCompte} trades={trades} onBack={() => setSelectedCompte(null)} onEdit={() => { setSelectedCompte(null); handleEditCompte(selectedCompte); }} lang={lang}
+                  onValidateEval={(compteSource, nextType) => {
+                    const newCompte = {
+                      id: Date.now(),
+                      nom: `${compteSource.type} ${nextType.label} $${(compteSource.taille / 1000).toFixed(0)}K`,
+                      numero: "",
+                      type: compteSource.type,
+                      typeCompte: nextType.id,
+                      taille: compteSource.taille,
+                      achat: 0,
+                      activation: 0,
+                      soldeInitial: 0,
+                      joursPayoutInitial: 0,
+                      payouts: [],
+                      isNew: true,
+                    };
+                    setComptes(cs => [...cs, newCompte]);
+                    setSelectedCompte(null);
+                  }}
+                />
               : tab === "dashboard"  ? <Dashboard trades={trades} comptes={comptes} onEditCompte={handleEditCompte} onNewCompte={handleNewCompte} onGoToAnalyse={handleGoToAnalyse} onTradeDetail={setSelectedTrade} onViewCompte={setSelectedCompte} lang={lang} user={user} />
               : tab === "session"    ? (
                 sessionSubView === "preparation"
