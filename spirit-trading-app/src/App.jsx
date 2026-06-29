@@ -617,7 +617,7 @@ const initialTrades = [
 // ─── CATALOGUE PROP FIRMS ─────────────────────────────────────────────────────
 const PROP_FIRMS_CATALOG = {
   Topstep: {
-    nom: "Topstep", couleur: "#00d4ff", emoji: "🏦", logo: "https://logo.clearbit.com/topstep.com", siteUrl: "https://www.topstep.com", reglesUrl: "https://support.topstep.com/hc/en-us/categories/4408836624791-Rules-Policies", discordUrl: "https://discord.com/invite/topstep",
+    nom: "Topstep", couleur: "#00d4ff", emoji: "🏦", logo: "/firms/topstep.png", siteUrl: "https://www.topstep.com", reglesUrl: "https://support.topstep.com/hc/en-us/categories/4408836624791-Rules-Policies", discordUrl: "https://discord.com/invite/topstep",
     description: "Futures prop firm · XFA",
     typesCompte: [
       { id: "combine", label: "Trading Combine", desc: "Évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", label: "Atteindre le profit target pour passer en XFA" } },
@@ -637,7 +637,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   Phidias: {
-    nom: "Phidias", couleur: "#f59e0b", emoji: "🏦", logo: "https://logo.clearbit.com/phidiaspropfirm.com", siteUrl: "https://phidiaspropfirm.com", reglesUrl: "https://phidiaspropfirm.com/rules", discordUrl: null,
+    nom: "Phidias", couleur: "#f59e0b", emoji: "🏦", logo: "/firms/phidias.png", siteUrl: "https://phidiaspropfirm.com", reglesUrl: "https://phidiaspropfirm.com/rules", discordUrl: null,
     description: "Express to Live",
     tailles: [10000, 25000, 50000, 100000, 200000],
     typesCompte: [
@@ -660,7 +660,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   Apex: {
-    nom: "Apex Trader Funding", couleur: "#a78bfa", emoji: "⚡", logo: "https://logo.clearbit.com/apextraderfunding.com", siteUrl: "https://apextraderfunding.com", reglesUrl: "https://apextraderfunding.com/help-center", discordUrl: "https://discord.com/invite/apextraderfunding",
+    nom: "Apex Trader Funding", couleur: "#a78bfa", emoji: "⚡", logo: "/firms/apex.png", siteUrl: "https://apextraderfunding.com", reglesUrl: "https://apextraderfunding.com/help-center", discordUrl: "https://discord.com/invite/apextraderfunding",
     description: "EOD Evaluation",
     tailles: [25000, 50000, 75000, 100000, 150000, 250000, 300000],
     typesCompte: [
@@ -772,7 +772,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   Tradeify: {
-    nom: "Tradeify", couleur: "#f97316", emoji: "🔥", logo: "https://logo.clearbit.com/tradeify.co", siteUrl: "https://tradeify.co", reglesUrl: "https://tradeify.co/rules", discordUrl: null,
+    nom: "Tradeify", couleur: "#f97316", emoji: "🔥", logo: "/firms/tradeify.png", siteUrl: "https://tradeify.co", reglesUrl: "https://tradeify.co/rules", discordUrl: null,
     description: "Futures · Challenge & Funded",
     tailles: [25000, 50000, 100000, 150000],
     typesCompte: [
@@ -789,7 +789,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   MyFundedFutures: {
-    nom: "MyFundedFutures", couleur: "#06b6d4", emoji: "🌊", logo: "https://logo.clearbit.com/myfundedfutures.com", siteUrl: "https://myfundedfutures.com", reglesUrl: "https://myfundedfutures.com/rules", discordUrl: null,
+    nom: "MyFundedFutures", couleur: "#06b6d4", emoji: "🌊", logo: "/firms/myfundedfutures.png", siteUrl: "https://myfundedfutures.com", reglesUrl: "https://myfundedfutures.com/rules", discordUrl: null,
     description: "Futures · Sim & Live",
     tailles: [50000, 100000, 150000, 200000],
     typesCompte: [
@@ -808,7 +808,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   Bulenox: {
-    nom: "Bulenox", couleur: "#8b5cf6", emoji: "🐂", logo: "https://logo.clearbit.com/bulenox.com", siteUrl: "https://bulenox.com", reglesUrl: "https://bulenox.com/rules", discordUrl: null,
+    nom: "Bulenox", couleur: "#8b5cf6", emoji: "🐂", logo: "/firms/bulenox.png", siteUrl: "https://bulenox.com", reglesUrl: "https://bulenox.com/rules", discordUrl: null,
     description: "Futures · Evaluation & Funded",
     tailles: [10000, 25000, 50000, 100000, 150000, 200000],
     typesCompte: [
@@ -826,7 +826,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   Earn2Trade: {
-    nom: "Earn2Trade", couleur: "#10b981", emoji: "📈", logo: "https://logo.clearbit.com/earn2trade.com", siteUrl: "https://earn2trade.com", reglesUrl: "https://earn2trade.com/gauntlet-rules", discordUrl: null,
+    nom: "Earn2Trade", couleur: "#10b981", emoji: "📈", logo: "/firms/earn2trade.png", siteUrl: "https://earn2trade.com", reglesUrl: "https://earn2trade.com/gauntlet-rules", discordUrl: null,
     description: "Futures · Gauntlet Mini & Pro",
     tailles: [25000, 50000, 100000, 150000, 200000],
     typesCompte: [
@@ -845,7 +845,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   TradeDay: {
-    nom: "TradeDay", couleur: "#ec4899", emoji: "📅", logo: "https://logo.clearbit.com/tradeday.com", siteUrl: "https://tradeday.com", reglesUrl: "https://tradeday.com/rules", discordUrl: null,
+    nom: "TradeDay", couleur: "#ec4899", emoji: "📅", logo: "/firms/tradeday.png", siteUrl: "https://tradeday.com", reglesUrl: "https://tradeday.com/rules", discordUrl: null,
     description: "Futures · Simple & Transparent",
     tailles: [10000, 25000, 50000, 100000, 150000, 200000],
     typesCompte: [
@@ -863,7 +863,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   EliteTrader: {
-    nom: "Elite Trader Funding", couleur: "#f59e0b", emoji: "👑", logo: "https://logo.clearbit.com/elitetraderfunding.com", siteUrl: "https://elitetraderfunding.com", reglesUrl: "https://elitetraderfunding.com/rules", discordUrl: null,
+    nom: "Elite Trader Funding", couleur: "#f59e0b", emoji: "👑", logo: "/firms/elitetrader.png", siteUrl: "https://elitetraderfunding.com", reglesUrl: "https://elitetraderfunding.com/rules", discordUrl: null,
     description: "Futures · EOD Drawdown",
     tailles: [50000, 100000, 150000, 200000, 300000],
     typesCompte: [
@@ -879,7 +879,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   TakeProfitTrader: {
-    nom: "Take Profit Trader", couleur: "#34d399", emoji: "💰", logo: "https://logo.clearbit.com/takeprofittrader.com", siteUrl: "https://takeprofittrader.com", reglesUrl: "https://takeprofittrader.com/rules", discordUrl: null,
+    nom: "Take Profit Trader", couleur: "#34d399", emoji: "💰", logo: "/firms/takeprofittrader.png", siteUrl: "https://takeprofittrader.com", reglesUrl: "https://takeprofittrader.com/rules", discordUrl: null,
     description: "Futures · Flexible Rules",
     tailles: [25000, 50000, 100000, 150000],
     typesCompte: [
@@ -895,7 +895,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   Funded4Traders: {
-    nom: "Funded4Traders", couleur: "#6366f1", emoji: "🎯", logo: "https://logo.clearbit.com/funded4traders.com", siteUrl: "https://funded4traders.com", reglesUrl: "https://funded4traders.com/rules", discordUrl: null,
+    nom: "Funded4Traders", couleur: "#6366f1", emoji: "🎯", logo: "/firms/funded4traders.png", siteUrl: "https://funded4traders.com", reglesUrl: "https://funded4traders.com/rules", discordUrl: null,
     description: "Futures · Multi-step eval",
     tailles: [25000, 50000, 100000, 200000],
     typesCompte: [
