@@ -2768,7 +2768,9 @@ function Dashboard({ trades, comptes, onEditCompte, onNewCompte, onGoToAnalyse, 
   const T = TR[lang]; const fr = lang === "fr";
 
   // ── Calculs ──
+  const EVAL_TYPES = ["combine", "eval", "eval_1", "eval_2", "gauntlet_mini", "gauntlet", "challenge"];
   const aUnCompteTopstep = comptes.some(c => c.type === "Topstep");
+  const aUnCompteTopstepFunded = comptes.some(c => c.type === "Topstep" && !EVAL_TYPES.includes(c.typeCompte));
   const topstepTrades = trades.filter(t => comptes.find(c => c.nom === t.compte)?.type === "Topstep");
   const soldeTopstep = topstepTrades.reduce((a, t) => a + t.pnl, 0);
   const mllTopstep = getMLL(soldeTopstep);
@@ -2869,11 +2871,11 @@ function Dashboard({ trades, comptes, onEditCompte, onNewCompte, onGoToAnalyse, 
 
       {/* ── STATS RAPIDES ── */}
       {trades.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(${aUnCompteTopstepFunded ? 3 : 2},1fr)`, gap: 12 }}>
           {[
             { label: fr ? "Note moyenne" : "Avg note", val: notesMoy ? `${notesMoy} ✦` : "—", sub: fr ? "Qualité d'exécution" : "Execution quality", color: "#fff" },
             { label: fr ? "P&L moyen / trade" : "Avg P&L / trade", val: `${Number(avgPnl) >= 0 ? "+" : ""}${avgPnl}$`, sub: fr ? "Sur tous les trades" : "On all trades", color: Number(avgPnl) >= 0 ? G.green : G.red },
-            { label: fr ? "Jours Topstep validés" : "Topstep valid days", val: joursValides, sub: fr ? "Jours ≥ $150" : "Days ≥ $150", color: joursValides >= 5 ? G.green : "#fff" },
+            ...(aUnCompteTopstepFunded ? [{ label: fr ? "Jours Topstep validés" : "Topstep valid days", val: joursValides, sub: fr ? "Jours ≥ $150" : "Days ≥ $150", color: joursValides >= 5 ? G.green : "#fff" }] : []),
           ].map((s, i) => (
             <div key={i} style={{ ...card }}>
               <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8 }}>{s.label}</div>
