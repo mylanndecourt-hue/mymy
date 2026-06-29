@@ -5968,7 +5968,7 @@ function LeChemin({ chapitres, setChapitres, lang = "fr" }) {
 
 function FirmLogo({ firm, size = 28, style = {} }) {
   const fd = typeof firm === "string" ? (PROP_FIRMS_CATALOG[firm] || PROP_FIRMS_CATALOG["Autre"]) : firm;
-  const [err, setErr] = React.useState(false);
+  const [err, setErr] = useState(false);
   if (!fd?.logo || err) {
     return <span style={{ fontSize: size * 0.85, lineHeight: 1, ...style }}>{fd?.emoji || "🏦"}</span>;
   }
