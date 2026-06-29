@@ -1552,9 +1552,12 @@ function PnlCurve({ trades, height = 180, positive, onTradeClick }) {
 
   if (trades.length < 1) return null;
 
-  const cumul = [];
+  const rawCumul = [];
   let sum = 0;
-  trades.forEach(t => { sum += t.pnl; cumul.push(sum); });
+  trades.forEach(t => { sum += t.pnl; rawCumul.push(sum); });
+  // Toujours commencer à 0 pour avoir une courbe même avec 1 trade
+  const cumul = [0, ...rawCumul];
+  const tradesWithStart = [null, ...trades]; // null = point de départ virtuel
 
   const PAD_L = 52, PAD_R = 16, PAD_T = 12, PAD_B = 28;
   const W = containerW, H = height;
@@ -1565,7 +1568,7 @@ function PnlCurve({ trades, height = 180, positive, onTradeClick }) {
   const minVal = -absMax, maxVal = absMax, range = maxVal - minVal;
 
   const pts = cumul.map((v, i) => [
-    PAD_L + (cumul.length > 1 ? (i / (cumul.length - 1)) : 0.5) * chartW,
+    PAD_L + (i / (cumul.length - 1)) * chartW,
     PAD_T + (1 - (v - minVal) / range) * chartH,
   ]);
   const zeroY = PAD_T + (1 - (0 - minVal) / range) * chartH;
@@ -1578,16 +1581,16 @@ function PnlCurve({ trades, height = 180, positive, onTradeClick }) {
     return { val: Math.round(val), y: PAD_T + (1 - (val - minVal) / range) * chartH };
   });
 
-  const xTickCount = Math.min(5, cumul.length);
-  const xLabels = cumul.length === 1
-    ? [{ label: "#1", x: PAD_L + chartW * 0.5 }]
-    : Array.from({ length: xTickCount }, (_, i) => {
-        const idx = Math.round(i * (cumul.length - 1) / (xTickCount - 1));
-        return { label: `#${idx + 1}`, x: PAD_L + (idx / (cumul.length - 1)) * chartW };
-      });
+  const realCount = rawCumul.length;
+  const xTickCount = Math.min(5, realCount);
+  const xLabels = Array.from({ length: xTickCount }, (_, i) => {
+    const realIdx = Math.round(i * (realCount - 1) / Math.max(1, xTickCount - 1));
+    const ptsIdx = realIdx + 1; // +1 car cumul commence à 0
+    return { label: `#${realIdx + 1}`, x: PAD_L + (ptsIdx / (cumul.length - 1)) * chartW };
+  });
 
   const GREEN = "#22c55e", RED = "#ef4444";
-  const hovTrade = hoverIdx !== null ? trades[hoverIdx] : null;
+  const hovTrade = hoverIdx !== null ? tradesWithStart[hoverIdx] : null;
   const hovCumul = hoverIdx !== null ? cumul[hoverIdx] : null;
 
   const handleMouseMove = (e) => {
@@ -1622,20 +1625,10 @@ function PnlCurve({ trades, height = 180, positive, onTradeClick }) {
           </g>
         ))}
         <line x1={PAD_L} y1={zeroY} x2={W - PAD_R} y2={zeroY} stroke="#4b5e7a" strokeWidth="0.8" strokeDasharray="3,3" opacity="0.7" />
-        {cumul.length === 1 ? (
-          <>
-            <line x1={pts[0][0]} y1={zeroY} x2={pts[0][0]} y2={pts[0][1]} stroke={cumul[0] >= 0 ? GREEN : RED} strokeWidth="2" strokeDasharray="4,3" opacity="0.5" />
-            <circle cx={pts[0][0]} cy={pts[0][1]} r={6} fill={cumul[0] >= 0 ? GREEN : RED} stroke="#06060f" strokeWidth="2" />
-            <circle cx={pts[0][0]} cy={pts[0][1]} r={12} fill={cumul[0] >= 0 ? GREEN : RED} opacity="0.15" />
-          </>
-        ) : (
-          <>
-            <path d={fillPath} fill="url(#fillPosI)" clipPath="url(#clipPosI)" />
-            <path d={fillPath} fill="url(#fillNegI)" clipPath="url(#clipNegI)" />
-            <path d={linePath} fill="none" stroke={GREEN} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" clipPath="url(#clipPosI)" />
-            <path d={linePath} fill="none" stroke={RED} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" clipPath="url(#clipNegI)" />
-          </>
-        )}
+        <path d={fillPath} fill="url(#fillPosI)" clipPath="url(#clipPosI)" />
+        <path d={fillPath} fill="url(#fillNegI)" clipPath="url(#clipNegI)" />
+        <path d={linePath} fill="none" stroke={GREEN} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" clipPath="url(#clipPosI)" />
+        <path d={linePath} fill="none" stroke={RED} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" clipPath="url(#clipNegI)" />
         {xLabels.map((t, i) => (
           <text key={i} x={t.x} y={H - 4} textAnchor="middle" fontSize="9" fill="#4b5e7a">{t.label}</text>
         ))}
@@ -1646,9 +1639,9 @@ function PnlCurve({ trades, height = 180, positive, onTradeClick }) {
           </g>
         )}
         {pts.map((pt, i) => (
-          <circle key={i} cx={pt[0]} cy={pt[1]} r={8} fill="transparent" style={{ cursor: "pointer" }}
-            onMouseEnter={() => setHoverIdx(i)} onMouseLeave={() => setHoverIdx(null)}
-            onClick={() => onTradeClick && onTradeClick(trades[i])} />
+          <circle key={i} cx={pt[0]} cy={pt[1]} r={8} fill="transparent" style={{ cursor: i > 0 ? "pointer" : "default" }}
+            onMouseEnter={() => i > 0 && setHoverIdx(i)} onMouseLeave={() => setHoverIdx(null)}
+            onClick={() => i > 0 && onTradeClick && onTradeClick(tradesWithStart[i])} />
         ))}
       </svg>
 
