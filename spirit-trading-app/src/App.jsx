@@ -2432,7 +2432,7 @@ function CalendrierPnL({ trades }) {
   );
 }
 
-function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, lang = "fr" }) {
+function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAccount, lang = "fr" }) {
   const fr = lang === "fr";
   const firm = PROP_FIRMS_CATALOG[compte.type] || PROP_FIRMS_CATALOG["Autre"];
   const tradeDuCompte = trades.filter(t => t.compte === compte.nom);
@@ -2467,6 +2467,7 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, lang = "
     (regles.type === "jours_trading" && regles.nombre && tradeDuCompte.length >= regles.nombre)
   );
   const [showValidModal, setShowValidModal] = useState(false);
+  const [showBlowModal, setShowBlowModal] = useState(false);
 
   const recentTrades = [...tradeDuCompte].sort((a, b) => b.date > a.date ? 1 : -1).slice(0, 5);
 
@@ -2518,17 +2519,48 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, lang = "
         </div>
       )}
 
+      {/* Modal compte cramé */}
+      {showBlowModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: "#0a0a14", border: "1px solid #ef444440", borderRadius: 20, padding: "40px 36px", maxWidth: 420, width: "100%", textAlign: "center" }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🔥</div>
+            <h2 style={{ fontSize: 22, fontWeight: 900, color: "#fff", marginBottom: 8 }}>Compte perdu</h2>
+            <p style={{ fontSize: 14, color: "#9ca3af", lineHeight: 1.7, marginBottom: 28 }}>
+              Tu es sur le point de marquer le compte <strong style={{ color: "#ef4444" }}>{compte.nom}</strong> comme <strong>cramé / perdu</strong>.<br />
+              Les trades sont conservés dans l'analyse globale.
+            </p>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button onClick={() => setShowBlowModal(false)} style={{ flex: 1, background: "none", border: "1px solid #1a1a2e", color: "#6b7280", borderRadius: 10, padding: "12px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                Annuler
+              </button>
+              <button onClick={() => { onBlowAccount && onBlowAccount(compte.id); setShowBlowModal(false); }} style={{ flex: 2, background: "#ef4444", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "inherit" }}>
+                🔥 Confirmer — compte cramé
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <button onClick={onBack} style={{ background: "#0e0e1a", border: "1px solid #1a1a2e", color: "#666", borderRadius: 10, padding: "8px 14px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>← Retour</button>
           <div>
-            <div style={{ fontSize: 11, color: firm.couleur, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 }}>{firm.emoji} {compte.type} · {typeData?.label || compte.typeCompte}</div>
-            <div style={{ fontSize: 28, fontWeight: 900, letterSpacing: -1 }}>{compte.nom}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <div style={{ fontSize: 11, color: firm.couleur, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.5 }}>{firm.emoji} {compte.type} · {typeData?.label || compte.typeCompte}</div>
+              {compte.blown && <span style={{ fontSize: 10, fontWeight: 800, color: "#ef4444", background: "#ef444420", border: "1px solid #ef444440", borderRadius: 20, padding: "2px 8px", letterSpacing: 0.5 }}>🔥 CRAMÉ</span>}
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 900, letterSpacing: -1, opacity: compte.blown ? 0.5 : 1 }}>{compte.nom}</div>
             {compte.numero && <div style={{ fontSize: 12, color: G.dim, marginTop: 2 }}>Compte #{compte.numero}</div>}
+            {compte.blown && compte.blownAt && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>Perdu le {compte.blownAt}</div>}
           </div>
         </div>
-        <button onClick={onEdit} style={{ background: "#1a1a2e", border: "1px solid #2a2a3e", color: "#aaa", borderRadius: 10, padding: "8px 16px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>✏️ Modifier</button>
+        <div style={{ display: "flex", gap: 8 }}>
+          {!compte.blown && (
+            <button onClick={() => setShowBlowModal(true)} style={{ background: "#ef444410", border: "1px solid #ef444430", color: "#ef4444", borderRadius: 10, padding: "8px 16px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>🔥 Compte cramé</button>
+          )}
+          <button onClick={onEdit} style={{ background: "#1a1a2e", border: "1px solid #2a2a3e", color: "#aaa", borderRadius: 10, padding: "8px 16px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>✏️ Modifier</button>
+        </div>
       </div>
 
       {/* KPI row */}
@@ -2966,12 +2998,14 @@ function Dashboard({ trades, comptes, onEditCompte, onNewCompte, onGoToAnalyse, 
               return (
                 <div key={c.id}
                   onClick={() => onViewCompte && onViewCompte(c)}
-                  style={{ ...card, cursor: "pointer", position: "relative", overflow: "hidden", transition: "transform .15s, border-color .15s", borderColor: firm.couleur + "40" }}
+                  style={{ ...card, cursor: "pointer", position: "relative", overflow: "hidden", transition: "transform .15s, border-color .15s", borderColor: c.blown ? "#ef444440" : firm.couleur + "40", opacity: c.blown ? 0.75 : 1 }}
                   onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
                   onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
                 >
                   {/* Glow */}
-                  <div style={{ position: "absolute", top: -30, right: -30, width: 100, height: 100, borderRadius: "50%", background: firm.couleur + "12", filter: "blur(30px)", pointerEvents: "none" }} />
+                  <div style={{ position: "absolute", top: -30, right: -30, width: 100, height: 100, borderRadius: "50%", background: c.blown ? "#ef444412" : firm.couleur + "12", filter: "blur(30px)", pointerEvents: "none" }} />
+                  {/* Badge cramé */}
+                  {c.blown && <div style={{ position: "absolute", top: 10, right: 10, fontSize: 10, fontWeight: 800, color: "#ef4444", background: "#ef444420", border: "1px solid #ef444440", borderRadius: 20, padding: "2px 8px" }}>🔥 CRAMÉ</div>}
 
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
                     <div>
@@ -8013,6 +8047,10 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
               ? <DetailTrade trade={selectedTrade} onBack={() => setSelectedTrade(null)} onEdit={handleEditTrade} lang={lang} />
               : selectedCompte && tab === "dashboard"
               ? <DetailCompte compte={selectedCompte} trades={trades} onBack={() => setSelectedCompte(null)} onEdit={() => { setSelectedCompte(null); handleEditCompte(selectedCompte); }} lang={lang}
+                  onBlowAccount={(compteId) => {
+                    setComptes(cs => cs.map(c => c.id === compteId ? { ...c, blown: true, blownAt: new Date().toISOString().split("T")[0] } : c));
+                    setSelectedCompte(null);
+                  }}
                   onValidateEval={(compteSource, nextType) => {
                     const newCompte = {
                       id: Date.now(),
