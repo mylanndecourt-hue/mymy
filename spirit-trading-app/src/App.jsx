@@ -617,7 +617,7 @@ const initialTrades = [
 // ─── CATALOGUE PROP FIRMS ─────────────────────────────────────────────────────
 const PROP_FIRMS_CATALOG = {
   Topstep: {
-    nom: "Topstep", couleur: "#00d4ff", emoji: "🏦", siteUrl: "https://www.topstep.com", reglesUrl: "https://support.topstep.com/hc/en-us/categories/4408836624791-Rules-Policies", discordUrl: "https://discord.com/invite/topstep",
+    nom: "Topstep", couleur: "#00d4ff", emoji: "🏦", logo: "https://logo.clearbit.com/topstep.com", siteUrl: "https://www.topstep.com", reglesUrl: "https://support.topstep.com/hc/en-us/categories/4408836624791-Rules-Policies", discordUrl: "https://discord.com/invite/topstep",
     description: "Futures prop firm · XFA",
     typesCompte: [
       { id: "combine", label: "Trading Combine", desc: "Évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", label: "Atteindre le profit target pour passer en XFA" } },
@@ -637,7 +637,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   Phidias: {
-    nom: "Phidias", couleur: "#f59e0b", emoji: "🏦", siteUrl: "https://phidiaspropfirm.com", reglesUrl: "https://phidiaspropfirm.com/rules", discordUrl: null,
+    nom: "Phidias", couleur: "#f59e0b", emoji: "🏦", logo: "https://logo.clearbit.com/phidiaspropfirm.com", siteUrl: "https://phidiaspropfirm.com", reglesUrl: "https://phidiaspropfirm.com/rules", discordUrl: null,
     description: "Express to Live",
     tailles: [10000, 25000, 50000, 100000, 200000],
     typesCompte: [
@@ -660,7 +660,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   Apex: {
-    nom: "Apex Trader Funding", couleur: "#a78bfa", emoji: "⚡", siteUrl: "https://apextraderfunding.com", reglesUrl: "https://apextraderfunding.com/help-center", discordUrl: "https://discord.com/invite/apextraderfunding",
+    nom: "Apex Trader Funding", couleur: "#a78bfa", emoji: "⚡", logo: "https://logo.clearbit.com/apextraderfunding.com", siteUrl: "https://apextraderfunding.com", reglesUrl: "https://apextraderfunding.com/help-center", discordUrl: "https://discord.com/invite/apextraderfunding",
     description: "EOD Evaluation",
     tailles: [25000, 50000, 75000, 100000, 150000, 250000, 300000],
     typesCompte: [
@@ -772,7 +772,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   Tradeify: {
-    nom: "Tradeify", couleur: "#f97316", emoji: "🔥", siteUrl: "https://tradeify.co", reglesUrl: "https://tradeify.co/rules", discordUrl: null,
+    nom: "Tradeify", couleur: "#f97316", emoji: "🔥", logo: "https://logo.clearbit.com/tradeify.co", siteUrl: "https://tradeify.co", reglesUrl: "https://tradeify.co/rules", discordUrl: null,
     description: "Futures · Challenge & Funded",
     tailles: [25000, 50000, 100000, 150000],
     typesCompte: [
@@ -789,7 +789,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   MyFundedFutures: {
-    nom: "MyFundedFutures", couleur: "#06b6d4", emoji: "🌊", siteUrl: "https://myfundedfutures.com", reglesUrl: "https://myfundedfutures.com/rules", discordUrl: null,
+    nom: "MyFundedFutures", couleur: "#06b6d4", emoji: "🌊", logo: "https://logo.clearbit.com/myfundedfutures.com", siteUrl: "https://myfundedfutures.com", reglesUrl: "https://myfundedfutures.com/rules", discordUrl: null,
     description: "Futures · Sim & Live",
     tailles: [50000, 100000, 150000, 200000],
     typesCompte: [
@@ -808,7 +808,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   Bulenox: {
-    nom: "Bulenox", couleur: "#8b5cf6", emoji: "🐂", siteUrl: "https://bulenox.com", reglesUrl: "https://bulenox.com/rules", discordUrl: null,
+    nom: "Bulenox", couleur: "#8b5cf6", emoji: "🐂", logo: "https://logo.clearbit.com/bulenox.com", siteUrl: "https://bulenox.com", reglesUrl: "https://bulenox.com/rules", discordUrl: null,
     description: "Futures · Evaluation & Funded",
     tailles: [10000, 25000, 50000, 100000, 150000, 200000],
     typesCompte: [
@@ -826,7 +826,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   Earn2Trade: {
-    nom: "Earn2Trade", couleur: "#10b981", emoji: "📈", siteUrl: "https://earn2trade.com", reglesUrl: "https://earn2trade.com/gauntlet-rules", discordUrl: null,
+    nom: "Earn2Trade", couleur: "#10b981", emoji: "📈", logo: "https://logo.clearbit.com/earn2trade.com", siteUrl: "https://earn2trade.com", reglesUrl: "https://earn2trade.com/gauntlet-rules", discordUrl: null,
     description: "Futures · Gauntlet Mini & Pro",
     tailles: [25000, 50000, 100000, 150000, 200000],
     typesCompte: [
@@ -845,7 +845,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   TradeDay: {
-    nom: "TradeDay", couleur: "#ec4899", emoji: "📅", siteUrl: "https://tradeday.com", reglesUrl: "https://tradeday.com/rules", discordUrl: null,
+    nom: "TradeDay", couleur: "#ec4899", emoji: "📅", logo: "https://logo.clearbit.com/tradeday.com", siteUrl: "https://tradeday.com", reglesUrl: "https://tradeday.com/rules", discordUrl: null,
     description: "Futures · Simple & Transparent",
     tailles: [10000, 25000, 50000, 100000, 150000, 200000],
     typesCompte: [
@@ -863,7 +863,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   EliteTrader: {
-    nom: "Elite Trader Funding", couleur: "#f59e0b", emoji: "👑", siteUrl: "https://elitetraderfunding.com", reglesUrl: "https://elitetraderfunding.com/rules", discordUrl: null,
+    nom: "Elite Trader Funding", couleur: "#f59e0b", emoji: "👑", logo: "https://logo.clearbit.com/elitetraderfunding.com", siteUrl: "https://elitetraderfunding.com", reglesUrl: "https://elitetraderfunding.com/rules", discordUrl: null,
     description: "Futures · EOD Drawdown",
     tailles: [50000, 100000, 150000, 200000, 300000],
     typesCompte: [
@@ -879,7 +879,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   TakeProfitTrader: {
-    nom: "Take Profit Trader", couleur: "#34d399", emoji: "💰", siteUrl: "https://takeprofittrader.com", reglesUrl: "https://takeprofittrader.com/rules", discordUrl: null,
+    nom: "Take Profit Trader", couleur: "#34d399", emoji: "💰", logo: "https://logo.clearbit.com/takeprofittrader.com", siteUrl: "https://takeprofittrader.com", reglesUrl: "https://takeprofittrader.com/rules", discordUrl: null,
     description: "Futures · Flexible Rules",
     tailles: [25000, 50000, 100000, 150000],
     typesCompte: [
@@ -895,7 +895,7 @@ const PROP_FIRMS_CATALOG = {
     ]
   },
   Funded4Traders: {
-    nom: "Funded4Traders", couleur: "#6366f1", emoji: "🎯", siteUrl: "https://funded4traders.com", reglesUrl: "https://funded4traders.com/rules", discordUrl: null,
+    nom: "Funded4Traders", couleur: "#6366f1", emoji: "🎯", logo: "https://logo.clearbit.com/funded4traders.com", siteUrl: "https://funded4traders.com", reglesUrl: "https://funded4traders.com/rules", discordUrl: null,
     description: "Futures · Multi-step eval",
     tailles: [25000, 50000, 100000, 200000],
     typesCompte: [
@@ -2823,8 +2823,9 @@ function Dashboard({ trades, comptes, onEditCompte, onNewCompte, onGoToAnalyse, 
 
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: firm.couleur, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
-                        {firm.emoji} {c.type}
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                        <FirmLogo firm={firm} size={20} style={{ borderRadius: 4 }} />
+                        <span style={{ fontSize: 11, fontWeight: 700, color: firm.couleur, textTransform: "uppercase", letterSpacing: 1 }}>{c.type}</span>
                       </div>
                       <div style={{ fontSize: 14, fontWeight: 800, color: "#fff" }}>{c.nom}</div>
                       {c.numero && <div style={{ fontSize: 10, color: G.dim, marginTop: 2 }}>#{c.numero}</div>}
@@ -4110,8 +4111,8 @@ function Regles({ comptes, preselectedFirm = null, reglesPerso, setReglesPerso, 
             const actif = tab === key;
             const enUse = firmsInUse.includes(key);
             return (
-              <button key={key} onClick={() => setTab(key)} style={{ background: actif ? f.couleur + "25" : COLORS.card, border: `1px solid ${actif ? f.couleur : COLORS.border}`, color: actif ? f.couleur : COLORS.textDim, borderRadius: 8, padding: "8px 14px", fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", position: "relative" }}>
-                {f.emoji} {f.nom}
+              <button key={key} onClick={() => setTab(key)} style={{ background: actif ? f.couleur + "25" : COLORS.card, border: `1px solid ${actif ? f.couleur : COLORS.border}`, color: actif ? f.couleur : COLORS.textDim, borderRadius: 8, padding: "8px 14px", fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", position: "relative", display: "flex", alignItems: "center", gap: 6 }}>
+                <FirmLogo firm={f} size={16} style={{ borderRadius: 3, opacity: actif ? 1 : 0.6 }} />{f.nom}
                 {enUse && <span style={{ position: "absolute", top: -3, right: -3, width: 7, height: 7, borderRadius: "50%", background: f.couleur, border: `2px solid ${COLORS.bg}` }} />}
               </button>
             );
@@ -5965,6 +5966,22 @@ function LeChemin({ chapitres, setChapitres, lang = "fr" }) {
   );
 }
 
+function FirmLogo({ firm, size = 28, style = {} }) {
+  const fd = typeof firm === "string" ? (PROP_FIRMS_CATALOG[firm] || PROP_FIRMS_CATALOG["Autre"]) : firm;
+  const [err, setErr] = React.useState(false);
+  if (!fd?.logo || err) {
+    return <span style={{ fontSize: size * 0.85, lineHeight: 1, ...style }}>{fd?.emoji || "🏦"}</span>;
+  }
+  return (
+    <img
+      src={fd.logo}
+      alt={fd.nom}
+      onError={() => setErr(true)}
+      style={{ width: size, height: size, objectFit: "contain", borderRadius: 6, ...style }}
+    />
+  );
+}
+
 function AjoutCompte({ onSave, onCancel, editCompte = null, onGoToRegles, lang = "fr" }) {
   const fr = lang === "fr";
   const inp = { width: "100%", background: "#0e0e1a", border: "1px solid #1a1a2e", borderRadius: 8, padding: "10px 12px", color: "#fff", fontSize: 13, outline: "none", boxSizing: "border-box" };
@@ -6033,7 +6050,9 @@ function AjoutCompte({ onSave, onCancel, editCompte = null, onGoToRegles, lang =
                 style={{ display: "flex", alignItems: "center", gap: 10, background: "#0e0e1a", border: "1px solid #1a1a2e", borderLeft: `3px solid ${fd.couleur}`, borderRadius: 10, padding: "16px 16px", cursor: "pointer", transition: "all 0.15s", textAlign: "left" }}
                 onMouseEnter={e => { e.currentTarget.style.background = "#13131f"; e.currentTarget.style.borderColor = `#1a1a2e`; e.currentTarget.style.borderLeftColor = fd.couleur; e.currentTarget.style.transform = "translateY(-1px)"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "#0e0e1a"; e.currentTarget.style.borderColor = "#1a1a2e"; e.currentTarget.style.borderLeftColor = fd.couleur; e.currentTarget.style.transform = "none"; }}>
-                <span style={{ fontSize: 24, lineHeight: 1, flexShrink: 0 }}>{fd.emoji}</span>
+                <div style={{ flexShrink: 0, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <FirmLogo firm={fd} size={28} />
+                </div>
                 <div style={{ overflow: "hidden", minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: fd.couleur, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{fd.nom}</div>
                   <div style={{ fontSize: 10, color: "#3a3a4e", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{fd.description}</div>
@@ -6047,8 +6066,8 @@ function AjoutCompte({ onSave, onCancel, editCompte = null, onGoToRegles, lang =
       {/* ÉTAPE 2 — Type de compte + Taille */}
       {step === 2 && (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-            <span style={{ fontSize: 18 }}>{firmData.emoji}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+            <FirmLogo firm={firmData} size={36} style={{ borderRadius: 8 }} />
             <div>
               <div style={{ fontSize: 16, fontWeight: 800, color: C, letterSpacing: -0.3 }}>{firmData.nom}</div>
               <div style={{ fontSize: 10, color: "#555" }}>{firmData.description}</div>
