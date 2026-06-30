@@ -3027,7 +3027,7 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAc
   );
 }
 
-function Dashboard({ trades, comptes, sessions = {}, onEditCompte, onNewCompte, onGoToAnalyse, onTradeDetail, onViewCompte, onDayOpen, lang = "fr", user }) {
+function Dashboard({ trades, comptes, sessions = {}, onEditCompte, onNewCompte, onNewTrade, onNewSession, onGoToAnalyse, onTradeDetail, onViewCompte, onDayOpen, lang = "fr", user }) {
   const T = TR[lang]; const fr = lang === "fr";
 
   // ── Calculs ──
@@ -3075,9 +3075,17 @@ function Dashboard({ trades, comptes, sessions = {}, onEditCompte, onNewCompte, 
             {fr ? <>Vue d'ensemble<br /><span style={{ background: "linear-gradient(135deg,#00e5a0,#818cf8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>de ton trading.</span></> : <>Overview of<br /><span style={{ background: "linear-gradient(135deg,#00e5a0,#818cf8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>your trading.</span></>}
           </h1>
         </div>
-        <button data-tutorial="add-account" onClick={onNewCompte} style={{ background: "linear-gradient(135deg,#00e5a0,#00b37a)", border: "none", color: "#06060f", borderRadius: 12, padding: "10px 20px", fontSize: 12, fontWeight: 800, cursor: "pointer", boxShadow: "0 0 20px rgba(0,229,160,0.25)", flexShrink: 0 }}>
-          {T.addAccount}
-        </button>
+        <div style={{ display: "flex", gap: 10, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
+          <button onClick={onNewTrade} style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.4)", color: "#818cf8", borderRadius: 12, padding: "10px 18px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+            ➕ {fr ? "Ajouter un trade" : "Add a trade"}
+          </button>
+          <button onClick={onNewSession} style={{ background: "rgba(0,229,160,0.1)", border: "1px solid rgba(0,229,160,0.3)", color: "#00e5a0", borderRadius: 12, padding: "10px 18px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+            🌅 {fr ? "Commencer une session" : "Start a session"}
+          </button>
+          <button data-tutorial="add-account" onClick={onNewCompte} style={{ background: "linear-gradient(135deg,#00e5a0,#00b37a)", border: "none", color: "#06060f", borderRadius: 12, padding: "10px 18px", fontSize: 12, fontWeight: 800, cursor: "pointer", boxShadow: "0 0 20px rgba(0,229,160,0.25)" }}>
+            {T.addAccount}
+          </button>
+        </div>
       </div>
 
       {/* ── KPI ROW ── */}
@@ -8504,7 +8512,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
                     setSelectedCompte(null);
                   }}
                 />
-              : tab === "dashboard"  ? <Dashboard trades={trades} comptes={comptes} sessions={sessions} onEditCompte={handleEditCompte} onNewCompte={handleNewCompte} onGoToAnalyse={handleGoToAnalyse} onTradeDetail={setSelectedTrade} onViewCompte={setSelectedCompte} onDayOpen={(date) => { setSessionDayDate(date); setSessionSubView("dayDetail"); navigateTo("session"); }} lang={lang} user={user} />
+              : tab === "dashboard"  ? <Dashboard trades={trades} comptes={comptes} sessions={sessions} onEditCompte={handleEditCompte} onNewCompte={handleNewCompte} onNewTrade={() => { setNewTradeDefaultDate(new Date().toISOString().split("T")[0]); setShowTradeDateModal(true); }} onNewSession={() => { navigateTo("session"); setSessionSubView("preparation"); }} onGoToAnalyse={handleGoToAnalyse} onTradeDetail={setSelectedTrade} onViewCompte={setSelectedCompte} onDayOpen={(date) => { setSessionDayDate(date); setSessionSubView("dayDetail"); navigateTo("session"); }} lang={lang} user={user} />
               : tab === "session"    ? (
                 sessionSubView === "preparation"
                   ? (
