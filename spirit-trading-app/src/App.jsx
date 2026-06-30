@@ -4475,14 +4475,25 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
         )}
 
         {/* P&L */}
-        <div style={{ marginBottom: 22 }}>
-          {fieldLabel(fr ? "Résultat (P&L)" : "Result (P&L)")}
-          <div style={{ position: "relative" }}>
-            <input type="number" placeholder="0" value={form.pnl} onChange={e => set("pnl", e.target.value)}
-              style={{ background: "rgba(255,255,255,0.03)", border: `2px solid ${Number(form.pnl) > 0 ? G.green + "60" : Number(form.pnl) < 0 ? G.red + "60" : "#1f2937"}`, borderRadius: 14, color: Number(form.pnl) > 0 ? G.green : Number(form.pnl) < 0 ? G.red : G.text, fontSize: 32, fontWeight: 900, textAlign: "center", padding: "16px 20px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", outline: "none" }} />
-            <div style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: G.dim }}>$</div>
-          </div>
-        </div>
+        {(() => {
+          const pnlVal = Number(form.pnl);
+          const isPos = pnlVal > 0, isNeg = pnlVal < 0;
+          const pnlColor = isPos ? G.green : isNeg ? G.red : G.dim;
+          return (
+            <div style={{ marginBottom: 22 }}>
+              <div style={{ background: isPos ? `${G.green}10` : isNeg ? `${G.red}10` : "rgba(255,255,255,0.02)", border: `2px solid ${isPos ? G.green + "50" : isNeg ? G.red + "50" : "#1f2937"}`, borderRadius: 18, padding: "20px 20px 16px", boxShadow: isPos ? `0 0 32px ${G.green}20` : isNeg ? `0 0 32px ${G.red}20` : "none", transition: "all 0.3s" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: pnlColor, textTransform: "uppercase", letterSpacing: 2, marginBottom: 10, textAlign: "center" }}>
+                  {isPos ? (fr ? "✦ GAIN" : "✦ PROFIT") : isNeg ? (fr ? "✦ PERTE" : "✦ LOSS") : (fr ? "Résultat (P&L)" : "Result (P&L)")}
+                </div>
+                <div style={{ position: "relative" }}>
+                  <input type="number" placeholder="0" value={form.pnl} onChange={e => set("pnl", e.target.value)}
+                    style={{ background: "transparent", border: "none", borderRadius: 10, color: pnlColor, fontSize: 48, fontWeight: 900, textAlign: "center", padding: "0 40px 0 0", width: "100%", boxSizing: "border-box", fontFamily: "inherit", outline: "none", letterSpacing: -1 }} />
+                  <div style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 18, fontWeight: 700, color: pnlColor, opacity: 0.6 }}>$</div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Compte */}
         <div style={{ marginBottom: 20 }}>
