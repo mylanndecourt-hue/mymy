@@ -4532,75 +4532,37 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
           <textarea placeholder={T.techNotesPlaceholder} value={form.notes_tech} onChange={e => set("notes_tech", e.target.value)} rows={3} style={{ ...inp, resize: "vertical" }} />
         </div>
 
-      {/* Discipline */}
-      <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 14 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.text, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>{T.discipline}</div>
-        <div style={{ marginBottom: 10 }}>
-          <label style={lbl}>Intimité avec Dieu</label>
-          <div style={{ display: "flex", gap: 8 }}>
-            {["Oui", "Non"].map(v => <button key={v} onClick={() => set("priere", v === "Oui")} style={{ flex: 1, background: (form.priere ? "Oui" : "Non") === v ? COLORS.cyan + "20" : COLORS.bg, border: `1px solid ${(form.priere ? "Oui" : "Non") === v ? COLORS.cyan : COLORS.border}`, color: (form.priere ? "Oui" : "Non") === v ? COLORS.cyan : COLORS.textDim, borderRadius: 8, padding: 10, fontSize: 13, cursor: "pointer" }}>{v === "Oui" ? T.yes : T.no}</button>)}
-          </div>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-          <div><label style={lbl}>{T.bedtime}</label><input type="time" value={form.heure_coucher} onChange={e => set("heure_coucher", e.target.value)} style={inp} /></div>
-          <div><label style={lbl}>{T.sleep}</label><input type="number" step="0.5" placeholder="7.5" value={form.sommeil} onChange={e => set("sommeil", e.target.value)} style={inp} /></div>
-        </div>
-        <div style={{ marginBottom: 10 }}>
-          <label style={lbl}>Qualité du sommeil</label>
-          <div style={{ display: "flex", gap: 6 }}>
-            {[1,2,3,4,5].map(n => {
-              const color = n <= 2 ? COLORS.red : n === 3 ? COLORS.amber : COLORS.green;
-              const active = form.qualite_sommeil >= n;
-              return (
-                <button key={n} onClick={() => set("qualite_sommeil", form.qualite_sommeil === n ? 0 : n)} style={{
-                  flex: 1, padding: "10px 0", borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 700,
-                  background: active ? color + "25" : COLORS.bg,
-                  border: `1.5px solid ${active ? color : COLORS.border}`,
-                  color: active ? color : COLORS.textDim,
-                  transition: "all 0.15s",
-                }}>{n}</button>
-              );
-            })}
-          </div>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-          <div>
-            <label style={lbl}>{T.screensBeforeBed}</label>
-            <div style={{ display: "flex", gap: 8 }}>
-              {["Non", "Oui"].map(v => <button key={v} onClick={() => set("ecrans", v === "Oui")} style={{ flex: 1, background: (form.ecrans ? "Oui" : "Non") === v ? (v === "Oui" ? COLORS.amber : COLORS.green) + "20" : COLORS.bg, border: `1px solid ${(form.ecrans ? "Oui" : "Non") === v ? (v === "Oui" ? COLORS.amber : COLORS.green) : COLORS.border}`, color: (form.ecrans ? "Oui" : "Non") === v ? (v === "Oui" ? COLORS.amber : COLORS.green) : COLORS.textDim, borderRadius: 8, padding: 10, fontSize: 13, cursor: "pointer" }}>{v === "Oui" ? T.yes : T.no}</button>)}
-            </div>
-          </div>
-          <div>
-            <label style={lbl}>{T.diet}</label>
-            <div style={{ display: "flex", gap: 8 }}>
-              {["Saine", "Neutre", "Mauvaise"].map(a => <button key={a} onClick={() => set("alimentation", a)} style={{ flex: 1, background: form.alimentation === a ? COLORS.cyan + "20" : COLORS.bg, border: `1px solid ${form.alimentation === a ? COLORS.cyan : COLORS.border}`, color: form.alimentation === a ? COLORS.cyan : COLORS.textDim, borderRadius: 8, padding: 10, fontSize: 12, cursor: "pointer", fontWeight: form.alimentation === a ? 700 : 400 }}>{a === "Saine" ? "Saine" : a === "Neutre" ? "Neutre" : "Mauvaise"}</button>)}
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Psychologie */}
-      <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 14 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.text, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>{lang === "fr" ? "Psychologie" : "Psychology"}</div>
-        <div style={{ marginBottom: 12 }}>
-          <label style={lbl}>{T.globalNote}</label>
-          <div style={{ display: "flex", gap: 8 }}>
-            {[1,2,3,4,5].map(n => <button key={n} onClick={() => set("note", n)} style={{ flex: 1, background: form.note >= n ? COLORS.amber + "20" : COLORS.bg, border: `1px solid ${form.note >= n ? COLORS.amber : COLORS.border}`, color: form.note >= n ? COLORS.amber : COLORS.muted, borderRadius: 8, padding: 10, fontSize: 16, cursor: "pointer" }}>⭐</button>)}
+      <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 18 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.text, marginBottom: 16, textTransform: "uppercase", letterSpacing: 1 }}>{lang === "fr" ? "🧠 Psychologie" : "🧠 Psychology"}</div>
+
+        {/* Note du trade en étoiles */}
+        <div style={{ marginBottom: 18 }}>
+          <label style={{ ...lbl, fontSize: 12 }}>{lang === "fr" ? "Note globale du trade" : "Trade global rating"}</label>
+          <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+            {[1,2,3,4,5].map(n => (
+              <button key={n} onClick={() => set("note", form.note === n ? 0 : n)}
+                style={{ flex: 1, background: form.note >= n ? COLORS.amber + "20" : COLORS.bg, border: `1.5px solid ${form.note >= n ? COLORS.amber : COLORS.border}`, color: form.note >= n ? COLORS.amber : COLORS.muted, borderRadius: 10, padding: "12px 0", fontSize: 22, cursor: "pointer", transition: "all 0.15s" }}>
+                {form.note >= n ? "⭐" : "☆"}
+              </button>
+            ))}
           </div>
         </div>
-        <div>
-          <label style={lbl}>{lang === "fr" ? "Émotions avant" : "Emotions before"}</label>
+
+        {/* Émotions avant */}
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ ...lbl, fontSize: 13, color: COLORS.amber }}>{lang === "fr" ? "Émotions avant le trade" : "Emotions before"}</label>
           <EmotionPicker field="emotion_avant" />
         </div>
-        <div style={{ marginTop: 10 }}>
-          <label style={lbl}>{lang === "fr" ? "Émotions pendant" : "Emotions during"}</label>
+
+        {/* Émotions pendant */}
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ ...lbl, fontSize: 13, color: COLORS.amber }}>{lang === "fr" ? "Émotions pendant le trade" : "Emotions during"}</label>
           <EmotionPicker field="emotion_pendant" />
         </div>
-        <div style={{ marginTop: 10 }}>
-          <label style={lbl}>{lang === "fr" ? "Émotions après" : "Emotions after"}</label>
-          <EmotionPicker field="emotion_apres" />
-        </div>
-        <div style={{ marginTop: 10 }}>
+
+        {/* Leçons apprises */}
+        <div>
           <label style={lbl}>{T.lessonLearned}</label>
           <textarea placeholder={T.lessonPlaceholder} value={form.lecon} onChange={e => set("lecon", e.target.value)} rows={3} style={{ ...inp, resize: "vertical" }} />
         </div>
