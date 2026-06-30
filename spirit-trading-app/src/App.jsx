@@ -4426,12 +4426,14 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
   );
 
   const ACTIFS_QUICK = ["NQ", "ES", "MNQ", "MES", "Gold", "DAX", "CL", "BTC"];
+  const [step, setStep] = useState(1);
+  const STEPS = [fr ? "Le trade" : "The trade", fr ? "Analyse" : "Analysis", fr ? "Psychologie" : "Psychology", fr ? "Note" : "Rating"];
 
   return (
     <div style={{ maxWidth: 680, margin: "0 auto", display: "flex", flexDirection: "column", gap: 0 }}>
 
       {/* ── HEADER ── */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, color: G.green, letterSpacing: 3, textTransform: "uppercase", marginBottom: 4 }}>
             {fr ? "Nouveau trade" : "New trade"}
@@ -4443,34 +4445,41 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
         <button onClick={onCancel} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid #1f2937", color: G.dim, borderRadius: 10, width: 36, height: 36, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>✕</button>
       </div>
 
-      {/* ── TEMPLATES ── */}
-      {!editTrade && templates.filter(t => !t.vide).length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          {fieldLabel("⚡ Templates")}
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {templates.filter(t => !t.vide).map(tpl => (
-              <button key={tpl.id} onClick={() => applyTemplate(tpl)} style={{ ...bubble(false, G.purple), border: "1.5px solid #818cf840", color: G.purple, background: "#818cf810", display: "flex", flexDirection: "column", alignItems: "flex-start", padding: "10px 14px", borderRadius: 12 }}>
-                <span style={{ fontSize: 12, fontWeight: 700 }}>{tpl.nom}</span>
-                <span style={{ fontSize: 10, color: G.dim, marginTop: 2 }}>{tpl.actif}{tpl.direction ? ` · ${tpl.direction}` : ""}{tpl.setup ? ` · ${tpl.setup}` : ""}</span>
-              </button>
-            ))}
+      {/* ── PROGRESS DOTS ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 28 }}>
+        {STEPS.map((s, i) => (
+          <div key={s} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div onClick={() => i < step - 1 && setStep(i + 1)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, cursor: i < step - 1 ? "pointer" : "default" }}>
+              <div style={{ width: i === step - 1 ? 24 : 8, height: 8, borderRadius: 4, background: i < step - 1 ? G.purple : i === step - 1 ? G.purple : "#1e1e2e", transition: "all 0.3s", boxShadow: i === step - 1 ? `0 0 12px ${G.purple}60` : "none", opacity: i < step - 1 ? 0.5 : 1 }} />
+              <div style={{ fontSize: 9, color: i === step - 1 ? G.purple : i < step - 1 ? `${G.purple}70` : "#333", fontWeight: i === step - 1 ? 700 : 400, textTransform: "uppercase", letterSpacing: 1, whiteSpace: "nowrap" }}>{s}</div>
+            </div>
+            {i < STEPS.length - 1 && <div style={{ width: 20, height: 1, background: i < step - 1 ? `${G.purple}50` : "#1e1e2e", marginBottom: 16, flexShrink: 0 }} />}
           </div>
-        </div>
-      )}
+        ))}
+      </div>
 
-      {/* ── SECTION 1 : LE TRADE ── */}
-      <div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 20, padding: "24px 22px", marginBottom: 12 }}>
-        {sectionTitle("📊", fr ? "Le trade" : "The trade")}
+      {/* ── STEP 1 : LE TRADE ── */}
+      {step === 1 && (<div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 20, padding: "24px 22px", marginBottom: 12 }}>
+        {!editTrade && templates.filter(t => !t.vide).length > 0 && (
+          <div style={{ marginBottom: 20 }}>
+            {fieldLabel("⚡ Templates")}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {templates.filter(t => !t.vide).map(tpl => (
+                <button key={tpl.id} onClick={() => applyTemplate(tpl)} style={{ ...bubble(false, G.purple), border: "1.5px solid #818cf840", color: G.purple, background: "#818cf810", display: "flex", flexDirection: "column", alignItems: "flex-start", padding: "10px 14px", borderRadius: 12 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700 }}>{tpl.nom}</span>
+                  <span style={{ fontSize: 10, color: G.dim, marginTop: 2 }}>{tpl.actif}{tpl.direction ? ` · ${tpl.direction}` : ""}{tpl.setup ? ` · ${tpl.setup}` : ""}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
-        {/* P&L proéminent */}
+        {/* P&L */}
         <div style={{ marginBottom: 22 }}>
           {fieldLabel(fr ? "Résultat (P&L)" : "Result (P&L)")}
           <div style={{ position: "relative" }}>
-            <input
-              type="number" placeholder="0" value={form.pnl}
-              onChange={e => set("pnl", e.target.value)}
-              style={{ background: "rgba(255,255,255,0.03)", border: `2px solid ${Number(form.pnl) > 0 ? G.green + "60" : Number(form.pnl) < 0 ? G.red + "60" : "#1f2937"}`, borderRadius: 14, color: Number(form.pnl) > 0 ? G.green : Number(form.pnl) < 0 ? G.red : G.text, fontSize: 32, fontWeight: 900, textAlign: "center", padding: "16px 20px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", outline: "none" }}
-            />
+            <input type="number" placeholder="0" value={form.pnl} onChange={e => set("pnl", e.target.value)}
+              style={{ background: "rgba(255,255,255,0.03)", border: `2px solid ${Number(form.pnl) > 0 ? G.green + "60" : Number(form.pnl) < 0 ? G.red + "60" : "#1f2937"}`, borderRadius: 14, color: Number(form.pnl) > 0 ? G.green : Number(form.pnl) < 0 ? G.red : G.text, fontSize: 32, fontWeight: 900, textAlign: "center", padding: "16px 20px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", outline: "none" }} />
             <div style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: G.dim }}>$</div>
           </div>
         </div>
@@ -4490,9 +4499,7 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
         <div style={{ marginBottom: 20 }}>
           {fieldLabel(fr ? "Actif" : "Asset")}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-            {ACTIFS_QUICK.map(a => (
-              <button key={a} onClick={() => set("actif", a)} style={bubble(form.actif === a, G.cyan)}>{a}</button>
-            ))}
+            {ACTIFS_QUICK.map(a => (<button key={a} onClick={() => set("actif", a)} style={bubble(form.actif === a, G.cyan)}>{a}</button>))}
           </div>
           <input value={ACTIFS_QUICK.includes(form.actif) ? "" : form.actif} onChange={e => set("actif", e.target.value)} placeholder={fr ? "Autre actif…" : "Other asset…"} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #1f2937", borderRadius: 10, color: G.text, fontSize: 13, padding: "9px 14px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", outline: "none" }} />
         </div>
@@ -4516,8 +4523,8 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
           </div>
         </div>
 
-        {/* Date / Heure / Durée / Taille / RR */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 0 }}>
+        {/* Date / Heure / Durée */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
           {[
             { label: fr ? "Date" : "Date", key: "date", type: "date" },
             { label: fr ? "Heure entrée" : "Entry time", key: "heure", type: "time" },
@@ -4529,7 +4536,9 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
             </div>
           ))}
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
+
+        {/* Taille / RR */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           {[
             { label: fr ? "Taille (contrats)" : "Size (contracts)", key: "taille", placeholder: "1" },
             { label: "R/R", key: "rr", placeholder: "2.0" },
@@ -4540,13 +4549,12 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
             </div>
           ))}
         </div>
-      </div>
+      </div>)}
 
-      {/* ── SECTION 2 : ANALYSE ── */}
-      <div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 20, padding: "24px 22px", marginBottom: 12 }}>
+      {/* ── STEP 2 : ANALYSE ── */}
+      {step === 2 && (<div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 20, padding: "24px 22px", marginBottom: 12 }}>
         {sectionTitle("🎯", fr ? "Analyse" : "Analysis")}
 
-        {/* Respect du plan */}
         <div style={{ marginBottom: 20 }}>
           {fieldLabel(fr ? "Respect du plan" : "Plan respected")}
           <div style={{ display: "flex", gap: 10 }}>
@@ -4563,18 +4571,16 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
           </div>
         )}
 
-        {/* Notes techniques */}
         <div>
           {fieldLabel(fr ? "Notes techniques" : "Technical notes")}
-          <textarea placeholder={T.techNotesPlaceholder} value={form.notes_tech} onChange={e => set("notes_tech", e.target.value)} rows={3} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #1f2937", borderRadius: 10, color: G.text, fontSize: 13, padding: "12px 14px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", resize: "vertical", outline: "none" }} />
+          <textarea placeholder={T.techNotesPlaceholder} value={form.notes_tech} onChange={e => set("notes_tech", e.target.value)} rows={4} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #1f2937", borderRadius: 10, color: G.text, fontSize: 13, padding: "12px 14px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", resize: "vertical", outline: "none" }} />
         </div>
-      </div>
+      </div>)}
 
-      {/* ── SECTION 3 : PSYCHOLOGIE ── */}
-      <div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 20, padding: "24px 22px", marginBottom: 12 }}>
+      {/* ── STEP 3 : PSYCHOLOGIE ── */}
+      {step === 3 && (<div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 20, padding: "24px 22px", marginBottom: 12 }}>
         {sectionTitle("🧠", fr ? "Psychologie" : "Psychology")}
 
-        {/* Émotions avant */}
         <div style={{ marginBottom: 18 }}>
           {fieldLabel(fr ? "🌅 Émotions avant" : "🌅 Emotions before")}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -4592,7 +4598,6 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
           )}
         </div>
 
-        {/* Émotions pendant */}
         <div style={{ marginBottom: 18 }}>
           {fieldLabel(fr ? "⚡ Émotions pendant" : "⚡ Emotions during")}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -4610,42 +4615,53 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
           )}
         </div>
 
-        {/* Leçons apprises */}
         <div>
           {fieldLabel(fr ? "📝 Leçons apprises" : "📝 Lessons learned")}
-          <textarea placeholder={T.lessonPlaceholder} value={form.lecon} onChange={e => set("lecon", e.target.value)} rows={3} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #1f2937", borderRadius: 10, color: G.text, fontSize: 13, padding: "12px 14px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", resize: "vertical", outline: "none" }} />
+          <textarea placeholder={T.lessonPlaceholder} value={form.lecon} onChange={e => set("lecon", e.target.value)} rows={4} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #1f2937", borderRadius: 10, color: G.text, fontSize: 13, padding: "12px 14px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", resize: "vertical", outline: "none" }} />
         </div>
-      </div>
+      </div>)}
 
-      {/* ── NOTE GLOBALE DU TRADE ── */}
-      <div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 20, padding: "24px 22px", marginBottom: 12 }}>
+      {/* ── STEP 4 : NOTE GLOBALE ── */}
+      {step === 4 && (<div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 20, padding: "24px 22px", marginBottom: 12 }}>
         {sectionTitle("⭐", fr ? "Note globale du trade" : "Trade rating")}
+        <div style={{ fontSize: 13, color: G.dim, marginBottom: 20 }}>{fr ? "Comment évalues-tu ce trade dans l'ensemble ?" : "How do you rate this trade overall?"}</div>
         <div style={{ display: "flex", gap: 8 }}>
           {[1,2,3,4,5].map(n => (
             <button key={n} onClick={() => set("note", form.note === n ? 0 : n)}
-              style={{ flex: 1, background: form.note >= n ? G.amber + "18" : "rgba(255,255,255,0.03)", border: `1.5px solid ${form.note >= n ? G.amber : "#1f2937"}`, borderRadius: 14, padding: "12px 0", fontSize: 24, cursor: "pointer", transition: "all 0.15s" }}>
+              style={{ flex: 1, background: form.note >= n ? G.amber + "18" : "rgba(255,255,255,0.03)", border: `1.5px solid ${form.note >= n ? G.amber : "#1f2937"}`, borderRadius: 14, padding: "16px 0", fontSize: 28, cursor: "pointer", transition: "all 0.15s" }}>
               {form.note >= n ? "⭐" : <span style={{ color: "#374151" }}>☆</span>}
             </button>
           ))}
         </div>
-      </div>
-
-      {/* ── ENREGISTRER COMME TEMPLATE ── */}
-      {!editTrade && templates.length > 0 && (
-        <div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 16, padding: "16px 20px", marginBottom: 12 }}>
-          {fieldLabel("⚡ " + (fr ? "Enregistrer comme template" : "Save as template"))}
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {templates.map(tpl => (
-              <button key={tpl.id} onClick={() => saveCurrentAsTemplate(tpl.id)} style={{ ...bubble(false, G.purple), background: "#818cf808", border: "1.5px solid #818cf830" }}>→ {tpl.nom}</button>
-            ))}
+        {!editTrade && templates.length > 0 && (
+          <div style={{ marginTop: 24 }}>
+            {fieldLabel("⚡ " + (fr ? "Enregistrer comme template" : "Save as template"))}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {templates.map(tpl => (
+                <button key={tpl.id} onClick={() => saveCurrentAsTemplate(tpl.id)} style={{ ...bubble(false, G.purple), background: "#818cf808", border: "1.5px solid #818cf830" }}>→ {tpl.nom}</button>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>)}
 
-      {/* ── BOUTON SAUVEGARDER ── */}
-      <button onClick={() => onSave(form, editTrade?.id)} style={{ background: "linear-gradient(135deg,#00e5a0,#00b37a)", color: "#06060f", border: "none", borderRadius: 16, padding: "18px", fontSize: 15, fontWeight: 900, cursor: "pointer", letterSpacing: 0.3, boxShadow: "0 0 30px rgba(0,229,160,0.2)" }}>
-        {editTrade ? T.updateTradeBtn : (fr ? "✓ Enregistrer le trade" : "✓ Save trade")}
-      </button>
+      {/* ── NAVIGATION ── */}
+      <div style={{ display: "flex", gap: 10 }}>
+        {step > 1 && (
+          <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid #1f2937", color: G.dim, borderRadius: 16, padding: "16px", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+            ← {fr ? "Précédent" : "Back"}
+          </button>
+        )}
+        {step < STEPS.length ? (
+          <button onClick={() => setStep(s => s + 1)} style={{ flex: 2, background: G.purple, color: "#fff", border: "none", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 900, cursor: "pointer", fontFamily: "inherit", letterSpacing: 0.3, boxShadow: `0 0 24px ${G.purple}40` }}>
+            {fr ? "Suivant →" : "Next →"}
+          </button>
+        ) : (
+          <button onClick={() => onSave(form, editTrade?.id)} style={{ flex: 2, background: "linear-gradient(135deg,#00e5a0,#00b37a)", color: "#06060f", border: "none", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 900, cursor: "pointer", letterSpacing: 0.3, boxShadow: "0 0 30px rgba(0,229,160,0.2)", fontFamily: "inherit" }}>
+            {editTrade ? T.updateTradeBtn : (fr ? "✓ Enregistrer le trade" : "✓ Save trade")}
+          </button>
+        )}
+      </div>
 
       {/* Modal éditeur de template */}
       {showTplEditor !== null && tplEditing && (
