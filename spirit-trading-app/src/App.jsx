@@ -4338,45 +4338,245 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
   };
 
 
+  const fr = lang === "fr";
+  const G = { green: "#00e5a0", red: "#ef4444", amber: "#f59e0b", purple: "#818cf8", cyan: "#22d3ee", dim: "#6b7280", border: "#1a1a2e", card: "#0a0a14", bg: "#06060f", text: "#e5e7eb" };
+  const bubble = (active, color = G.purple) => ({
+    background: active ? color + "20" : "rgba(255,255,255,0.03)",
+    border: `1.5px solid ${active ? color : "#1f2937"}`,
+    color: active ? color : "#6b7280",
+    borderRadius: 20, padding: "8px 16px", fontSize: 13, fontWeight: active ? 700 : 500,
+    cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s", whiteSpace: "nowrap",
+  });
+  const sectionTitle = (icon, label) => (
+    <div style={{ fontSize: 11, fontWeight: 700, color: G.dim, textTransform: "uppercase", letterSpacing: 2, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
+      <span>{icon}</span>{label}
+    </div>
+  );
+  const fieldLabel = (label) => (
+    <div style={{ fontSize: 11, color: G.dim, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{label}</div>
+  );
+
+  const ACTIFS_QUICK = ["NQ", "ES", "MNQ", "MES", "Gold", "DAX", "CL", "BTC"];
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: COLORS.text }}>{editTrade ? T.editTradeTitle(editTrade.id) : T.newTradeTitle}</div>
-        <button onClick={onCancel} style={{ background: "none", border: "none", color: COLORS.muted, fontSize: 20, cursor: "pointer" }}>✕</button>
+    <div style={{ maxWidth: 680, margin: "0 auto", display: "flex", flexDirection: "column", gap: 0 }}>
+
+      {/* ── HEADER ── */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: G.green, letterSpacing: 3, textTransform: "uppercase", marginBottom: 4 }}>
+            {fr ? "Nouveau trade" : "New trade"}
+          </div>
+          <h2 style={{ fontSize: 28, fontWeight: 900, letterSpacing: -1, margin: 0, lineHeight: 1 }}>
+            {fr ? <>Journalise<br /><span style={{ background: "linear-gradient(135deg,#00e5a0,#818cf8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>ton trade.</span></> : <>Log your<br /><span style={{ background: "linear-gradient(135deg,#00e5a0,#818cf8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>trade.</span></>}
+          </h2>
+        </div>
+        <button onClick={onCancel} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid #1f2937", color: G.dim, borderRadius: 10, width: 36, height: 36, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>✕</button>
       </div>
 
       {/* ── TEMPLATES ── */}
-      {!editTrade && templates.length > 0 && (
-        <div style={{ background: "#0a0a14", border: "1px solid #1a1a2e", borderRadius: 12, padding: "14px 16px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1.5 }}>⚡ Templates</div>
-            <div style={{ fontSize: 10, color: "#4b5563" }}>Cliquer pour appliquer · ✏️ pour modifier</div>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
-            {templates.map(tpl => (
-              <div key={tpl.id} style={{ position: "relative" }}>
-                <button onClick={() => applyTemplate(tpl)}
-                  style={{ width: "100%", background: tpl.vide ? "#0e0e1a" : "#818cf810", border: `1px solid ${tpl.vide ? "#1a1a2e" : "#818cf840"}`, borderRadius: 10, padding: "10px 10px 10px 10px", cursor: tpl.vide ? "default" : "pointer", textAlign: "left", transition: "all 0.15s", color: "#fff" }}
-                  onMouseEnter={e => { if (!tpl.vide) e.currentTarget.style.borderColor = "#818cf880"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = tpl.vide ? "#1a1a2e" : "#818cf840"; }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: tpl.vide ? "#4b5563" : "#818cf8", marginBottom: 4, paddingRight: 16, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{tpl.nom}</div>
-                  {tpl.vide ? (
-                    <div style={{ fontSize: 10, color: "#374151" }}>Vide</div>
-                  ) : (
-                    <div style={{ fontSize: 10, color: "#6b7280", lineHeight: 1.6 }}>
-                      {tpl.actif && <span>{tpl.actif}</span>}{tpl.actif && tpl.direction && " · "}{tpl.direction && <span style={{ color: tpl.direction === "LONG" ? "#00e5a0" : "#ef4444" }}>{tpl.direction}</span>}
-                      {tpl.setup && <div style={{ marginTop: 1 }}>{tpl.setup}</div>}
-                    </div>
-                  )}
-                </button>
-                <button onClick={() => { setTplEditing({ ...tpl }); setShowTplEditor(tpl.id); }}
-                  style={{ position: "absolute", top: 6, right: 6, background: "none", border: "none", color: "#4b5563", fontSize: 11, cursor: "pointer", padding: 2, lineHeight: 1 }}>✏️</button>
-              </div>
+      {!editTrade && templates.filter(t => !t.vide).length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          {fieldLabel("⚡ Templates")}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {templates.filter(t => !t.vide).map(tpl => (
+              <button key={tpl.id} onClick={() => applyTemplate(tpl)} style={{ ...bubble(false, G.purple), border: "1.5px solid #818cf840", color: G.purple, background: "#818cf810", display: "flex", flexDirection: "column", alignItems: "flex-start", padding: "10px 14px", borderRadius: 12 }}>
+                <span style={{ fontSize: 12, fontWeight: 700 }}>{tpl.nom}</span>
+                <span style={{ fontSize: 10, color: G.dim, marginTop: 2 }}>{tpl.actif}{tpl.direction ? ` · ${tpl.direction}` : ""}{tpl.setup ? ` · ${tpl.setup}` : ""}</span>
+              </button>
             ))}
           </div>
         </div>
       )}
+
+      {/* ── SECTION 1 : LE TRADE ── */}
+      <div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 20, padding: "24px 22px", marginBottom: 12 }}>
+        {sectionTitle("📊", fr ? "Le trade" : "The trade")}
+
+        {/* P&L proéminent */}
+        <div style={{ marginBottom: 22 }}>
+          {fieldLabel(fr ? "Résultat (P&L)" : "Result (P&L)")}
+          <div style={{ position: "relative" }}>
+            <input
+              type="number" placeholder="0" value={form.pnl}
+              onChange={e => set("pnl", e.target.value)}
+              style={{ background: "rgba(255,255,255,0.03)", border: `2px solid ${Number(form.pnl) > 0 ? G.green + "60" : Number(form.pnl) < 0 ? G.red + "60" : "#1f2937"}`, borderRadius: 14, color: Number(form.pnl) > 0 ? G.green : Number(form.pnl) < 0 ? G.red : G.text, fontSize: 32, fontWeight: 900, textAlign: "center", padding: "16px 20px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", outline: "none" }}
+            />
+            <div style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: G.dim }}>$</div>
+          </div>
+        </div>
+
+        {/* Compte */}
+        <div style={{ marginBottom: 20 }}>
+          {fieldLabel(fr ? "Compte" : "Account")}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {comptes.map(c => (
+              <button key={c.id || c.nom} onClick={() => set("compte", c.nom)} style={bubble(form.compte === c.nom, G.cyan)}>{c.nom}</button>
+            ))}
+            {comptes.length === 0 && <span style={{ fontSize: 12, color: G.dim }}>{fr ? "Aucun compte — crée-en un d'abord" : "No account — create one first"}</span>}
+          </div>
+        </div>
+
+        {/* Actif */}
+        <div style={{ marginBottom: 20 }}>
+          {fieldLabel(fr ? "Actif" : "Asset")}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+            {ACTIFS_QUICK.map(a => (
+              <button key={a} onClick={() => set("actif", a)} style={bubble(form.actif === a, G.cyan)}>{a}</button>
+            ))}
+          </div>
+          <input value={ACTIFS_QUICK.includes(form.actif) ? "" : form.actif} onChange={e => set("actif", e.target.value)} placeholder={fr ? "Autre actif…" : "Other asset…"} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #1f2937", borderRadius: 10, color: G.text, fontSize: 13, padding: "9px 14px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", outline: "none" }} />
+        </div>
+
+        {/* Direction */}
+        <div style={{ marginBottom: 20 }}>
+          {fieldLabel("Direction")}
+          <div style={{ display: "flex", gap: 10 }}>
+            <button onClick={() => set("direction", "LONG")} style={{ ...bubble(form.direction === "LONG", G.green), flex: 1, padding: "14px 0", fontSize: 15, fontWeight: 800, borderRadius: 14, textAlign: "center" }}>▲ LONG</button>
+            <button onClick={() => set("direction", "SHORT")} style={{ ...bubble(form.direction === "SHORT", G.red), flex: 1, padding: "14px 0", fontSize: 15, fontWeight: 800, borderRadius: 14, textAlign: "center" }}>▼ SHORT</button>
+          </div>
+        </div>
+
+        {/* Setup */}
+        <div style={{ marginBottom: 20 }}>
+          {fieldLabel("Setup")}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {["Breakout", "Pullback", "Reversal", "Range", "News", "Scalp", "Swing", "ICT", fr ? "Autre" : "Other"].map(s => (
+              <button key={s} onClick={() => set("setup", s)} style={bubble(form.setup === s, G.purple)}>{s}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Date / Heure / Durée / Taille / RR */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 0 }}>
+          {[
+            { label: fr ? "Date" : "Date", key: "date", type: "date" },
+            { label: fr ? "Heure entrée" : "Entry time", key: "heure", type: "time" },
+            { label: fr ? "Durée (min)" : "Duration (min)", key: "duree", type: "number", placeholder: "15" },
+          ].map(f => (
+            <div key={f.key}>
+              {fieldLabel(f.label)}
+              <input type={f.type} value={form[f.key]} onChange={e => set(f.key, e.target.value)} placeholder={f.placeholder} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #1f2937", borderRadius: 10, color: G.text, fontSize: 13, padding: "9px 12px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", colorScheme: "dark", outline: "none" }} />
+            </div>
+          ))}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
+          {[
+            { label: fr ? "Taille (contrats)" : "Size (contracts)", key: "taille", placeholder: "1" },
+            { label: "R/R", key: "rr", placeholder: "2.0" },
+          ].map(f => (
+            <div key={f.key}>
+              {fieldLabel(f.label)}
+              <input type="number" step="0.1" value={form[f.key]} onChange={e => set(f.key, e.target.value)} placeholder={f.placeholder} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #1f2937", borderRadius: 10, color: G.text, fontSize: 13, padding: "9px 12px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", outline: "none" }} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── SECTION 2 : ANALYSE ── */}
+      <div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 20, padding: "24px 22px", marginBottom: 12 }}>
+        {sectionTitle("🎯", fr ? "Analyse" : "Analysis")}
+
+        {/* Respect du plan */}
+        <div style={{ marginBottom: 20 }}>
+          {fieldLabel(fr ? "Respect du plan" : "Plan respected")}
+          <div style={{ display: "flex", gap: 10 }}>
+            {[["Oui", G.green, T.yes], ["Partiel", G.amber, T.partial], ["Non", G.red, T.no]].map(([r, c, label]) => (
+              <button key={r} onClick={() => set("respect", r)} style={{ ...bubble(form.respect === r, c), flex: 1, padding: "12px 0", fontWeight: 700, fontSize: 13, textAlign: "center", borderRadius: 14 }}>{label}</button>
+            ))}
+          </div>
+        </div>
+
+        {form.respect !== "Oui" && (
+          <div style={{ marginBottom: 20 }}>
+            {fieldLabel(fr ? "Règle violée" : "Violated rule")}
+            <input type="text" placeholder={T.violatedRulePlaceholder} value={form.regle_violee} onChange={e => set("regle_violee", e.target.value)} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #1f2937", borderRadius: 10, color: G.text, fontSize: 13, padding: "9px 14px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", outline: "none" }} />
+          </div>
+        )}
+
+        {/* Notes techniques */}
+        <div>
+          {fieldLabel(fr ? "Notes techniques" : "Technical notes")}
+          <textarea placeholder={T.techNotesPlaceholder} value={form.notes_tech} onChange={e => set("notes_tech", e.target.value)} rows={3} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #1f2937", borderRadius: 10, color: G.text, fontSize: 13, padding: "12px 14px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", resize: "vertical", outline: "none" }} />
+        </div>
+      </div>
+
+      {/* ── SECTION 3 : PSYCHOLOGIE ── */}
+      <div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 20, padding: "24px 22px", marginBottom: 12 }}>
+        {sectionTitle("🧠", fr ? "Psychologie" : "Psychology")}
+
+        {/* Note étoiles */}
+        <div style={{ marginBottom: 22 }}>
+          {fieldLabel(fr ? "Note globale du trade" : "Trade rating")}
+          <div style={{ display: "flex", gap: 8 }}>
+            {[1,2,3,4,5].map(n => (
+              <button key={n} onClick={() => set("note", form.note === n ? 0 : n)}
+                style={{ flex: 1, background: form.note >= n ? G.amber + "18" : "rgba(255,255,255,0.03)", border: `1.5px solid ${form.note >= n ? G.amber : "#1f2937"}`, borderRadius: 14, padding: "12px 0", fontSize: 24, cursor: "pointer", transition: "all 0.15s" }}>
+                {form.note >= n ? "⭐" : <span style={{ color: "#374151" }}>☆</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Émotions avant */}
+        <div style={{ marginBottom: 18 }}>
+          {fieldLabel(fr ? "🌅 Émotions avant" : "🌅 Emotions before")}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {emotions.map(em => {
+              const sel = (Array.isArray(form.emotion_avant) ? form.emotion_avant : form.emotion_avant ? [form.emotion_avant] : []).includes(em);
+              return <button key={em} onClick={() => toggleEmotion("emotion_avant", em)} style={bubble(sel, G.amber)}>{em}</button>;
+            })}
+            <button onClick={() => setShowAddEmotion(showAddEmotion === "emotion_avant" ? null : "emotion_avant")} style={{ ...bubble(false), border: "1.5px dashed #1f2937" }}>+ {fr ? "Autre" : "Other"}</button>
+          </div>
+          {showAddEmotion === "emotion_avant" && (
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+              <input autoFocus placeholder={T.newEmotionPlaceholder} value={newEmotion} onChange={e => setNewEmotion(e.target.value)} onKeyDown={e => e.key === "Enter" && addEmotion("emotion_avant")} style={{ flex: 1, background: "rgba(255,255,255,0.03)", border: "1px solid #1f2937", borderRadius: 10, color: G.text, fontSize: 13, padding: "8px 12px", fontFamily: "inherit", outline: "none" }} />
+              <button onClick={() => addEmotion("emotion_avant")} style={{ background: G.amber, color: "#000", border: "none", borderRadius: 10, padding: "8px 16px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>✓</button>
+            </div>
+          )}
+        </div>
+
+        {/* Émotions pendant */}
+        <div style={{ marginBottom: 18 }}>
+          {fieldLabel(fr ? "⚡ Émotions pendant" : "⚡ Emotions during")}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {emotions.map(em => {
+              const sel = (Array.isArray(form.emotion_pendant) ? form.emotion_pendant : form.emotion_pendant ? [form.emotion_pendant] : []).includes(em);
+              return <button key={em} onClick={() => toggleEmotion("emotion_pendant", em)} style={bubble(sel, G.amber)}>{em}</button>;
+            })}
+            <button onClick={() => setShowAddEmotion(showAddEmotion === "emotion_pendant" ? null : "emotion_pendant")} style={{ ...bubble(false), border: "1.5px dashed #1f2937" }}>+ {fr ? "Autre" : "Other"}</button>
+          </div>
+          {showAddEmotion === "emotion_pendant" && (
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+              <input autoFocus placeholder={T.newEmotionPlaceholder} value={newEmotion} onChange={e => setNewEmotion(e.target.value)} onKeyDown={e => e.key === "Enter" && addEmotion("emotion_pendant")} style={{ flex: 1, background: "rgba(255,255,255,0.03)", border: "1px solid #1f2937", borderRadius: 10, color: G.text, fontSize: 13, padding: "8px 12px", fontFamily: "inherit", outline: "none" }} />
+              <button onClick={() => addEmotion("emotion_pendant")} style={{ background: G.amber, color: "#000", border: "none", borderRadius: 10, padding: "8px 16px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>✓</button>
+            </div>
+          )}
+        </div>
+
+        {/* Leçons apprises */}
+        <div>
+          {fieldLabel(fr ? "📝 Leçons apprises" : "📝 Lessons learned")}
+          <textarea placeholder={T.lessonPlaceholder} value={form.lecon} onChange={e => set("lecon", e.target.value)} rows={3} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #1f2937", borderRadius: 10, color: G.text, fontSize: 13, padding: "12px 14px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", resize: "vertical", outline: "none" }} />
+        </div>
+      </div>
+
+      {/* ── ENREGISTRER COMME TEMPLATE ── */}
+      {!editTrade && templates.length > 0 && (
+        <div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 16, padding: "16px 20px", marginBottom: 12 }}>
+          {fieldLabel("⚡ " + (fr ? "Enregistrer comme template" : "Save as template"))}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {templates.map(tpl => (
+              <button key={tpl.id} onClick={() => saveCurrentAsTemplate(tpl.id)} style={{ ...bubble(false, G.purple), background: "#818cf808", border: "1.5px solid #818cf830" }}>→ {tpl.nom}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── BOUTON SAUVEGARDER ── */}
+      <button onClick={() => onSave(form, editTrade?.id)} style={{ background: "linear-gradient(135deg,#00e5a0,#00b37a)", color: "#06060f", border: "none", borderRadius: 16, padding: "18px", fontSize: 15, fontWeight: 900, cursor: "pointer", letterSpacing: 0.3, boxShadow: "0 0 30px rgba(0,229,160,0.2)" }}>
+        {editTrade ? T.updateTradeBtn : (fr ? "✓ Enregistrer le trade" : "✓ Save trade")}
+      </button>
 
       {/* Modal éditeur de template */}
       {showTplEditor !== null && tplEditing && (
@@ -4384,210 +4584,39 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
           <div style={{ background: "#0a0a14", border: "1px solid #818cf840", borderRadius: 20, padding: "32px 28px", maxWidth: 400, width: "100%" }}>
             <div style={{ fontSize: 17, fontWeight: 900, color: "#fff", marginBottom: 20 }}>⚡ Modifier le template</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 4 }}>Nom du template</label>
-                <input value={tplEditing.nom} onChange={e => setTplEditing(t => ({ ...t, nom: e.target.value }))} style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#fff", borderRadius: 8, padding: "9px 12px", fontSize: 13, width: "100%", boxSizing: "border-box", fontFamily: "inherit" }} />
-              </div>
+              {[["Nom", "nom", "text", "Mon template"], ["Actif", "actif", "text", "NQ, ES…"], ["Setup", "setup", "text", "Breakout, ICT…"]].map(([lbl, key, type, ph]) => (
+                <div key={key}>
+                  <label style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 4 }}>{lbl}</label>
+                  <input type={type} value={tplEditing[key]} onChange={e => setTplEditing(t => ({ ...t, [key]: e.target.value }))} placeholder={ph} style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#fff", borderRadius: 8, padding: "9px 12px", fontSize: 13, width: "100%", boxSizing: "border-box", fontFamily: "inherit", outline: "none" }} />
+                </div>
+              ))}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <div>
-                  <label style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 4 }}>Actif</label>
-                  <input value={tplEditing.actif} onChange={e => setTplEditing(t => ({ ...t, actif: e.target.value }))} placeholder="Nasdaq, ES…" style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#fff", borderRadius: 8, padding: "9px 12px", fontSize: 13, width: "100%", boxSizing: "border-box", fontFamily: "inherit" }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 4 }}>Direction</label>
+                  <label style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 4 }}>Direction</label>
                   <select value={tplEditing.direction} onChange={e => setTplEditing(t => ({ ...t, direction: e.target.value }))} style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#fff", borderRadius: 8, padding: "9px 12px", fontSize: 13, width: "100%", boxSizing: "border-box", fontFamily: "inherit" }}>
-                    <option value="LONG">LONG</option>
-                    <option value="SHORT">SHORT</option>
+                    <option value="LONG">LONG</option><option value="SHORT">SHORT</option>
                   </select>
                 </div>
-              </div>
-              <div>
-                <label style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 4 }}>Setup</label>
-                <input value={tplEditing.setup} onChange={e => setTplEditing(t => ({ ...t, setup: e.target.value }))} placeholder="Breakout, ICT, Reversal…" style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#fff", borderRadius: 8, padding: "9px 12px", fontSize: 13, width: "100%", boxSizing: "border-box", fontFamily: "inherit" }} />
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <div>
-                  <label style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 4 }}>Taille (contrats)</label>
-                  <input type="number" value={tplEditing.taille} onChange={e => setTplEditing(t => ({ ...t, taille: e.target.value }))} placeholder="1" style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#fff", borderRadius: 8, padding: "9px 12px", fontSize: 13, width: "100%", boxSizing: "border-box", fontFamily: "inherit" }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 4 }}>Heure d'entrée</label>
-                  <input type="time" value={tplEditing.heure} onChange={e => setTplEditing(t => ({ ...t, heure: e.target.value }))} style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#fff", borderRadius: 8, padding: "9px 12px", fontSize: 13, width: "100%", boxSizing: "border-box", fontFamily: "inherit", colorScheme: "dark" }} />
+                  <label style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 4 }}>{fr ? "Taille" : "Size"}</label>
+                  <input type="number" value={tplEditing.taille} onChange={e => setTplEditing(t => ({ ...t, taille: e.target.value }))} placeholder="1" style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#fff", borderRadius: 8, padding: "9px 12px", fontSize: 13, width: "100%", boxSizing: "border-box", fontFamily: "inherit", outline: "none" }} />
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 4 }}>Compte par défaut</label>
+                <label style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 4 }}>{fr ? "Compte" : "Account"}</label>
                 <select value={tplEditing.compte} onChange={e => setTplEditing(t => ({ ...t, compte: e.target.value }))} style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#fff", borderRadius: 8, padding: "9px 12px", fontSize: 13, width: "100%", boxSizing: "border-box", fontFamily: "inherit" }}>
-                  <option value="">— Aucun —</option>
+                  <option value="">— {fr ? "Aucun" : "None"} —</option>
                   {comptes.map(c => <option key={c.id} value={c.nom}>{c.nom}</option>)}
                 </select>
               </div>
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
-              <button onClick={() => { setShowTplEditor(null); setTplEditing(null); }} style={{ flex: 1, background: "none", border: "1px solid #1a1a2e", color: "#6b7280", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Annuler</button>
-              <button onClick={() => { onSaveTemplate?.({ ...tplEditing, vide: !tplEditing.actif && !tplEditing.setup }); setShowTplEditor(null); setTplEditing(null); }}
-                style={{ flex: 2, background: "#818cf8", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "inherit" }}>✓ Enregistrer</button>
+              <button onClick={() => { setShowTplEditor(null); setTplEditing(null); }} style={{ flex: 1, background: "none", border: "1px solid #1a1a2e", color: "#6b7280", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>{fr ? "Annuler" : "Cancel"}</button>
+              <button onClick={() => { onSaveTemplate?.({ ...tplEditing, vide: !tplEditing.actif && !tplEditing.setup }); setShowTplEditor(null); setTplEditing(null); }} style={{ flex: 2, background: G.purple, color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "inherit" }}>✓ {fr ? "Enregistrer" : "Save"}</button>
             </div>
           </div>
         </div>
       )}
-
-      {/* P&L toujours visible en haut */}
-      <div style={{ background: COLORS.card, border: `2px solid ${form.pnl > 0 ? COLORS.green + "60" : form.pnl < 0 ? COLORS.red + "60" : COLORS.border}`, borderRadius: 12, padding: "10px 14px", display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ fontSize: 10, color: COLORS.muted, textTransform: "uppercase", letterSpacing: 0.8, whiteSpace: "nowrap" }}>{T.gainLoss}</div>
-        <input
-          type="number" placeholder="0" value={form.pnl}
-          onChange={e => set("pnl", e.target.value)}
-          style={{ ...inp, fontSize: 20, fontWeight: 800, textAlign: "center", color: form.pnl > 0 ? COLORS.green : form.pnl < 0 ? COLORS.red : COLORS.text }}
-        />
-        <div style={{ fontSize: 10, color: COLORS.muted }}>{T.negativeForLoss}</div>
-      </div>
-
-      {/* Compte + Actif */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <div>
-          <label style={lbl}>{T.account}</label>
-          <select value={form.compte} onChange={e => set("compte", e.target.value)} style={inp}>
-            {comptes.length > 0 ? comptes.map(c => <option key={c.id || c.nom} value={c.nom}>{c.nom}</option>) : <option>{T.noAccount}</option>}
-          </select>
-        </div>
-          <div><label style={lbl}>{T.asset}</label>
-            <select value={form.actif} onChange={e => set("actif", e.target.value)} style={inp}>
-              <optgroup label="Indices US">
-                <option>NQ (Nasdaq)</option>
-                <option>ES (S&amp;P 500)</option>
-                <option>YM (Dow Jones)</option>
-                <option>RTY (Russell 2000)</option>
-              </optgroup>
-              <optgroup label="Indices EU">
-                <option>DAX (GER40)</option>
-                <option>FTSE 100</option>
-                <option>CAC 40</option>
-                <option>Euro Stoxx 50</option>
-              </optgroup>
-              <optgroup label={lang === "fr" ? "Matières premières" : "Commodities"}>
-                <option>Gold (GC)</option>
-                <option>Silver (SI)</option>
-                <option>Crude Oil (CL)</option>
-                <option>Natural Gas (NG)</option>
-                <option>Copper (HG)</option>
-              </optgroup>
-              <optgroup label={lang === "fr" ? "Obligations" : "Bonds"}>
-                <option>US 10Y (ZN)</option>
-                <option>US 30Y (ZB)</option>
-                <option>US 2Y (ZT)</option>
-              </optgroup>
-              <optgroup label="Forex">
-                <option>EUR/USD (6E)</option>
-                <option>GBP/USD (6B)</option>
-                <option>USD/JPY (6J)</option>
-                <option>AUD/USD (6A)</option>
-              </optgroup>
-              <optgroup label="Crypto">
-                <option>Bitcoin (BTC)</option>
-                <option>Ethereum (ETH)</option>
-              </optgroup>
-              <optgroup label={lang === "fr" ? "Autre" : "Other"}>
-                <option>{lang === "fr" ? "Autre" : "Other"}</option>
-              </optgroup>
-            </select>
-          </div>
-        </div>
-        <div style={{ marginBottom: 10 }}>
-          <label style={lbl}>{T.direction}</label>
-          <div style={{ display: "flex", gap: 8 }}>
-            {["LONG", "SHORT"].map(d => (
-              <button key={d} onClick={() => set("direction", d)} style={{ flex: 1, background: form.direction === d ? (d === "LONG" ? COLORS.green : COLORS.red) + "25" : COLORS.bg, border: `1px solid ${form.direction === d ? (d === "LONG" ? COLORS.green : COLORS.red) : COLORS.border}`, color: form.direction === d ? (d === "LONG" ? COLORS.green : COLORS.red) : COLORS.textDim, borderRadius: 8, padding: 10, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{d}</button>
-            ))}
-          </div>
-        </div>
-        <div style={{ marginBottom: 10 }}>
-          <label style={lbl}>{T.setup}</label>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {["Breakout", "Pullback", "Reversal", "Range", "News", "Scalp", "Swing", lang === "fr" ? "Autre" : "Other"].map(s => (
-              <button key={s} onClick={() => set("setup", s)} style={{ background: form.setup === s ? COLORS.cyan + "20" : COLORS.bg, border: `1px solid ${form.setup === s ? COLORS.cyan : COLORS.border}`, color: form.setup === s ? COLORS.cyan : COLORS.textDim, borderRadius: 6, padding: "6px 10px", fontSize: 12, cursor: "pointer" }}>{s}</button>
-            ))}
-          </div>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-          <div><label style={lbl}>{T.rr}</label><input type="number" step="0.1" placeholder="2.0" value={form.rr} onChange={e => set("rr", e.target.value)} style={inp} /></div>
-          <div><label style={lbl}>{lang === "fr" ? "Taille" : "Size"}</label><input type="number" placeholder="lots" value={form.taille} onChange={e => set("taille", e.target.value)} style={inp} /></div>
-        </div>
-        <div style={{ marginBottom: 10 }}>
-          <label style={lbl}>{T.planRespect}</label>
-          <div style={{ display: "flex", gap: 8 }}>
-            {["Oui", "Partiel", "Non"].map(r => (
-              <button key={r} onClick={() => set("respect", r)} style={{ flex: 1, background: form.respect === r ? (r === "Oui" ? COLORS.green : r === "Partiel" ? COLORS.amber : COLORS.red) + "20" : COLORS.bg, border: `1px solid ${form.respect === r ? (r === "Oui" ? COLORS.green : r === "Partiel" ? COLORS.amber : COLORS.red) : COLORS.border}`, color: form.respect === r ? (r === "Oui" ? COLORS.green : r === "Partiel" ? COLORS.amber : COLORS.red) : COLORS.textDim, borderRadius: 8, padding: 10, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{r === "Oui" ? T.yes : r === "Non" ? T.no : T.partial}</button>
-            ))}
-          </div>
-        </div>
-        {form.respect !== "Oui" && (
-          <div style={{ marginBottom: 10 }}>
-            <label style={lbl}>{T.violatedRule}</label>
-            <input type="text" placeholder={T.violatedRulePlaceholder} value={form.regle_violee} onChange={e => set("regle_violee", e.target.value)} style={inp} />
-          </div>
-        )}
-        <div>
-          <label style={lbl}>{T.techNotes}</label>
-          <textarea placeholder={T.techNotesPlaceholder} value={form.notes_tech} onChange={e => set("notes_tech", e.target.value)} rows={3} style={{ ...inp, resize: "vertical" }} />
-        </div>
-
-      {/* Psychologie */}
-      <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 18 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.text, marginBottom: 16, textTransform: "uppercase", letterSpacing: 1 }}>{lang === "fr" ? "🧠 Psychologie" : "🧠 Psychology"}</div>
-
-        {/* Note du trade en étoiles */}
-        <div style={{ marginBottom: 18 }}>
-          <label style={{ ...lbl, fontSize: 12 }}>{lang === "fr" ? "Note globale du trade" : "Trade global rating"}</label>
-          <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
-            {[1,2,3,4,5].map(n => (
-              <button key={n} onClick={() => set("note", form.note === n ? 0 : n)}
-                style={{ flex: 1, background: form.note >= n ? COLORS.amber + "20" : COLORS.bg, border: `1.5px solid ${form.note >= n ? COLORS.amber : COLORS.border}`, color: form.note >= n ? COLORS.amber : COLORS.muted, borderRadius: 10, padding: "12px 0", fontSize: 22, cursor: "pointer", transition: "all 0.15s" }}>
-                {form.note >= n ? "⭐" : "☆"}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Émotions avant */}
-        <div style={{ marginBottom: 14 }}>
-          <label style={{ ...lbl, fontSize: 13, color: COLORS.amber }}>{lang === "fr" ? "Émotions avant le trade" : "Emotions before"}</label>
-          <EmotionPicker field="emotion_avant" />
-        </div>
-
-        {/* Émotions pendant */}
-        <div style={{ marginBottom: 14 }}>
-          <label style={{ ...lbl, fontSize: 13, color: COLORS.amber }}>{lang === "fr" ? "Émotions pendant le trade" : "Emotions during"}</label>
-          <EmotionPicker field="emotion_pendant" />
-        </div>
-
-        {/* Leçons apprises */}
-        <div>
-          <label style={lbl}>{T.lessonLearned}</label>
-          <textarea placeholder={T.lessonPlaceholder} value={form.lecon} onChange={e => set("lecon", e.target.value)} rows={3} style={{ ...inp, resize: "vertical" }} />
-        </div>
-      </div>
-
-      {/* Enregistrer comme template */}
-      {!editTrade && templates.length > 0 && (
-        <div style={{ background: "#0a0a14", border: "1px solid #1a1a2e", borderRadius: 12, padding: "12px 16px" }}>
-          <div style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8, fontWeight: 700 }}>⚡ Enregistrer comme template</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
-            {templates.map(tpl => (
-              <button key={tpl.id} onClick={() => saveCurrentAsTemplate(tpl.id)}
-                style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#818cf8", borderRadius: 8, padding: "8px 6px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "#818cf840"; e.currentTarget.style.background = "#818cf810"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "#2a2a3e"; e.currentTarget.style.background = "#0e0e1a"; }}>
-                → {tpl.nom}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <button onClick={() => onSave(form, editTrade?.id)} style={{ background: COLORS.green, color: COLORS.bg, border: "none", borderRadius: 10, padding: 16, fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
-        {editTrade ? T.updateTradeBtn : T.saveTradeBtn}
-      </button>
     </div>
   );
 }
