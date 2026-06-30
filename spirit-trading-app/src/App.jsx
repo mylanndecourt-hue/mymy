@@ -6655,13 +6655,6 @@ function Tarifs({ lang = "fr", user }) {
 
       {/* Social proof */}
       <div style={{ textAlign: "center", marginTop: 20, display: "flex", justifyContent: "center", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <div style={{ display: "flex" }}>
-            {["🟢","🟢","🟢","🟢","🟢"].map((_, i) => <span key={i} style={{ fontSize: 10 }}>⭐</span>)}
-          </div>
-          <span style={{ fontSize: 11, color: G.dim }}>{fr ? "4.9/5 · Traders vérifiés" : "4.9/5 · Verified traders"}</span>
-        </div>
-        <span style={{ color: "#1a1a2e", fontSize: 16 }}>|</span>
         <span style={{ fontSize: 11, color: G.dim }}>🔒 {fr ? "Paiement Stripe sécurisé" : "Secure Stripe payment"}</span>
         <span style={{ color: "#1a1a2e", fontSize: 16 }}>|</span>
         <span style={{ fontSize: 11, color: G.dim }}>📦 {fr ? "TVA incluse" : "VAT included"}</span>
