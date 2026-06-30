@@ -7099,11 +7099,8 @@ function LandingPage({ onEnter, onCheckout, lang }) {
       </div>
 
       {/* ── SECTION 1 : HERO ── */}
-      <section className="land-section noise-bg hero-section" style={{ justifyContent:"center", alignItems:"center", textAlign:"center", padding:"64px 24px 0", background:"radial-gradient(ellipse 80% 60% at 50% 20%,#00e5a010 0%,transparent 60%), radial-gradient(ellipse 60% 40% at 80% 80%,#818cf808 0%,transparent 60%), #06060f" }}>
-        {/* Orb */}
-        <div style={{ position:"absolute", top:"15%", left:"50%", transform:"translateX(-50%)", width:600, height:600, background:"radial-gradient(circle,#00e5a012 0%,transparent 70%)", borderRadius:"50%", animation:"glow-pulse 4s ease-in-out infinite", pointerEvents:"none" }} />
+      <section className="land-section noise-bg hero-section" style={{ justifyContent:"center", alignItems:"center", padding:"0 48px", background:"radial-gradient(ellipse 80% 60% at 20% 50%,#00e5a008 0%,transparent 60%), #06060f", minHeight:"100vh" }}>
 
-        {/* ── Background charts via CSS ::before (see .hero-section::before in <style>) ── */}
         {false && <svg
           style={{ position:"absolute", top:0, left:0, width:"100%", height:"100%", pointerEvents:"none", zIndex:0 }}
           preserveAspectRatio="xMidYMid slice"
@@ -7189,44 +7186,203 @@ function LandingPage({ onEnter, onCheckout, lang }) {
           </g>
         </svg>}
 
-        <div style={{ position:"relative", zIndex:1, animation:"fadeUp .9s ease forwards" }}>
-          <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"#00e5a010", border:"1px solid #00e5a025", borderRadius:20, padding:"6px 18px", fontSize:11, fontWeight:700, color:"#00e5a0", letterSpacing:2, textTransform:"uppercase", marginBottom:32 }}>
-            <span style={{ width:6, height:6, background:"#00e5a0", borderRadius:"50%", display:"inline-block", animation:"glow-pulse 2s ease-in-out infinite" }} />
-            Journal de trading intelligent
+        <div style={{ position:"relative", zIndex:1, display:"grid", gridTemplateColumns:"1fr 1fr", gap:64, alignItems:"center", maxWidth:1200, width:"100%", margin:"0 auto", padding:"80px 0" }}>
+
+          {/* ── GAUCHE : texte ── */}
+          <div style={{ animation:"fadeUp .9s ease forwards" }}>
+            <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"#00e5a010", border:"1px solid #00e5a025", borderRadius:20, padding:"6px 18px", fontSize:11, fontWeight:700, color:"#00e5a0", letterSpacing:2, textTransform:"uppercase", marginBottom:28 }}>
+              <span style={{ width:6, height:6, background:"#00e5a0", borderRadius:"50%", display:"inline-block", animation:"glow-pulse 2s ease-in-out infinite" }} />
+              {fr ? "Journal de trading intelligent" : "Smart trading journal"}
+            </div>
+
+            <h1 style={{ fontSize:"clamp(36px,5vw,68px)", fontWeight:900, lineHeight:1.05, margin:"0 0 20px", letterSpacing:-2 }}>
+              <span className="grad-text">{fr ? "Le journal" : "The journal"}</span><br />{fr ? "du trader prop firm." : "for prop firm traders."}
+            </h1>
+
+            <p style={{ fontSize:16, color:"#555", lineHeight:1.8, marginBottom:36, fontWeight:400, maxWidth:460 }}>
+              {fr ? <>Conçu pour les traders prop firm. Passe le funded, garde-le.<br /><span style={{ color:"#00e5a0", fontWeight:600 }}>Comprends tes patterns perdants — et arrête.</span></> : <>Built for prop firm traders. Pass the funded, keep it.<br /><span style={{ color:"#00e5a0", fontWeight:600 }}>Understand your losing patterns — and stop.</span></>}
+            </p>
+
+            <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:48 }}>
+              <button className="land-cta" onClick={onEnter}>
+                {fr ? "Accéder à mon espace" : "Open my dashboard"} <span style={{ fontSize:18 }}>→</span>
+              </button>
+              <button className="land-cta-outline" onClick={() => scrollTo(4)}>
+                💳 {fr ? "Voir les tarifs" : "See pricing"}
+              </button>
+            </div>
+
+            <div style={{ display:"flex", gap:32, flexWrap:"wrap" }}>
+              {(fr
+                ? [["500+","trades analysés"],["15+","prop firms"],["IA","coach intégré"],["☁️","Cloud sync"]]
+                : [["500+","trades analyzed"],["15+","prop firms"],["AI","integrated coach"],["☁️","Cloud sync"]]
+              ).map(([v,l]) => (
+                <div key={l} style={{ textAlign:"left" }}>
+                  <div style={{ fontSize:20, fontWeight:900, color:"#fff", letterSpacing:-1 }}>{v}</div>
+                  <div style={{ fontSize:10, color:"#444", fontWeight:600, letterSpacing:1, textTransform:"uppercase", marginTop:2 }}>{l}</div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <h1 style={{ fontSize:"clamp(40px,7vw,80px)", fontWeight:900, lineHeight:1.05, margin:"0 0 24px", letterSpacing:-3, maxWidth:900 }}>
-            <span className="grad-text">Le journal</span><br />du trader prop firm.
-          </h1>
+          {/* ── DROITE : carousel de feature cards ── */}
+          {(() => {
+            const featureCards = [
+              {
+                label: fr ? "📊 Analyse" : "📊 Analysis",
+                color: "#00e5a0",
+                preview: (
+                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between" }}>
+                      {[["Win Rate","68%","#00e5a0"],["P&L","+4 820$","#00e5a0"],["R:R","1.8","#818cf8"]].map(([l,v,c]) => (
+                        <div key={l} style={{ background:"#06060f", borderRadius:10, padding:"10px 12px", flex:1, margin:"0 3px", textAlign:"center" }}>
+                          <div style={{ fontSize:9, color:"#444", textTransform:"uppercase", letterSpacing:1 }}>{l}</div>
+                          <div style={{ fontSize:16, fontWeight:900, color:c, marginTop:3 }}>{v}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ background:"#06060f", borderRadius:10, padding:"10px 12px" }}>
+                      <div style={{ fontSize:9, color:"#444", textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>P&L PAR SETUP</div>
+                      <div style={{ display:"flex", gap:4, alignItems:"flex-end", height:36 }}>
+                        {[55,82,38,91,63,74,48,95].map((v,i) => (
+                          <div key={i} style={{ flex:1, height:`${v}%`, borderRadius:3, background: v>70?"#00e5a0":v>50?"#818cf8":"#ef4444", opacity:0.8 }} />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )
+              },
+              {
+                label: fr ? "📝 Journal trade" : "📝 Trade log",
+                color: "#818cf8",
+                preview: (
+                  <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                    {[
+                      { pnl:"+823$", actif:"NQ", dir:"LONG", setup:"Breakout", note:5, win:true },
+                      { pnl:"-120$", actif:"ES", dir:"SHORT", setup:"Reversal", note:2, win:false },
+                      { pnl:"+340$", actif:"MNQ", dir:"LONG", setup:"Pullback", note:4, win:true },
+                    ].map((t,i) => (
+                      <div key={i} style={{ background:"#06060f", borderRadius:10, padding:"10px 12px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                          <div style={{ width:6, height:6, borderRadius:"50%", background: t.win?"#00e5a0":"#ef4444", flexShrink:0 }} />
+                          <span style={{ fontSize:11, color:"#e5e7eb", fontWeight:700 }}>{t.actif}</span>
+                          <span style={{ fontSize:10, color:"#444" }}>{t.dir} · {t.setup}</span>
+                        </div>
+                        <span style={{ fontSize:13, fontWeight:900, color: t.win?"#00e5a0":"#ef4444" }}>{t.pnl}</span>
+                      </div>
+                    ))}
+                  </div>
+                )
+              },
+              {
+                label: fr ? "📅 Calendrier" : "📅 Calendar",
+                color: "#22d3ee",
+                preview: (
+                  <div>
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:3, marginBottom:8 }}>
+                      {["L","M","M","J","V","S","D"].map((d,i) => <div key={i} style={{ fontSize:9, color:"#333", textAlign:"center", fontWeight:700 }}>{d}</div>)}
+                    </div>
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:3 }}>
+                      {[0,0,1,1,1,0,0, 1,1,1,0,1,0,0, 0,1,1,1,1,0,0, 1,1,0,1,1,0,0].map((v,i) => {
+                        const colors = ["#0d1117","#0d1117","#00e5a060","#ef444460"];
+                        const ci = v===0 ? (i%4===0?1:0) : (i%3===0?3:2);
+                        return <div key={i} style={{ aspectRatio:"1", borderRadius:4, background:colors[ci], border: ci>1 ? `1px solid ${ci===2?"#00e5a030":"#ef444430"}`:undefined }} />;
+                      })}
+                    </div>
+                    <div style={{ display:"flex", gap:6, marginTop:10, flexWrap:"wrap" }}>
+                      {[["🟢","Gain"],["🔴","Perte"],["📰","Annonce"]].map(([e,l]) => (
+                        <div key={l} style={{ fontSize:9, color:"#444", display:"flex", gap:3, alignItems:"center" }}><span>{e}</span>{l}</div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              },
+              {
+                label: fr ? "🏛️ Structure & Fiscalité" : "🏛️ Tax & Structure",
+                color: "#f59e0b",
+                preview: (
+                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                    <div style={{ display:"flex", gap:8 }}>
+                      <div style={{ flex:1, background:"#06060f", borderRadius:10, padding:"12px" }}>
+                        <div style={{ fontSize:9, color:"#444", textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>ROI NET</div>
+                        <div style={{ fontSize:22, fontWeight:900, color:"#f59e0b" }}>+68%</div>
+                        <div style={{ fontSize:9, color:"#444", marginTop:3 }}>après impôts</div>
+                      </div>
+                      <div style={{ flex:1, background:"#06060f", borderRadius:10, padding:"12px" }}>
+                        <div style={{ fontSize:9, color:"#444", textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>STRUCTURE</div>
+                        <div style={{ fontSize:14, fontWeight:900, color:"#00e5a0" }}>SASU</div>
+                        <div style={{ fontSize:9, color:"#444", marginTop:3 }}>IS 15%</div>
+                      </div>
+                    </div>
+                    <div style={{ background:"#06060f", borderRadius:10, padding:"10px 12px" }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                        <span style={{ fontSize:10, color:"#444" }}>Payouts reçus</span>
+                        <span style={{ fontSize:12, fontWeight:700, color:"#f59e0b" }}>12 840$</span>
+                      </div>
+                      <div style={{ height:4, background:"#1a1a2e", borderRadius:2 }}>
+                        <div style={{ width:"68%", height:"100%", background:"linear-gradient(90deg,#f59e0b,#00e5a0)", borderRadius:2 }} />
+                      </div>
+                    </div>
+                  </div>
+                )
+              },
+              {
+                label: fr ? "🌅 Session trading" : "🌅 Trading session",
+                color: "#a78bfa",
+                preview: (
+                  <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                    <div style={{ background:"#06060f", borderRadius:10, padding:"10px 12px" }}>
+                      <div style={{ fontSize:9, color:"#444", textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>ANNONCES DU JOUR</div>
+                      {[["08:30","CPI m/m","🔴 Fort"],["14:30","GDP","🟡 Moyen"]].map(([h,e,i]) => (
+                        <div key={e} style={{ display:"flex", justifyContent:"space-between", padding:"4px 0", borderBottom:"1px solid #0d1117" }}>
+                          <span style={{ fontSize:10, color:"#818cf8", fontWeight:700 }}>{h}</span>
+                          <span style={{ fontSize:10, color:"#e5e7eb" }}>{e}</span>
+                          <span style={{ fontSize:9 }}>{i}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ background:"#06060f", borderRadius:10, padding:"10px 12px" }}>
+                      <div style={{ fontSize:9, color:"#444", textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>ÉTAT D'ESPRIT</div>
+                      <div style={{ display:"flex", gap:4, flexWrap:"wrap" }}>
+                        {["Serein","Confiant","Focus"].map(e => (
+                          <span key={e} style={{ background:"#f59e0b15", border:"1px solid #f59e0b30", color:"#f59e0b", borderRadius:12, padding:"3px 8px", fontSize:9, fontWeight:700 }}>{e}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )
+              },
+            ];
 
-          <p style={{ fontSize:"clamp(15px,2vw,18px)", color:"#555", lineHeight:1.8, maxWidth:560, margin:"0 auto 48px", fontWeight:400 }}>
-            Conçu pour les traders prop firm. Passe le funded, garde-le.<br /><span style={{ color:"#00e5a0", fontWeight:600 }}>Comprends tes patterns perdants — et arrête.</span>
-          </p>
+            return (
+              <div style={{ position:"relative", height:480, overflow:"hidden" }}>
+                {/* Fade top/bottom */}
+                <div style={{ position:"absolute", top:0, left:0, right:0, height:60, background:"linear-gradient(to bottom,#06060f,transparent)", zIndex:10, pointerEvents:"none" }} />
+                <div style={{ position:"absolute", bottom:0, left:0, right:0, height:80, background:"linear-gradient(to top,#06060f,transparent)", zIndex:10, pointerEvents:"none" }} />
 
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:14, flexWrap:"wrap" }}>
-            <button className="land-cta" onClick={onEnter}>
-              Accéder à mon espace <span style={{ fontSize:18 }}>→</span>
-            </button>
-            <button className="land-cta-outline" onClick={() => scrollTo(4)}>
-              💳 {fr ? "Voir les tarifs" : "See pricing"}
-            </button>
-            <button className="land-cta-outline" onClick={() => scrollTo(1)}>
-              {fr ? "Découvrir" : "Learn more"}
-            </button>
-          </div>
+                <style>{`
+                  @keyframes scrollCards {
+                    0% { transform: translateY(0); }
+                    100% { transform: translateY(-50%); }
+                  }
+                `}</style>
 
-          <div style={{ marginTop:64, display:"flex", justifyContent:"center", gap:48, flexWrap:"wrap" }}>
-            {[["500+", "trades analysés"], ["15+", "prop firms"], ["IA", "coach intégré"], ["☁️", "Cloud sync"]].map(([v,l]) => (
-              <div key={l} style={{ textAlign:"center" }}>
-                <div style={{ fontSize:22, fontWeight:900, color:"#fff", letterSpacing:-1 }}>{v}</div>
-                <div style={{ fontSize:11, color:"#444", fontWeight:600, letterSpacing:1, textTransform:"uppercase", marginTop:2 }}>{l}</div>
+                <div style={{ display:"flex", flexDirection:"column", gap:14, animation:"scrollCards 18s linear infinite" }}>
+                  {[...featureCards, ...featureCards].map((card, idx) => (
+                    <div key={idx} style={{ background:"#0e0e1a", border:`1px solid ${card.color}25`, borderRadius:20, padding:"18px 20px", flexShrink:0 }}>
+                      <div style={{ fontSize:11, fontWeight:700, color:card.color, textTransform:"uppercase", letterSpacing:1.5, marginBottom:12 }}>{card.label}</div>
+                      {card.preview}
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
+            );
+          })()}
+
         </div>
 
         {/* Scroll hint */}
-        <div style={{ position:"absolute", bottom:32, left:"50%", transform:"translateX(-50%)", display:"flex", flexDirection:"column", alignItems:"center", gap:8, opacity:.3, cursor:"pointer" }} onClick={() => scrollTo(1)}>
+        <div style={{ position:"absolute", bottom:24, left:"50%", transform:"translateX(-50%)", display:"flex", flexDirection:"column", alignItems:"center", gap:8, opacity:.3, cursor:"pointer" }} onClick={() => scrollTo(1)}>
           <span style={{ fontSize:11, letterSpacing:2, textTransform:"uppercase", fontWeight:600 }}>scroll</span>
           <div style={{ width:1, height:40, background:"linear-gradient(to bottom,#fff,transparent)" }} />
         </div>
