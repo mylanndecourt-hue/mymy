@@ -4574,19 +4574,6 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
       <div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 20, padding: "24px 22px", marginBottom: 12 }}>
         {sectionTitle("🧠", fr ? "Psychologie" : "Psychology")}
 
-        {/* Note étoiles */}
-        <div style={{ marginBottom: 22 }}>
-          {fieldLabel(fr ? "Note globale du trade" : "Trade rating")}
-          <div style={{ display: "flex", gap: 8 }}>
-            {[1,2,3,4,5].map(n => (
-              <button key={n} onClick={() => set("note", form.note === n ? 0 : n)}
-                style={{ flex: 1, background: form.note >= n ? G.amber + "18" : "rgba(255,255,255,0.03)", border: `1.5px solid ${form.note >= n ? G.amber : "#1f2937"}`, borderRadius: 14, padding: "12px 0", fontSize: 24, cursor: "pointer", transition: "all 0.15s" }}>
-                {form.note >= n ? "⭐" : <span style={{ color: "#374151" }}>☆</span>}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Émotions avant */}
         <div style={{ marginBottom: 18 }}>
           {fieldLabel(fr ? "🌅 Émotions avant" : "🌅 Emotions before")}
@@ -4627,6 +4614,19 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
         <div>
           {fieldLabel(fr ? "📝 Leçons apprises" : "📝 Lessons learned")}
           <textarea placeholder={T.lessonPlaceholder} value={form.lecon} onChange={e => set("lecon", e.target.value)} rows={3} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #1f2937", borderRadius: 10, color: G.text, fontSize: 13, padding: "12px 14px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", resize: "vertical", outline: "none" }} />
+        </div>
+      </div>
+
+      {/* ── NOTE GLOBALE DU TRADE ── */}
+      <div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 20, padding: "24px 22px", marginBottom: 12 }}>
+        {sectionTitle("⭐", fr ? "Note globale du trade" : "Trade rating")}
+        <div style={{ display: "flex", gap: 8 }}>
+          {[1,2,3,4,5].map(n => (
+            <button key={n} onClick={() => set("note", form.note === n ? 0 : n)}
+              style={{ flex: 1, background: form.note >= n ? G.amber + "18" : "rgba(255,255,255,0.03)", border: `1.5px solid ${form.note >= n ? G.amber : "#1f2937"}`, borderRadius: 14, padding: "12px 0", fontSize: 24, cursor: "pointer", transition: "all 0.15s" }}>
+              {form.note >= n ? "⭐" : <span style={{ color: "#374151" }}>☆</span>}
+            </button>
+          ))}
         </div>
       </div>
 
