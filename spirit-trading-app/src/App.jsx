@@ -1875,6 +1875,237 @@ const HOLIDAYS_CACHE = (() => {
   return all;
 })();
 
+function UnifiedCalendar({ trades, sessions = {}, user, onDayOpen, lang = "fr" }) {
+  const fr = lang === "fr";
+  const authFetch = makeAuthFetch(user);
+  const G = { green: "#00e5a0", red: "#ef4444", amber: "#f59e0b", purple: "#818cf8", dim: "#6b7280", border: "#1a1a2e", card: "#0e0e1a", text: "#e5e7eb" };
+
+  const today = new Date();
+  const todayStr = toYMD(today);
+
+  const [viewDate, setViewDate] = useState(() => {
+    const allDates = trades.map(t => t.date).filter(Boolean).sort();
+    if (allDates.length === 0) return new Date();
+    return new Date(allDates[allDates.length - 1] + "T12:00:00");
+  });
+  const [ecoByDate, setEcoByDate] = useState({});
+
+  useEffect(() => {
+    const cacheKey = `ff_eco7_cal_${todayStr}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) { setEcoByDate(JSON.parse(cached)); return; }
+    (async () => {
+      try {
+        const r = await authFetch("/api/calendar");
+        if (!r.ok) return;
+        const data = await r.json();
+        if (!Array.isArray(data)) return;
+        const byDate = {};
+        data.forEach(a => {
+          const raw = a.time || a.date || "";
+          if (!raw) return;
+          const d = new Date(raw);
+          if (isNaN(d)) return;
+          const dateStr = d.toLocaleDateString("fr-CA", { timeZone: "Europe/Paris" });
+          if (!byDate[dateStr]) byDate[dateStr] = [];
+          byDate[dateStr].push({ event: a.event || a.title || "—", impact: (a.impact || "low").toLowerCase(), country: a.country || "USD" });
+        });
+        sessionStorage.setItem(cacheKey, JSON.stringify(byDate));
+        setEcoByDate(byDate);
+      } catch {}
+    })();
+  }, []);
+
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const monthLabel = new Date(year, month, 1).toLocaleDateString(fr ? "fr-FR" : "en-US", { month: "long", year: "numeric" });
+
+  const prevMonth = () => setViewDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1));
+  const nextMonth = () => setViewDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1));
+  const goToday = () => setViewDate(new Date());
+
+  // Grouper trades par date
+  const byDate = {};
+  trades.forEach(t => {
+    if (!t.date) return;
+    if (!byDate[t.date]) byDate[t.date] = [];
+    byDate[t.date].push(t);
+  });
+
+  const EMOTION_EMOJI = { "Confiant": "😊", "Serein": "😌", "Stressé": "😰", "Anxieux": "😟", "Frustré": "😤", "Euphorique": "🤩", "Impatient": "⚡", "En FOMO": "😱", "Neutre": "😐" };
+  const FOOD_EMOJI = { "Saine": "🥗", "Neutre": "🍽️", "Mauvaise": "🍔" };
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  let startDow = firstDay.getDay() - 1;
+  if (startDow < 0) startDow = 6;
+
+  const cells = [];
+  for (let i = 0; i < startDow; i++) cells.push(null);
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    cells.push(`${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`);
+  }
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const [popover, setPopover] = useState(null);
+
+  const dayHeaders = fr ? ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"] : ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+  return (
+    <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 16, padding: "20px 22px", position: "relative" }}
+      onMouseLeave={() => setPopover(null)}>
+
+      {/* Popover */}
+      {popover && (
+        <div style={{ position: "fixed", zIndex: 999, top: Math.min(popover.y + 12, window.innerHeight - 260), left: Math.min(popover.x + 12, window.innerWidth - 300), background: "#0e0e1a", border: "1px solid #2a2a3e", borderRadius: 14, padding: "14px 16px", minWidth: 260, maxWidth: 300, boxShadow: "0 16px 48px rgba(0,0,0,0.85)", pointerEvents: "none" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: G.text, marginBottom: 10 }}>
+            {new Date(popover.iso + "T12:00:00").toLocaleDateString(fr ? "fr-FR" : "en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+          </div>
+          {/* Jours fériés / bourse fermée */}
+          {popover.hols.map((h, i) => (
+            <div key={i} style={{ marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 14 }}>{h.type === "closed" ? "🔴" : "🟡"}</span>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: h.type === "closed" ? G.red : G.amber }}>{h.type === "closed" ? (fr ? "Bourse fermée" : "Market closed") : (fr ? "Clôture anticipée" : "Early close")}</div>
+                <div style={{ fontSize: 12, color: G.text }}>{h.label}</div>
+              </div>
+            </div>
+          ))}
+          {/* Annonces éco */}
+          {popover.eco.length > 0 && (
+            <div style={{ borderTop: popover.hols.length > 0 ? "1px solid #1a1a2e" : "none", paddingTop: popover.hols.length > 0 ? 8 : 0, marginBottom: 8 }}>
+              <div style={{ fontSize: 10, color: G.dim, fontWeight: 700, marginBottom: 5, textTransform: "uppercase", letterSpacing: 1 }}>📰 {fr ? "Annonces éco" : "Eco events"}</div>
+              {popover.eco.filter(e => e.impact === "high" || e.impact === "medium").map((e, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: e.impact === "high" ? G.red : G.amber, flexShrink: 0, display: "inline-block" }} />
+                  <span style={{ fontSize: 11, color: G.text }}>{e.event}</span>
+                  <span style={{ fontSize: 10, color: G.dim, marginLeft: "auto" }}>{e.country}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {/* PnL trades */}
+          {popover.hasTrades && (
+            <div style={{ borderTop: "1px solid #1a1a2e", paddingTop: 8 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 11, color: G.dim }}>P&L</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: popover.pnl >= 0 ? G.green : G.red }}>{popover.pnl >= 0 ? "+" : ""}{Math.round(popover.pnl)}$</span>
+              </div>
+              <div style={{ fontSize: 10, color: G.dim, marginTop: 2 }}>{popover.nbTrades} trade{popover.nbTrades > 1 ? "s" : ""} · {popover.wins}W/{popover.nbTrades - popover.wins}L</div>
+            </div>
+          )}
+          {popover.mainEmotion && EMOTION_EMOJI[popover.mainEmotion] && (
+            <div style={{ marginTop: 6, fontSize: 11, color: G.dim }}>{EMOTION_EMOJI[popover.mainEmotion]} {popover.mainEmotion}</div>
+          )}
+        </div>
+      )}
+
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 1.5, fontWeight: 700 }}>📅 {fr ? "Calendrier de trading" : "Trading calendar"}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button onClick={prevMonth} style={{ background: "none", border: `1px solid ${G.border}`, color: G.text, borderRadius: 8, width: 28, height: 28, cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>‹</button>
+          <span style={{ fontSize: 13, fontWeight: 800, color: G.text, minWidth: 130, textAlign: "center", textTransform: "capitalize" }}>{monthLabel}</span>
+          <button onClick={nextMonth} style={{ background: "none", border: `1px solid ${G.border}`, color: G.text, borderRadius: 8, width: 28, height: 28, cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>›</button>
+          <button onClick={goToday} style={{ background: "rgba(129,140,248,0.1)", border: `1px solid ${G.purple}40`, color: G.purple, borderRadius: 8, padding: "4px 10px", fontSize: 11, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>{fr ? "Aujourd'hui" : "Today"}</button>
+        </div>
+      </div>
+
+      {/* En-têtes */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4, marginBottom: 4 }}>
+        {dayHeaders.map(d => <div key={d} style={{ textAlign: "center", fontSize: 10, fontWeight: 700, color: G.dim, letterSpacing: 1, padding: "4px 0", textTransform: "uppercase" }}>{d}</div>)}
+      </div>
+
+      {/* Grille */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4 }}>
+        {cells.map((iso, idx) => {
+          if (!iso) return <div key={idx} />;
+          const dayTrades = byDate[iso] || [];
+          const sess = sessions[iso] || {};
+          const pnl = dayTrades.reduce((s, t) => s + (t.pnl || 0), 0);
+          const wins = dayTrades.filter(t => (t.pnl || 0) > 0).length;
+          const hasTrades = dayTrades.length > 0;
+          const hasSession = Object.keys(sess).length > 0;
+          const mainEmotion = (sess.etat_esprit || [])[0] || (dayTrades[0]?.emotion_avant || "").split(",")[0].trim() || null;
+          const food = sess.alimentation || dayTrades[0]?.alimentation;
+          const sport = !!sess.sport;
+          const hols = HOLIDAYS_CACHE[iso] || [];
+          const isClosed = hols.some(h => h.type === "closed");
+          const isEarly = hols.some(h => h.type === "early");
+          const eco = ecoByDate[iso] || [];
+          const hasHigh = eco.some(e => e.impact === "high");
+          const hasMed = eco.some(e => e.impact === "medium");
+          const isToday = iso === todayStr;
+          const isFuture = iso > todayStr;
+          const isWeekend = idx % 7 >= 5;
+          const clickable = (hasTrades || hasSession) && !isFuture && onDayOpen;
+
+          let borderColor = G.border;
+          if (isClosed || isEarly) borderColor = "rgba(239,68,68,0.5)";
+          if (hasTrades) borderColor = pnl >= 0 ? "#00e5a040" : "#ef444440";
+          if (isToday) borderColor = G.purple;
+
+          return (
+            <div key={iso}
+              style={{ background: hasTrades || hasSession ? "rgba(255,255,255,0.025)" : "transparent", border: `1.5px solid ${borderColor}`, borderRadius: 10, minHeight: 80, padding: "8px 8px", display: "flex", flexDirection: "column", gap: 3, cursor: clickable ? "pointer" : "default", opacity: isFuture ? 0.3 : 1, transition: "filter 0.1s, border-color 0.15s", boxShadow: isToday ? `0 0 0 2px ${G.purple}` : "none" }}
+              onMouseEnter={e => { if (clickable || hols.length > 0 || eco.length > 0) { e.currentTarget.style.filter = "brightness(1.15)"; setPopover({ iso, hols, eco, hasTrades, pnl, nbTrades: dayTrades.length, wins, mainEmotion, x: e.clientX, y: e.clientY }); } }}
+              onMouseMove={e => setPopover(p => p ? { ...p, x: e.clientX, y: e.clientY } : null)}
+              onMouseLeave={e => { e.currentTarget.style.filter = ""; setPopover(null); }}
+              onClick={() => clickable && onDayOpen(iso)}>
+              {/* Ligne numéro + indicateurs */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <span style={{ fontSize: 12, fontWeight: isToday ? 900 : 600, color: isToday ? G.purple : isWeekend ? "#374151" : hasTrades || hasSession ? G.text : G.dim, lineHeight: 1 }}>{parseInt(iso.slice(8))}</span>
+                <div style={{ display: "flex", gap: 2, alignItems: "center" }}>
+                  {isClosed && <span style={{ fontSize: 10 }}>🔴</span>}
+                  {isEarly && <span style={{ fontSize: 10 }}>🟡</span>}
+                  {hasHigh && <span style={{ width: 6, height: 6, borderRadius: "50%", background: G.red, display: "inline-block" }} />}
+                  {!hasHigh && hasMed && <span style={{ width: 6, height: 6, borderRadius: "50%", background: G.amber, display: "inline-block" }} />}
+                </div>
+              </div>
+              {/* Férié label */}
+              {hols.length > 0 && <div style={{ fontSize: 8, color: isClosed ? G.red : G.amber, lineHeight: 1.2, fontWeight: 600 }}>{hols[0].label.length > 12 ? hols[0].label.slice(0, 11) + "…" : hols[0].label}</div>}
+              {/* PnL */}
+              {hasTrades && <div style={{ fontSize: 11, fontWeight: 800, color: pnl >= 0 ? G.green : G.red, lineHeight: 1, marginTop: 2 }}>{pnl >= 0 ? "+" : ""}{Math.abs(pnl) >= 1000 ? `${(pnl/1000).toFixed(1)}k` : Math.round(pnl)}$</div>}
+              {hasTrades && <div style={{ fontSize: 9, color: G.dim }}>{dayTrades.length}T · {wins}W/{dayTrades.length - wins}L</div>}
+              {/* Icônes état */}
+              {(hasTrades || hasSession) && (
+                <div style={{ display: "flex", gap: 2, fontSize: 10, flexWrap: "wrap", marginTop: "auto" }}>
+                  {mainEmotion && EMOTION_EMOJI[mainEmotion] && <span title={mainEmotion}>{EMOTION_EMOJI[mainEmotion]}</span>}
+                  {sport && <span title="Sport">🏃</span>}
+                  {food && FOOD_EMOJI[food] && <span title={food}>{FOOD_EMOJI[food]}</span>}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Légende */}
+      <div style={{ display: "flex", gap: 12, marginTop: 14, flexWrap: "wrap", alignItems: "center" }}>
+        {[
+          { dot: false, sw: 10, sh: 10, bg: "rgba(239,68,68,0.2)", border: "rgba(239,68,68,0.5)", label: fr ? "🔴 Bourse fermée" : "🔴 Market closed" },
+          { dot: false, sw: 10, sh: 10, bg: "rgba(245,158,11,0.2)", border: "rgba(245,158,11,0.5)", label: fr ? "🟡 Clôture anticipée" : "🟡 Early close" },
+          { dot: false, sw: 10, sh: 10, bg: "rgba(0,229,160,0.2)", border: "rgba(0,229,160,0.5)", label: fr ? "Jour profitable" : "Profitable day" },
+          { dot: false, sw: 10, sh: 10, bg: "rgba(239,68,68,0.15)", border: "rgba(239,68,68,0.4)", label: fr ? "Jour perdant" : "Losing day" },
+        ].map((item, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <div style={{ width: item.sw, height: item.sh, borderRadius: 3, background: item.bg, border: `1px solid ${item.border}` }} />
+            <span style={{ fontSize: 10, color: G.dim }}>{item.label}</span>
+          </div>
+        ))}
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: G.red, display: "inline-block" }} />
+          <span style={{ fontSize: 10, color: G.dim }}>{fr ? "Annonce forte" : "High impact"}</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: G.amber, display: "inline-block" }} />
+          <span style={{ fontSize: 10, color: G.dim }}>{fr ? "Annonce moyenne" : "Med impact"}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CalendrierTrading({ trades, user }) {
   const authFetch = makeAuthFetch(user);
   const today = new Date();
@@ -2796,7 +3027,7 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAc
   );
 }
 
-function Dashboard({ trades, comptes, onEditCompte, onNewCompte, onGoToAnalyse, onTradeDetail, onViewCompte, lang = "fr", user }) {
+function Dashboard({ trades, comptes, sessions = {}, onEditCompte, onNewCompte, onGoToAnalyse, onTradeDetail, onViewCompte, onDayOpen, lang = "fr", user }) {
   const T = TR[lang]; const fr = lang === "fr";
 
   // ── Calculs ──
@@ -2967,7 +3198,7 @@ function Dashboard({ trades, comptes, onEditCompte, onNewCompte, onGoToAnalyse, 
       </div>
 
       {/* ── CALENDRIER DE TRADING ── */}
-      <CalendrierTrading trades={trades} user={user} />
+      <UnifiedCalendar trades={trades} sessions={sessions} user={user} onDayOpen={onDayOpen} lang={lang} />
 
       {/* ── COMPTES ── */}
       <div>
@@ -3981,7 +4212,7 @@ function AnalysePage({ trades, comptes, onDetail, lang = "fr", user }) {
           })()}
 
         {/* Calendrier de trading */}
-        <CalendrierTrading trades={trades} user={user} />
+        <UnifiedCalendar trades={trades} user={user} lang={lang} />
 
         </div>{/* fin section performance */}
 
@@ -7601,102 +7832,72 @@ function MonCompte({ user, subscription, onLogout, lang = "fr" }) {
   );
 }
 
-function TemplateEditor({ tpl, onSave, onReset, lang = "fr" }) {
-  const fr = lang === "fr";
-  const INP = { background: "#12121f", border: "1px solid #2a2a3e", borderRadius: 8, color: "#e5e7eb", fontSize: 14, padding: "8px 12px", fontFamily: "inherit", outline: "none", width: "100%" };
-  const LBL = { fontSize: 11, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4, display: "block" };
-  const [draft, setDraft] = useState({ ...tpl });
-  useEffect(() => { setDraft({ ...tpl }); }, [tpl.id]);
-  const set = (k, v) => setDraft(d => ({ ...d, [k]: v }));
-  const dirty = JSON.stringify(draft) !== JSON.stringify(tpl);
-  const handleSave = () => {
-    const filled = draft.actif || draft.setup || draft.taille || draft.heure || draft.duree || draft.compte;
-    onSave({ ...draft, vide: !filled });
-  };
-  return (
-    <div style={{ background: "#0a0a14", border: `1px solid ${tpl.vide ? "#1a1a2e" : "#7c3aed50"}`, borderRadius: 14, padding: 24 }}>
-      {/* Nom */}
-      <div style={{ marginBottom: 20 }}>
-        <label style={LBL}>{fr ? "Nom du template" : "Template name"}</label>
-        <input value={draft.nom} onChange={e => set("nom", e.target.value)} style={{ ...INP, fontSize: 16, fontWeight: 700, color: "#fff" }} />
-      </div>
-      {/* Champs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12, marginBottom: 20 }}>
-        <div>
-          <label style={LBL}>{fr ? "Actif" : "Asset"}</label>
-          <input value={draft.actif} onChange={e => set("actif", e.target.value)} placeholder="ES, NQ, MES…" style={INP} />
-        </div>
-        <div>
-          <label style={LBL}>Direction</label>
-          <select value={draft.direction} onChange={e => set("direction", e.target.value)} style={{ ...INP, cursor: "pointer" }}>
-            <option value="LONG">LONG</option>
-            <option value="SHORT">SHORT</option>
-          </select>
-        </div>
-        <div>
-          <label style={LBL}>Setup</label>
-          <input value={draft.setup} onChange={e => set("setup", e.target.value)} placeholder="Breakout, ORB…" style={INP} />
-        </div>
-        <div>
-          <label style={LBL}>{fr ? "Taille (contrats)" : "Size (contracts)"}</label>
-          <input value={draft.taille} onChange={e => set("taille", e.target.value)} placeholder="1" style={INP} />
-        </div>
-        <div>
-          <label style={LBL}>{fr ? "Heure d'entrée" : "Entry time"}</label>
-          <input type="time" value={draft.heure} onChange={e => set("heure", e.target.value)} style={INP} />
-        </div>
-        <div>
-          <label style={LBL}>{fr ? "Durée (min)" : "Duration (min)"}</label>
-          <input value={draft.duree} onChange={e => set("duree", e.target.value)} placeholder="15" style={INP} />
-        </div>
-        <div>
-          <label style={LBL}>{fr ? "Compte" : "Account"}</label>
-          <input value={draft.compte} onChange={e => set("compte", e.target.value)} placeholder={fr ? "Nom du compte" : "Account name"} style={INP} />
-        </div>
-      </div>
-      {/* Actions */}
-      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-        <button
-          onClick={handleSave}
-          disabled={!dirty}
-          style={{ background: dirty ? "#7c3aed" : "#2a2a3e", border: "none", borderRadius: 8, color: dirty ? "#fff" : "#4b5563", fontSize: 13, fontWeight: 700, padding: "8px 20px", cursor: dirty ? "pointer" : "default", fontFamily: "inherit", transition: "all 0.15s" }}
-        >
-          {fr ? "Sauvegarder" : "Save"}
-        </button>
-        {!tpl.vide && (
-          <button
-            onClick={onReset}
-            style={{ background: "none", border: "1px solid #ef444430", borderRadius: 8, color: "#ef4444", fontSize: 12, padding: "7px 14px", cursor: "pointer", fontFamily: "inherit" }}
-          >
-            {fr ? "Réinitialiser" : "Reset"}
-          </button>
-        )}
-        {dirty && <span style={{ fontSize: 12, color: "#6b7280" }}>{fr ? "Modifications non sauvegardées" : "Unsaved changes"}</span>}
-      </div>
-    </div>
-  );
-}
-
 function TemplatesPage({ templates, setTemplates, lang = "fr" }) {
   const fr = lang === "fr";
+  const [editingId, setEditingId] = useState(null);
+  const [editingNom, setEditingNom] = useState("");
+  const FIELDS = [
+    { key: "actif", label: fr ? "Actif" : "Asset" },
+    { key: "direction", label: "Direction" },
+    { key: "setup", label: "Setup" },
+    { key: "taille", label: fr ? "Taille" : "Size" },
+    { key: "heure", label: fr ? "Heure" : "Time" },
+    { key: "duree", label: fr ? "Durée" : "Duration" },
+    { key: "compte", label: fr ? "Compte" : "Account" },
+  ];
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 24px" }}>
+    <div style={{ maxWidth: 700, margin: "0 auto", padding: "40px 24px" }}>
       <h2 style={{ fontSize: 26, fontWeight: 800, color: "#fff", marginBottom: 8 }}>
         {fr ? "Mes Templates" : "My Templates"}
       </h2>
       <p style={{ color: "#6b7280", fontSize: 14, marginBottom: 32 }}>
-        {fr ? "3 templates de trade réutilisables. Modifie et sauvegarde directement ici." : "3 reusable trade templates. Edit and save directly here."}
+        {fr ? "Tes 3 templates sauvegardés. Clique sur le nom pour renommer." : "Your 3 saved templates. Click the name to rename."}
       </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {templates.map(tpl => (
-          <TemplateEditor
-            key={tpl.id}
-            tpl={tpl}
-            lang={lang}
-            onSave={(updated) => setTemplates(prev => prev.map(t => t.id === updated.id ? updated : t))}
-            onReset={() => setTemplates(prev => prev.map(t => t.id === tpl.id ? { ...t, actif: "", direction: "LONG", setup: "", taille: "", heure: "09:30", duree: "", compte: "", vide: true } : t))}
-          />
+          <div key={tpl.id} style={{ background: "#0a0a14", border: `1px solid ${tpl.vide ? "#1a1a2e" : "#7c3aed40"}`, borderRadius: 12, padding: "18px 20px", display: "flex", alignItems: "center", gap: 16 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {editingId === tpl.id ? (
+                <input
+                  autoFocus
+                  value={editingNom}
+                  onChange={e => setEditingNom(e.target.value)}
+                  onBlur={() => {
+                    if (editingNom.trim()) setTemplates(prev => prev.map(t => t.id === tpl.id ? { ...t, nom: editingNom.trim() } : t));
+                    setEditingId(null);
+                  }}
+                  onKeyDown={e => { if (e.key === "Enter" || e.key === "Escape") e.currentTarget.blur(); }}
+                  style={{ background: "#1a1a2e", border: "1px solid #7c3aed60", borderRadius: 6, color: "#fff", fontSize: 15, fontWeight: 700, padding: "4px 10px", fontFamily: "inherit", outline: "none", width: 220 }}
+                />
+              ) : (
+                <span onClick={() => { setEditingId(tpl.id); setEditingNom(tpl.nom); }} style={{ fontSize: 15, fontWeight: 700, color: tpl.vide ? "#4b5563" : "#e5e7eb", cursor: "pointer" }}>
+                  {tpl.nom} <span style={{ opacity: 0.4, fontSize: 12 }}>✏️</span>
+                </span>
+              )}
+              {tpl.vide
+                ? <div style={{ fontSize: 12, color: "#4b5563", marginTop: 4 }}>{fr ? "Vide — sauvegarde depuis le formulaire Nouveau trade" : "Empty — save from the New trade form"}</div>
+                : <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                    {FIELDS.filter(f => tpl[f.key]).map(f => (
+                      <span key={f.key} style={{ background: "#12121f", border: "1px solid #2a2a3e", borderRadius: 6, fontSize: 11, color: "#9ca3af", padding: "2px 8px" }}>
+                        <span style={{ color: "#6b7280" }}>{f.label} </span>{tpl[f.key]}
+                      </span>
+                    ))}
+                  </div>
+              }
+            </div>
+            {!tpl.vide && (
+              <button
+                onClick={() => setTemplates(prev => prev.map(t => t.id === tpl.id ? { ...t, actif: "", direction: "LONG", setup: "", taille: "", heure: "09:30", duree: "", compte: "", vide: true } : t))}
+                style={{ background: "none", border: "1px solid #ef444430", borderRadius: 6, color: "#ef4444", fontSize: 11, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
+              >
+                {fr ? "Vider" : "Clear"}
+              </button>
+            )}
+          </div>
         ))}
+      </div>
+      <div style={{ marginTop: 24, padding: 14, background: "#0a0a14", border: "1px solid #1a1a2e", borderRadius: 10, color: "#6b7280", fontSize: 13 }}>
+        💡 {fr ? "Pour sauvegarder : remplis un trade → \"Enregistrer comme template\"." : "To save: fill a trade → \"Save as template\"."}
       </div>
     </div>
   );
@@ -8303,7 +8504,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
                     setSelectedCompte(null);
                   }}
                 />
-              : tab === "dashboard"  ? <Dashboard trades={trades} comptes={comptes} onEditCompte={handleEditCompte} onNewCompte={handleNewCompte} onGoToAnalyse={handleGoToAnalyse} onTradeDetail={setSelectedTrade} onViewCompte={setSelectedCompte} lang={lang} user={user} />
+              : tab === "dashboard"  ? <Dashboard trades={trades} comptes={comptes} sessions={sessions} onEditCompte={handleEditCompte} onNewCompte={handleNewCompte} onGoToAnalyse={handleGoToAnalyse} onTradeDetail={setSelectedTrade} onViewCompte={setSelectedCompte} onDayOpen={(date) => { setSessionDayDate(date); setSessionSubView("dayDetail"); navigateTo("session"); }} lang={lang} user={user} />
               : tab === "session"    ? (
                 sessionSubView === "preparation"
                   ? (
@@ -8408,7 +8609,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
                           </div>
                         );
                       })()}
-                      <SessionCalendar trades={trades} sessions={sessions} onDetail={setSelectedTrade} onNew={() => navigateTo("nouveau")} onDayOpen={(date) => { setSessionDayDate(date); setSessionSubView("dayDetail"); }} lang={lang} />
+                      <UnifiedCalendar trades={trades} sessions={sessions} user={user} onDayOpen={(date) => { setSessionDayDate(date); setSessionSubView("dayDetail"); }} lang={lang} />
                     </div>
                   )
               )
