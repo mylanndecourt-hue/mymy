@@ -4425,7 +4425,7 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
     <div style={{ fontSize: 11, color: G.dim, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{label}</div>
   );
 
-  const ACTIFS_QUICK = ["NQ", "ES", "MNQ", "MES", "Gold", "DAX", "CL", "BTC"];
+  const ACTIFS_QUICK = ["NQ", "ES", "MNQ", "MES", "MYM", "M2K", "MGC", "MCL", "MBT", "MET", "Gold", "Silver", "DAX", "CL", "BTC", "ETH"];
   const [step, setStep] = useState(1);
   const STEPS = [fr ? "Le trade" : "The trade", fr ? "Analyse" : "Analysis", fr ? "Psychologie" : "Psychology", fr ? "Leçons" : "Lessons", fr ? "Note" : "Rating"];
 
