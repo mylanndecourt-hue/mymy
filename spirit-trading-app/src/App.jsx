@@ -3991,7 +3991,7 @@ function AnalysePage({ trades, comptes, onDetail, lang = "fr", user }) {
   );
 }
 
-function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaultDate = null, lang = "fr" }) {
+function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaultDate = null, templates = [], onSaveTemplate, lang = "fr" }) {
   const T = TR[lang];
   const defaultCompte = comptes.length > 0 ? comptes[0].nom : "";
   const [form, setForm] = useState(() => {
@@ -4008,6 +4008,27 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
     };
   });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const [showTplEditor, setShowTplEditor] = useState(null); // template en cours d'édition (objet)
+  const [tplEditing, setTplEditing] = useState(null); // copie locale pour édition
+
+  const applyTemplate = (tpl) => {
+    if (tpl.vide) return;
+    if (tpl.actif) set("actif", tpl.actif);
+    if (tpl.direction) set("direction", tpl.direction);
+    if (tpl.setup) set("setup", tpl.setup);
+    if (tpl.taille) set("taille", tpl.taille);
+    if (tpl.heure) set("heure", tpl.heure);
+    if (tpl.duree) set("duree", tpl.duree);
+    if (tpl.compte && comptes.find(c => c.nom === tpl.compte)) set("compte", tpl.compte);
+  };
+
+  const saveCurrentAsTemplate = (tplId) => {
+    const tpl = templates.find(t => t.id === tplId);
+    if (!tpl) return;
+    const updated = { ...tpl, actif: form.actif, direction: form.direction, setup: form.setup, taille: form.taille, heure: form.heure, duree: form.duree, compte: form.compte, vide: false };
+    onSaveTemplate?.(updated);
+  };
+
   const [emotions, setEmotions] = useState([
     "Serein", "Confiant", "Neutre", "Stressé", "Anxieux",
     "Frustré", "Euphorique", "En FOMO", "Impatient", "En colère",
@@ -4085,6 +4106,92 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
         <div style={{ fontSize: 15, fontWeight: 800, color: COLORS.text }}>{editTrade ? T.editTradeTitle(editTrade.id) : T.newTradeTitle}</div>
         <button onClick={onCancel} style={{ background: "none", border: "none", color: COLORS.muted, fontSize: 20, cursor: "pointer" }}>✕</button>
       </div>
+
+      {/* ── TEMPLATES ── */}
+      {!editTrade && templates.length > 0 && (
+        <div style={{ background: "#0a0a14", border: "1px solid #1a1a2e", borderRadius: 12, padding: "14px 16px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1.5 }}>⚡ Templates</div>
+            <div style={{ fontSize: 10, color: "#4b5563" }}>Cliquer pour appliquer · ✏️ pour modifier</div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
+            {templates.map(tpl => (
+              <div key={tpl.id} style={{ position: "relative" }}>
+                <button onClick={() => applyTemplate(tpl)}
+                  style={{ width: "100%", background: tpl.vide ? "#0e0e1a" : "#818cf810", border: `1px solid ${tpl.vide ? "#1a1a2e" : "#818cf840"}`, borderRadius: 10, padding: "10px 10px 10px 10px", cursor: tpl.vide ? "default" : "pointer", textAlign: "left", transition: "all 0.15s", color: "#fff" }}
+                  onMouseEnter={e => { if (!tpl.vide) e.currentTarget.style.borderColor = "#818cf880"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = tpl.vide ? "#1a1a2e" : "#818cf840"; }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: tpl.vide ? "#4b5563" : "#818cf8", marginBottom: 4, paddingRight: 16, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{tpl.nom}</div>
+                  {tpl.vide ? (
+                    <div style={{ fontSize: 10, color: "#374151" }}>Vide</div>
+                  ) : (
+                    <div style={{ fontSize: 10, color: "#6b7280", lineHeight: 1.6 }}>
+                      {tpl.actif && <span>{tpl.actif}</span>}{tpl.actif && tpl.direction && " · "}{tpl.direction && <span style={{ color: tpl.direction === "LONG" ? "#00e5a0" : "#ef4444" }}>{tpl.direction}</span>}
+                      {tpl.setup && <div style={{ marginTop: 1 }}>{tpl.setup}</div>}
+                    </div>
+                  )}
+                </button>
+                <button onClick={() => { setTplEditing({ ...tpl }); setShowTplEditor(tpl.id); }}
+                  style={{ position: "absolute", top: 6, right: 6, background: "none", border: "none", color: "#4b5563", fontSize: 11, cursor: "pointer", padding: 2, lineHeight: 1 }}>✏️</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Modal éditeur de template */}
+      {showTplEditor !== null && tplEditing && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: "#0a0a14", border: "1px solid #818cf840", borderRadius: 20, padding: "32px 28px", maxWidth: 400, width: "100%" }}>
+            <div style={{ fontSize: 17, fontWeight: 900, color: "#fff", marginBottom: 20 }}>⚡ Modifier le template</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 4 }}>Nom du template</label>
+                <input value={tplEditing.nom} onChange={e => setTplEditing(t => ({ ...t, nom: e.target.value }))} style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#fff", borderRadius: 8, padding: "9px 12px", fontSize: 13, width: "100%", boxSizing: "border-box", fontFamily: "inherit" }} />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <label style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 4 }}>Actif</label>
+                  <input value={tplEditing.actif} onChange={e => setTplEditing(t => ({ ...t, actif: e.target.value }))} placeholder="Nasdaq, ES…" style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#fff", borderRadius: 8, padding: "9px 12px", fontSize: 13, width: "100%", boxSizing: "border-box", fontFamily: "inherit" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 4 }}>Direction</label>
+                  <select value={tplEditing.direction} onChange={e => setTplEditing(t => ({ ...t, direction: e.target.value }))} style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#fff", borderRadius: 8, padding: "9px 12px", fontSize: 13, width: "100%", boxSizing: "border-box", fontFamily: "inherit" }}>
+                    <option value="LONG">LONG</option>
+                    <option value="SHORT">SHORT</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 4 }}>Setup</label>
+                <input value={tplEditing.setup} onChange={e => setTplEditing(t => ({ ...t, setup: e.target.value }))} placeholder="Breakout, ICT, Reversal…" style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#fff", borderRadius: 8, padding: "9px 12px", fontSize: 13, width: "100%", boxSizing: "border-box", fontFamily: "inherit" }} />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <label style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 4 }}>Taille (contrats)</label>
+                  <input type="number" value={tplEditing.taille} onChange={e => setTplEditing(t => ({ ...t, taille: e.target.value }))} placeholder="1" style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#fff", borderRadius: 8, padding: "9px 12px", fontSize: 13, width: "100%", boxSizing: "border-box", fontFamily: "inherit" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 4 }}>Heure d'entrée</label>
+                  <input type="time" value={tplEditing.heure} onChange={e => setTplEditing(t => ({ ...t, heure: e.target.value }))} style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#fff", borderRadius: 8, padding: "9px 12px", fontSize: 13, width: "100%", boxSizing: "border-box", fontFamily: "inherit", colorScheme: "dark" }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 4 }}>Compte par défaut</label>
+                <select value={tplEditing.compte} onChange={e => setTplEditing(t => ({ ...t, compte: e.target.value }))} style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#fff", borderRadius: 8, padding: "9px 12px", fontSize: 13, width: "100%", boxSizing: "border-box", fontFamily: "inherit" }}>
+                  <option value="">— Aucun —</option>
+                  {comptes.map(c => <option key={c.id} value={c.nom}>{c.nom}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
+              <button onClick={() => { setShowTplEditor(null); setTplEditing(null); }} style={{ flex: 1, background: "none", border: "1px solid #1a1a2e", color: "#6b7280", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Annuler</button>
+              <button onClick={() => { onSaveTemplate?.({ ...tplEditing, vide: !tplEditing.actif && !tplEditing.setup }); setShowTplEditor(null); setTplEditing(null); }}
+                style={{ flex: 2, background: "#818cf8", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "inherit" }}>✓ Enregistrer</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* P&L toujours visible en haut */}
       <div style={{ background: COLORS.card, border: `2px solid ${form.pnl > 0 ? COLORS.green + "60" : form.pnl < 0 ? COLORS.red + "60" : COLORS.border}`, borderRadius: 12, padding: "10px 14px", display: "flex", alignItems: "center", gap: 12 }}>
@@ -4259,6 +4366,23 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
           <textarea placeholder={T.lessonPlaceholder} value={form.lecon} onChange={e => set("lecon", e.target.value)} rows={3} style={{ ...inp, resize: "vertical" }} />
         </div>
       </div>
+
+      {/* Enregistrer comme template */}
+      {!editTrade && templates.length > 0 && (
+        <div style={{ background: "#0a0a14", border: "1px solid #1a1a2e", borderRadius: 12, padding: "12px 16px" }}>
+          <div style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8, fontWeight: 700 }}>⚡ Enregistrer comme template</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
+            {templates.map(tpl => (
+              <button key={tpl.id} onClick={() => saveCurrentAsTemplate(tpl.id)}
+                style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#818cf8", borderRadius: 8, padding: "8px 6px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "#818cf840"; e.currentTarget.style.background = "#818cf810"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "#2a2a3e"; e.currentTarget.style.background = "#0e0e1a"; }}>
+                → {tpl.nom}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <button onClick={() => onSave(form, editTrade?.id)} style={{ background: COLORS.green, color: COLORS.bg, border: "none", borderRadius: 10, padding: 16, fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
         {editTrade ? T.updateTradeBtn : T.saveTradeBtn}
@@ -7544,6 +7668,12 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
   const [reglesPerso, setReglesPerso] = useState(initialReglesPerso);
   const [chapitres, setChapitres] = useState(initialChapitres);
   const [sessions, setSessions] = useState({});
+  const DEFAULT_TEMPLATES = [
+    { id: 1, nom: "Template 1", actif: "", direction: "LONG", setup: "", taille: "", heure: "09:30", duree: "", compte: "", vide: true },
+    { id: 2, nom: "Template 2", actif: "", direction: "LONG", setup: "", taille: "", heure: "09:30", duree: "", compte: "", vide: true },
+    { id: 3, nom: "Template 3", actif: "", direction: "LONG", setup: "", taille: "", heure: "09:30", duree: "", compte: "", vide: true },
+  ];
+  const [templates, setTemplates] = useState(DEFAULT_TEMPLATES);
   const [mentorQ, setMentorQ] = useState(initialMentorQ);
   const [fraisDivers, setFraisDivers] = useState([
     { id: 1, label: "Plateforme NinjaTrader", montant: 60, type: "mensuel", categorie: "plateforme" },
@@ -7585,6 +7715,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
     if (cloudData.tauxPerso) setTauxPerso(cloudData.tauxPerso);
     if (Array.isArray(cloudData.chapitres)) setChapitres(cloudData.chapitres);
     if (cloudData.sessions && typeof cloudData.sessions === "object") setSessions(cloudData.sessions);
+    if (Array.isArray(cloudData.templates) && cloudData.templates.length === 3) setTemplates(cloudData.templates);
     setStorageReady(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -7592,11 +7723,11 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
   // Sauvegarde automatique vers Firestore via onDataChange (debounce géré dans AppShell)
   useEffect(() => {
     if (!storageReady) return;
-    const data = { trades, comptes, objectifs, reglesPerso, mentorQ, fraisDivers, fiscal, deviseRecue, deviseRef, tauxPerso, chapitres, sessions };
+    const data = { trades, comptes, objectifs, reglesPerso, mentorQ, fraisDivers, fiscal, deviseRecue, deviseRef, tauxPerso, chapitres, sessions, templates };
     onDataChange?.(data);
     setShowStorageSaved(saveStatus === "saved");
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trades, comptes, objectifs, reglesPerso, mentorQ, fraisDivers, fiscal, deviseRecue, deviseRef, tauxPerso, chapitres, sessions, storageReady]);
+  }, [trades, comptes, objectifs, reglesPerso, mentorQ, fraisDivers, fiscal, deviseRecue, deviseRef, tauxPerso, chapitres, sessions, templates, storageReady]);
 
   const handleSaveTrade = (form, editId) => {
     const t = {
@@ -8180,7 +8311,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
                   )
               )
               : tab === "analyse"    ? <AnalysePage trades={trades} comptes={comptes} onDetail={(t) => setSelectedTrade(t)} lang={lang} user={user} />
-              : tab === "nouveau"    ? <NouveauTrade onSave={handleSaveTrade} onCancel={handleCancelEdit} comptes={comptes} editTrade={editingTrade} defaultDate={newTradeDefaultDate} lang={lang} />
+              : tab === "nouveau"    ? <NouveauTrade onSave={handleSaveTrade} onCancel={handleCancelEdit} comptes={comptes} editTrade={editingTrade} defaultDate={newTradeDefaultDate} templates={templates} onSaveTemplate={(tpl) => setTemplates(prev => prev.map(t => t.id === tpl.id ? tpl : t))} lang={lang} />
               : tab === "ajout_compte" ? (
                 <div style={{ display: "flex", justifyContent: "center" }}>
                   <div style={{ background: "#0a0a14", border: "1px solid #1a1a2e", borderRadius: 20, position: "relative", overflow: "hidden", width: 1040 }}>
