@@ -2998,6 +2998,86 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAc
         </div>
       </div>
 
+      {/* ── GRAPHIQUE DE PROGRESSION VERS L'OBJECTIF ── */}
+      {isEval && targetMontant && (
+        <div style={{ ...card }}>
+          <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, marginBottom: 16, fontWeight: 700 }}>
+            📈 {fr ? "Progression vers l'objectif" : "Progression to target"}
+          </div>
+          {(() => {
+            const sorted = [...tradeDuCompte].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+            // Points cumulatifs : commence à 0
+            const points = [0];
+            sorted.forEach(t => points.push((points[points.length - 1] || 0) + (t.pnl || 0)));
+            const current = points[points.length - 1];
+            const pct = Math.min(100, Math.max(0, Math.round((current / targetMontant) * 100)));
+            const couleur = firm.couleur || G.green;
+
+            // Mini SVG sparkline
+            const W = 500, H = 100, PAD = 10;
+            const maxY = Math.max(targetMontant * 1.1, ...points);
+            const minY = Math.min(0, ...points);
+            const rangeY = maxY - minY || 1;
+            const toX = (i) => PAD + (i / Math.max(1, points.length - 1)) * (W - PAD * 2);
+            const toY = (v) => H - PAD - ((v - minY) / rangeY) * (H - PAD * 2);
+            const targetY = toY(targetMontant);
+            const pathD = points.map((v, i) => `${i === 0 ? "M" : "L"}${toX(i).toFixed(1)},${toY(v).toFixed(1)}`).join(" ");
+            const fillD = pathD + ` L${toX(points.length - 1).toFixed(1)},${toY(0).toFixed(1)} L${toX(0).toFixed(1)},${toY(0).toFixed(1)} Z`;
+
+            return (
+              <div>
+                {/* Barre de progression */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <span style={{ fontSize: 13, color: "#9ca3af" }}>{fr ? "Progression" : "Progress"}</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: current >= targetMontant ? G.green : couleur }}>
+                    {current >= 0 ? "+" : ""}{current.toFixed(0)}$ / {targetMontant}$
+                  </span>
+                </div>
+                <div style={{ height: 10, background: "#1a1a2e", borderRadius: 6, overflow: "hidden", marginBottom: 20 }}>
+                  <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg, ${couleur}80, ${couleur})`, borderRadius: 6, transition: "width 0.5s ease" }} />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: G.dim, marginBottom: 16 }}>
+                  <span>0$</span>
+                  <span style={{ color: couleur, fontWeight: 700 }}>{pct}% atteint</span>
+                  <span style={{ color: couleur }}>{fr ? "Objectif" : "Target"} : {targetMontant}$</span>
+                </div>
+
+                {/* Sparkline */}
+                <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: 120, display: "block", overflow: "visible" }}>
+                  <defs>
+                    <linearGradient id="progFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={couleur} stopOpacity="0.3" />
+                      <stop offset="100%" stopColor={couleur} stopOpacity="0.02" />
+                    </linearGradient>
+                  </defs>
+                  {/* Zone remplie */}
+                  {points.length > 1 && <path d={fillD} fill="url(#progFill)" />}
+                  {/* Ligne */}
+                  {points.length > 1 && <path d={pathD} fill="none" stroke={couleur} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
+                  {/* Point unique */}
+                  {points.length === 1 && <circle cx={toX(0)} cy={toY(0)} r="4" fill={couleur} />}
+                  {/* Ligne cible */}
+                  <line x1={PAD} y1={targetY} x2={W - PAD} y2={targetY} stroke={couleur} strokeWidth="1.5" strokeDasharray="6 4" opacity="0.6" />
+                  <text x={W - PAD + 4} y={targetY + 4} fontSize="10" fill={couleur} opacity="0.8">{targetMontant}$</text>
+                  {/* Ligne zéro */}
+                  <line x1={PAD} y1={toY(0)} x2={W - PAD} y2={toY(0)} stroke="#374151" strokeWidth="1" />
+                  {/* Point courant */}
+                  {points.length > 0 && (
+                    <circle cx={toX(points.length - 1)} cy={toY(current)} r="5" fill={current >= targetMontant ? G.green : couleur} stroke="#0a0a14" strokeWidth="2" />
+                  )}
+                </svg>
+
+                {tradeDuCompte.length === 0 && (
+                  <div style={{ textAlign: "center", fontSize: 12, color: G.dim, marginTop: 8 }}>
+                    {fr ? "Ajoute ton premier trade pour voir ta progression" : "Add your first trade to see your progress"}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
       {/* Derniers trades */}
       {recentTrades.length > 0 && (
         <div style={{ ...card }}>
@@ -3089,7 +3169,7 @@ function Dashboard({ trades, comptes, sessions = {}, onEditCompte, onNewCompte, 
       </div>
 
       {/* ── KPI ROW ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
         {[
           {
             label: fr ? "P&L Global (gains latents)" : "Global P&L (unrealized)",
@@ -3098,17 +3178,6 @@ function Dashboard({ trades, comptes, sessions = {}, onEditCompte, onNewCompte, 
             sub: hasData ? (pnlPositif ? (fr ? "En gain" : "In profit") : (fr ? "En perte" : "In loss")) : (fr ? "Aucun trade" : "No trades"),
             glow: pnlPositif ? G.green : G.red,
           },
-          (() => {
-            const net = trades.reduce((a, t) => a + (t.pnl || 0), 0);
-            const pos = net >= 0;
-            return {
-              label: fr ? "P&L net (prop firms)" : "Net P&L (prop firms)",
-              val: trades.length ? `${pos ? "+" : ""}${net.toFixed(0)}$` : "—",
-              color: trades.length ? (pos ? G.green : G.red) : G.muted,
-              sub: fr ? `${comptes.length} compte${comptes.length > 1 ? "s" : ""} actif${comptes.length > 1 ? "s" : ""}` : `${comptes.length} active account${comptes.length > 1 ? "s" : ""}`,
-              glow: pos ? G.green : G.red,
-            };
-          })(),
           {
             label: fr ? "Win Rate" : "Win Rate",
             val: trades.length ? `${winRate}%` : "—",
