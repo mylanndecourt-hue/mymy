@@ -7601,6 +7601,107 @@ function MonCompte({ user, subscription, onLogout, lang = "fr" }) {
   );
 }
 
+function TemplateEditor({ tpl, onSave, onReset, lang = "fr" }) {
+  const fr = lang === "fr";
+  const INP = { background: "#12121f", border: "1px solid #2a2a3e", borderRadius: 8, color: "#e5e7eb", fontSize: 14, padding: "8px 12px", fontFamily: "inherit", outline: "none", width: "100%" };
+  const LBL = { fontSize: 11, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4, display: "block" };
+  const [draft, setDraft] = React.useState({ ...tpl });
+  React.useEffect(() => { setDraft({ ...tpl }); }, [tpl.id]);
+  const set = (k, v) => setDraft(d => ({ ...d, [k]: v }));
+  const dirty = JSON.stringify(draft) !== JSON.stringify(tpl);
+  const handleSave = () => {
+    const filled = draft.actif || draft.setup || draft.taille || draft.heure || draft.duree || draft.compte;
+    onSave({ ...draft, vide: !filled });
+  };
+  return (
+    <div style={{ background: "#0a0a14", border: `1px solid ${tpl.vide ? "#1a1a2e" : "#7c3aed50"}`, borderRadius: 14, padding: 24 }}>
+      {/* Nom */}
+      <div style={{ marginBottom: 20 }}>
+        <label style={LBL}>{fr ? "Nom du template" : "Template name"}</label>
+        <input value={draft.nom} onChange={e => set("nom", e.target.value)} style={{ ...INP, fontSize: 16, fontWeight: 700, color: "#fff" }} />
+      </div>
+      {/* Champs */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12, marginBottom: 20 }}>
+        <div>
+          <label style={LBL}>{fr ? "Actif" : "Asset"}</label>
+          <input value={draft.actif} onChange={e => set("actif", e.target.value)} placeholder="ES, NQ, MES…" style={INP} />
+        </div>
+        <div>
+          <label style={LBL}>Direction</label>
+          <select value={draft.direction} onChange={e => set("direction", e.target.value)} style={{ ...INP, cursor: "pointer" }}>
+            <option value="LONG">LONG</option>
+            <option value="SHORT">SHORT</option>
+          </select>
+        </div>
+        <div>
+          <label style={LBL}>Setup</label>
+          <input value={draft.setup} onChange={e => set("setup", e.target.value)} placeholder="Breakout, ORB…" style={INP} />
+        </div>
+        <div>
+          <label style={LBL}>{fr ? "Taille (contrats)" : "Size (contracts)"}</label>
+          <input value={draft.taille} onChange={e => set("taille", e.target.value)} placeholder="1" style={INP} />
+        </div>
+        <div>
+          <label style={LBL}>{fr ? "Heure d'entrée" : "Entry time"}</label>
+          <input type="time" value={draft.heure} onChange={e => set("heure", e.target.value)} style={INP} />
+        </div>
+        <div>
+          <label style={LBL}>{fr ? "Durée (min)" : "Duration (min)"}</label>
+          <input value={draft.duree} onChange={e => set("duree", e.target.value)} placeholder="15" style={INP} />
+        </div>
+        <div>
+          <label style={LBL}>{fr ? "Compte" : "Account"}</label>
+          <input value={draft.compte} onChange={e => set("compte", e.target.value)} placeholder={fr ? "Nom du compte" : "Account name"} style={INP} />
+        </div>
+      </div>
+      {/* Actions */}
+      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <button
+          onClick={handleSave}
+          disabled={!dirty}
+          style={{ background: dirty ? "#7c3aed" : "#2a2a3e", border: "none", borderRadius: 8, color: dirty ? "#fff" : "#4b5563", fontSize: 13, fontWeight: 700, padding: "8px 20px", cursor: dirty ? "pointer" : "default", fontFamily: "inherit", transition: "all 0.15s" }}
+        >
+          {fr ? "Sauvegarder" : "Save"}
+        </button>
+        {!tpl.vide && (
+          <button
+            onClick={onReset}
+            style={{ background: "none", border: "1px solid #ef444430", borderRadius: 8, color: "#ef4444", fontSize: 12, padding: "7px 14px", cursor: "pointer", fontFamily: "inherit" }}
+          >
+            {fr ? "Réinitialiser" : "Reset"}
+          </button>
+        )}
+        {dirty && <span style={{ fontSize: 12, color: "#6b7280" }}>{fr ? "Modifications non sauvegardées" : "Unsaved changes"}</span>}
+      </div>
+    </div>
+  );
+}
+
+function TemplatesPage({ templates, setTemplates, lang = "fr" }) {
+  const fr = lang === "fr";
+  return (
+    <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 24px" }}>
+      <h2 style={{ fontSize: 26, fontWeight: 800, color: "#fff", marginBottom: 8 }}>
+        {fr ? "Mes Templates" : "My Templates"}
+      </h2>
+      <p style={{ color: "#6b7280", fontSize: 14, marginBottom: 32 }}>
+        {fr ? "3 templates de trade réutilisables. Modifie et sauvegarde directement ici." : "3 reusable trade templates. Edit and save directly here."}
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {templates.map(tpl => (
+          <TemplateEditor
+            key={tpl.id}
+            tpl={tpl}
+            lang={lang}
+            onSave={(updated) => setTemplates(prev => prev.map(t => t.id === updated.id ? updated : t))}
+            onReset={() => setTemplates(prev => prev.map(t => t.id === tpl.id ? { ...t, actif: "", direction: "LONG", setup: "", taille: "", heure: "09:30", duree: "", compte: "", vide: true } : t))}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function App({ user, cloudData, onDataChange, saveStatus, onLogout, subscription, isPreview = false, onCheckout, checkoutLoading, checkoutError }) {
   const authFetch = makeAuthFetch(user);
 
@@ -7991,12 +8092,13 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
 
 
   const MODULES = [
-    { id: "dashboard", label: fr ? "Dashboard"             : "Dashboard"        },
-    { id: "session",   label: fr ? "Session"               : "Session"          },
-    { id: "analyse",   label: fr ? "Analyse"               : "Analysis"         },
-    { id: "roi",       label: fr ? "Structure & Fiscalité" : "Structure & Tax"  },
-    { id: "tarifs",    label: fr ? "Tarifs"                : "Pricing"          },
-    { id: "compte",    label: fr ? "Mon compte"            : "My account"       },
+    { id: "dashboard",  label: fr ? "Dashboard"             : "Dashboard"        },
+    { id: "session",    label: fr ? "Session"               : "Session"          },
+    { id: "analyse",    label: fr ? "Analyse"               : "Analysis"         },
+    { id: "templates",  label: fr ? "Templates"             : "Templates"        },
+    { id: "roi",        label: fr ? "Structure & Fiscalité" : "Structure & Tax"  },
+    { id: "tarifs",     label: fr ? "Tarifs"                : "Pricing"          },
+    { id: "compte",     label: fr ? "Mon compte"            : "My account"       },
   ];
 
   const isLanding = tab === "landing";
@@ -8310,6 +8412,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
                     </div>
                   )
               )
+              : tab === "templates"  ? <TemplatesPage templates={templates} setTemplates={setTemplates} lang={lang} />
               : tab === "analyse"    ? <AnalysePage trades={trades} comptes={comptes} onDetail={(t) => setSelectedTrade(t)} lang={lang} user={user} />
               : tab === "nouveau"    ? <NouveauTrade onSave={handleSaveTrade} onCancel={handleCancelEdit} comptes={comptes} editTrade={editingTrade} defaultDate={newTradeDefaultDate} templates={templates} onSaveTemplate={(tpl) => setTemplates(prev => prev.map(t => t.id === tpl.id ? tpl : t))} lang={lang} />
               : tab === "ajout_compte" ? (
@@ -8341,9 +8444,10 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
           {[
             { id: "dashboard", icon: "📊", label: "Dashboard" },
             { id: "session",   icon: "🌅", label: "Session" },
-            { id: "nouveau",   icon: "➕", label: fr ? "Trade" : "Trade" },
-            { id: "analyse",   icon: "🔬", label: fr ? "Analyse" : "Analysis" },
-            { id: "compte",    icon: "👤", label: fr ? "Compte" : "Account" },
+            { id: "nouveau",    icon: "➕", label: fr ? "Trade" : "Trade" },
+            { id: "templates",  icon: "📋", label: "Templates" },
+            { id: "analyse",    icon: "🔬", label: fr ? "Analyse" : "Analysis" },
+            { id: "compte",     icon: "👤", label: fr ? "Compte" : "Account" },
           ].map(item => (
             <button key={item.id} className={`sp-bottom-nav-btn${tab === item.id ? " active" : ""}`}
               onClick={() => { navigateTo(item.id); setSelectedCompte(null); setSelectedTrade(null); }}>
