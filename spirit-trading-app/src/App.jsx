@@ -7605,8 +7605,8 @@ function TemplateEditor({ tpl, onSave, onReset, lang = "fr" }) {
   const fr = lang === "fr";
   const INP = { background: "#12121f", border: "1px solid #2a2a3e", borderRadius: 8, color: "#e5e7eb", fontSize: 14, padding: "8px 12px", fontFamily: "inherit", outline: "none", width: "100%" };
   const LBL = { fontSize: 11, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4, display: "block" };
-  const [draft, setDraft] = React.useState({ ...tpl });
-  React.useEffect(() => { setDraft({ ...tpl }); }, [tpl.id]);
+  const [draft, setDraft] = useState({ ...tpl });
+  useEffect(() => { setDraft({ ...tpl }); }, [tpl.id]);
   const set = (k, v) => setDraft(d => ({ ...d, [k]: v }));
   const dirty = JSON.stringify(draft) !== JSON.stringify(tpl);
   const handleSave = () => {
