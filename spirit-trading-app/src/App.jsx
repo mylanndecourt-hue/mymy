@@ -6515,6 +6515,22 @@ function Tarifs({ lang = "fr", user }) {
 
   const plans = [
     {
+      id: "annual",
+      badge: fr ? "⭐ Recommandé" : "⭐ Recommended",
+      name: fr ? "Annuel" : "Annual",
+      price: "79,99€",
+      period: fr ? "/an" : "/year",
+      priceNote: fr ? "soit 6,67€/mois — économise 15,89€" : "€6.67/month — save €15.89",
+      color: G.green,
+      features: [
+        fr ? "Tout le plan Mensuel" : "Everything in Monthly",
+        fr ? "2 mois offerts vs mensuel" : "2 months free vs monthly",
+        fr ? "Accès prioritaire aux nouvelles fonctionnalités" : "Priority access to new features",
+        fr ? "Support prioritaire" : "Priority support",
+      ],
+      cta: fr ? "Commencer — 79,99€/an" : "Start — €79.99/year",
+    },
+    {
       id: "monthly",
       badge: null,
       name: fr ? "Mensuel" : "Monthly",
@@ -6531,22 +6547,6 @@ function Tarifs({ lang = "fr", user }) {
         fr ? "Suivi prop firms" : "Prop firm tracking",
       ],
       cta: fr ? "Commencer — 7,99€/mois" : "Start — €7.99/month",
-    },
-    {
-      id: "annual",
-      badge: fr ? "🔥 2 mois offerts" : "🔥 2 months free",
-      name: fr ? "Annuel" : "Annual",
-      price: "79,99€",
-      period: fr ? "/an" : "/year",
-      priceNote: fr ? "soit 6,67€/mois — économise 15,89€" : "€6.67/month — save €15.89",
-      color: G.green,
-      features: [
-        fr ? "Tout le plan Mensuel" : "Everything in Monthly",
-        fr ? "2 mois offerts vs mensuel" : "2 months free vs monthly",
-        fr ? "Accès prioritaire aux nouvelles fonctionnalités" : "Priority access to new features",
-        fr ? "Support prioritaire" : "Priority support",
-      ],
-      cta: fr ? "Choisir l'Annuel — 79,99€/an" : "Choose Annual — €79.99/year",
     },
   ];
 
@@ -6616,18 +6616,19 @@ function Tarifs({ lang = "fr", user }) {
               onClick={() => handleSubscribe(p.id)}
               disabled={!!loading}
               style={{
-                background: p.id === "annual" ? p.color : "transparent",
-                border: `1.5px solid ${p.color}`,
-                color: p.id === "annual" ? "#06060f" : p.color,
+                background: p.id === "annual" ? G.green : "transparent",
+                border: `1.5px solid ${p.id === "annual" ? G.green : G.purple}`,
+                color: p.id === "annual" ? "#06060f" : G.purple,
                 borderRadius: 12, padding: "13px 0",
                 fontSize: 12, fontWeight: 800,
                 cursor: loading ? "wait" : "pointer",
                 width: "100%", transition: "all 0.15s",
                 opacity: loading && loading !== p.id ? 0.5 : 1,
-                boxShadow: p.id === "annual" ? `0 0 24px ${p.color}40` : "none",
+                boxShadow: p.id === "annual" ? `0 0 24px ${G.green}50` : "none",
+                fontFamily: "inherit",
               }}
-              onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = p.color; e.currentTarget.style.color = "#06060f"; } }}
-              onMouseLeave={e => { if (p.id !== "annual" && !loading) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = p.color; } }}
+              onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = p.id === "annual" ? "#00ffb3" : G.purple; e.currentTarget.style.color = "#06060f"; } }}
+              onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = p.id === "annual" ? G.green : "transparent"; e.currentTarget.style.color = p.id === "annual" ? "#06060f" : G.purple; } }}
             >
               {loading === p.id ? "Redirection…" : p.cta}
             </button>
@@ -6642,11 +6643,28 @@ function Tarifs({ lang = "fr", user }) {
         </div>
       )}
 
-      {/* Footer note */}
-      <div style={{ textAlign: "center", marginTop: 36, fontSize: 12, color: G.dim }}>
-        {fr
-          ? "💳 Paiement sécurisé via Stripe · Annulation à tout moment · TVA incluse"
-          : "💳 Secure payment via Stripe · Cancel anytime · VAT included"}
+      {/* Garantie */}
+      <div style={{ textAlign: "center", marginTop: 24, background: `${G.green}08`, border: `1px solid ${G.green}20`, borderRadius: 14, padding: "16px 24px", maxWidth: 640, margin: "24px auto 0" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: G.green, marginBottom: 4 }}>
+          🛡️ {fr ? "Satisfait ou remboursé — 14 jours" : "Money-back guarantee — 14 days"}
+        </div>
+        <div style={{ fontSize: 11, color: G.dim }}>
+          {fr ? "Pas convaincu ? On te rembourse intégralement, sans question." : "Not convinced? Full refund, no questions asked."}
+        </div>
+      </div>
+
+      {/* Social proof */}
+      <div style={{ textAlign: "center", marginTop: 20, display: "flex", justifyContent: "center", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ display: "flex" }}>
+            {["🟢","🟢","🟢","🟢","🟢"].map((_, i) => <span key={i} style={{ fontSize: 10 }}>⭐</span>)}
+          </div>
+          <span style={{ fontSize: 11, color: G.dim }}>{fr ? "4.9/5 · Traders vérifiés" : "4.9/5 · Verified traders"}</span>
+        </div>
+        <span style={{ color: "#1a1a2e", fontSize: 16 }}>|</span>
+        <span style={{ fontSize: 11, color: G.dim }}>🔒 {fr ? "Paiement Stripe sécurisé" : "Secure Stripe payment"}</span>
+        <span style={{ color: "#1a1a2e", fontSize: 16 }}>|</span>
+        <span style={{ fontSize: 11, color: G.dim }}>📦 {fr ? "TVA incluse" : "VAT included"}</span>
       </div>
     </div>
   );
