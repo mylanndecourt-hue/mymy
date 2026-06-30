@@ -4427,7 +4427,7 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
 
   const ACTIFS_QUICK = ["NQ", "ES", "MNQ", "MES", "Gold", "DAX", "CL", "BTC"];
   const [step, setStep] = useState(1);
-  const STEPS = [fr ? "Le trade" : "The trade", fr ? "Analyse" : "Analysis", fr ? "Psychologie" : "Psychology", fr ? "Note" : "Rating"];
+  const STEPS = [fr ? "Le trade" : "The trade", fr ? "Analyse" : "Analysis", fr ? "Psychologie" : "Psychology", fr ? "Leçons" : "Lessons", fr ? "Note" : "Rating"];
 
   return (
     <div style={{ maxWidth: 680, margin: "0 auto", display: "flex", flexDirection: "column", gap: 0 }}>
@@ -4615,14 +4615,17 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
           )}
         </div>
 
-        <div>
-          {fieldLabel(fr ? "📝 Leçons apprises" : "📝 Lessons learned")}
-          <textarea placeholder={T.lessonPlaceholder} value={form.lecon} onChange={e => set("lecon", e.target.value)} rows={4} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #1f2937", borderRadius: 10, color: G.text, fontSize: 13, padding: "12px 14px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", resize: "vertical", outline: "none" }} />
-        </div>
       </div>)}
 
-      {/* ── STEP 4 : NOTE GLOBALE ── */}
+      {/* ── STEP 4 : LEÇONS APPRISES ── */}
       {step === 4 && (<div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 20, padding: "24px 22px", marginBottom: 12 }}>
+        {sectionTitle("📝", fr ? "Leçons apprises" : "Lessons learned")}
+        <div style={{ fontSize: 13, color: G.dim, marginBottom: 16 }}>{fr ? "Ce que ce trade t'a appris…" : "What this trade taught you…"}</div>
+        <textarea placeholder={T.lessonPlaceholder} value={form.lecon} onChange={e => set("lecon", e.target.value)} rows={8} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #1f2937", borderRadius: 10, color: G.text, fontSize: 13, padding: "12px 14px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", resize: "vertical", outline: "none" }} />
+      </div>)}
+
+      {/* ── STEP 5 : NOTE GLOBALE ── */}
+      {step === 5 && (<div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 20, padding: "24px 22px", marginBottom: 12 }}>
         {sectionTitle("⭐", fr ? "Note globale du trade" : "Trade rating")}
         <div style={{ fontSize: 13, color: G.dim, marginBottom: 20 }}>{fr ? "Comment évalues-tu ce trade dans l'ensemble ?" : "How do you rate this trade overall?"}</div>
         <div style={{ display: "flex", gap: 8 }}>
