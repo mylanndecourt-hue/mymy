@@ -4474,7 +4474,7 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
           </div>
         )}
 
-        {/* P&L */}
+        {/* 1. RÉSULTAT */}
         {(() => {
           const pnlVal = Number(form.pnl);
           const isPos = pnlVal > 0, isNeg = pnlVal < 0;
@@ -4493,7 +4493,16 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
           );
         })()}
 
-        {/* Compte */}
+        {/* 2. DIRECTION */}
+        <div style={{ marginBottom: 20 }}>
+          {fieldLabel("Direction")}
+          <div style={{ display: "flex", gap: 10 }}>
+            <button onClick={() => set("direction", "LONG")} style={{ ...bubble(form.direction === "LONG", G.green), flex: 1, padding: "14px 0", fontSize: 15, fontWeight: 800, borderRadius: 14, textAlign: "center" }}>▲ LONG</button>
+            <button onClick={() => set("direction", "SHORT")} style={{ ...bubble(form.direction === "SHORT", G.red), flex: 1, padding: "14px 0", fontSize: 15, fontWeight: 800, borderRadius: 14, textAlign: "center" }}>▼ SHORT</button>
+          </div>
+        </div>
+
+        {/* 3. COMPTE */}
         <div style={{ marginBottom: 20 }}>
           {fieldLabel(fr ? "Compte" : "Account")}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -4504,7 +4513,7 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
           </div>
         </div>
 
-        {/* Actif */}
+        {/* 4. ACTIF */}
         <div style={{ marginBottom: 20 }}>
           {fieldLabel(fr ? "Actif" : "Asset")}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
@@ -4513,16 +4522,7 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
           <input value={ACTIFS_QUICK.includes(form.actif) ? "" : form.actif} onChange={e => set("actif", e.target.value)} placeholder={fr ? "Autre actif…" : "Other asset…"} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid #1f2937", borderRadius: 10, color: G.text, fontSize: 13, padding: "9px 14px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", outline: "none" }} />
         </div>
 
-        {/* Direction */}
-        <div style={{ marginBottom: 20 }}>
-          {fieldLabel("Direction")}
-          <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={() => set("direction", "LONG")} style={{ ...bubble(form.direction === "LONG", G.green), flex: 1, padding: "14px 0", fontSize: 15, fontWeight: 800, borderRadius: 14, textAlign: "center" }}>▲ LONG</button>
-            <button onClick={() => set("direction", "SHORT")} style={{ ...bubble(form.direction === "SHORT", G.red), flex: 1, padding: "14px 0", fontSize: 15, fontWeight: 800, borderRadius: 14, textAlign: "center" }}>▼ SHORT</button>
-          </div>
-        </div>
-
-        {/* Setup */}
+        {/* 5. SETUP */}
         <div style={{ marginBottom: 20 }}>
           {fieldLabel("Setup")}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -4532,7 +4532,7 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
           </div>
         </div>
 
-        {/* Date / Heure / Durée */}
+        {/* 6. DATE / HEURE / DURÉE */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
           {[
             { label: fr ? "Date" : "Date", key: "date", type: "date" },
@@ -4546,7 +4546,7 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
           ))}
         </div>
 
-        {/* Taille / RR */}
+        {/* 7. TAILLE / RR */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           {[
             { label: fr ? "Taille (contrats)" : "Size (contracts)", key: "taille", placeholder: "1" },
