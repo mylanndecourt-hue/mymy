@@ -8606,79 +8606,6 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
                           </button>
                         </div>
                       </div>
-                      {showTradeDateModal && (() => {
-                        const pickerDate = newTradeDefaultDate ? new Date(newTradeDefaultDate + "T12:00:00") : new Date();
-                        const [pickerYear, pickerMonth] = [pickerDate.getFullYear(), pickerDate.getMonth()];
-                        const firstDay = new Date(pickerYear, pickerMonth, 1).getDay();
-                        const startOffset = (firstDay === 0 ? 6 : firstDay - 1);
-                        const daysInMonth = new Date(pickerYear, pickerMonth + 1, 0).getDate();
-                        const monthNames = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
-                        const dayNames = ["L","M","M","J","V","S","D"];
-                        const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
-                        const changeMonth = (delta) => {
-                          const d = new Date(pickerYear, pickerMonth + delta, 1);
-                          const cur = newTradeDefaultDate ? parseInt(newTradeDefaultDate.split("-")[2]) : 1;
-                          const maxD = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-                          const day = Math.min(cur, maxD);
-                          setNewTradeDefaultDate(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`);
-                        };
-                        return (
-                          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-                            <div style={{ background: "#0a0a14", border: "1px solid #818cf840", borderRadius: 20, padding: "32px 28px", maxWidth: 360, width: "100%" }}>
-                              <div style={{ fontSize: 19, fontWeight: 900, color: "#fff", marginBottom: 4 }}>➕ {fr ? "Nouveau trade" : "New trade"}</div>
-                              <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 22 }}>{fr ? "Sélectionne le jour du trade" : "Select the trade date"}</div>
-
-                              {/* Saisie manuelle */}
-                              <label style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1.2, display: "block", marginBottom: 6 }}>{fr ? "Saisie manuelle" : "Manual input"}</label>
-                              <input type="date" value={newTradeDefaultDate || ""} onChange={e => setNewTradeDefaultDate(e.target.value)}
-                                style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#fff", borderRadius: 8, padding: "9px 12px", fontSize: 13, width: "100%", boxSizing: "border-box", fontFamily: "inherit", marginBottom: 20, colorScheme: "dark" }} />
-
-                              {/* Mini calendrier */}
-                              <div style={{ background: "#0e0e1a", border: "1px solid #1a1a2e", borderRadius: 12, padding: "14px 12px" }}>
-                                {/* Header mois */}
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                                  <button onClick={() => changeMonth(-1)} style={{ background: "none", border: "none", color: "#818cf8", fontSize: 16, cursor: "pointer", padding: "2px 6px", borderRadius: 6, lineHeight: 1 }}>‹</button>
-                                  <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{monthNames[pickerMonth]} {pickerYear}</span>
-                                  <button onClick={() => changeMonth(1)} style={{ background: "none", border: "none", color: "#818cf8", fontSize: 16, cursor: "pointer", padding: "2px 6px", borderRadius: 6, lineHeight: 1 }}>›</button>
-                                </div>
-                                {/* Jours de semaine */}
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 6 }}>
-                                  {dayNames.map((d, i) => (
-                                    <div key={i} style={{ textAlign: "center", fontSize: 10, color: "#4b5563", fontWeight: 700, padding: "2px 0" }}>{d}</div>
-                                  ))}
-                                </div>
-                                {/* Grille de jours */}
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
-                                  {Array.from({ length: totalCells }, (_, i) => {
-                                    const dayNum = i - startOffset + 1;
-                                    const valid = dayNum >= 1 && dayNum <= daysInMonth;
-                                    const dateStr = valid ? `${pickerYear}-${String(pickerMonth+1).padStart(2,"0")}-${String(dayNum).padStart(2,"0")}` : null;
-                                    const isSelected = dateStr === newTradeDefaultDate;
-                                    const isToday = dateStr === new Date().toISOString().split("T")[0];
-                                    return (
-                                      <button key={i} onClick={() => valid && setNewTradeDefaultDate(dateStr)} disabled={!valid}
-                                        style={{ background: isSelected ? "#818cf8" : isToday ? "#818cf820" : "none", border: isToday && !isSelected ? "1px solid #818cf840" : "none", color: isSelected ? "#fff" : valid ? "#d1d5db" : "transparent", borderRadius: 6, padding: "5px 0", fontSize: 12, fontWeight: isSelected ? 700 : 400, cursor: valid ? "pointer" : "default", textAlign: "center", transition: "background 0.1s" }}>
-                                        {valid ? dayNum : ""}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-
-                              {/* Actions */}
-                              <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-                                <button onClick={() => setShowTradeDateModal(false)} style={{ flex: 1, background: "none", border: "1px solid #1a1a2e", color: "#6b7280", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-                                  {fr ? "Annuler" : "Cancel"}
-                                </button>
-                                <button onClick={() => { setShowTradeDateModal(false); setEditingTrade(null); navigateTo("nouveau"); }} disabled={!newTradeDefaultDate}
-                                  style={{ flex: 2, background: "#818cf8", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "inherit", opacity: newTradeDefaultDate ? 1 : 0.4 }}>
-                                  {fr ? "Continuer →" : "Continue →"}
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })()}
                       <UnifiedCalendar trades={trades} sessions={sessions} user={user} onDayOpen={(date) => { setSessionDayDate(date); setSessionSubView("dayDetail"); }} lang={lang} />
                     </div>
                   )
@@ -8706,6 +8633,80 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
           </div>
         )}
       </div>
+
+      {showTradeDateModal && (() => {
+        const pickerDate = newTradeDefaultDate ? new Date(newTradeDefaultDate + "T12:00:00") : new Date();
+        const [pickerYear, pickerMonth] = [pickerDate.getFullYear(), pickerDate.getMonth()];
+        const firstDay = new Date(pickerYear, pickerMonth, 1).getDay();
+        const startOffset = (firstDay === 0 ? 6 : firstDay - 1);
+        const daysInMonth = new Date(pickerYear, pickerMonth + 1, 0).getDate();
+        const monthNames = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+        const dayNames = ["L","M","M","J","V","S","D"];
+        const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
+        const changeMonth = (delta) => {
+          const d = new Date(pickerYear, pickerMonth + delta, 1);
+          const cur = newTradeDefaultDate ? parseInt(newTradeDefaultDate.split("-")[2]) : 1;
+          const maxD = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+          const day = Math.min(cur, maxD);
+          setNewTradeDefaultDate(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`);
+        };
+        return (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+            <div style={{ background: "#0a0a14", border: "1px solid #818cf840", borderRadius: 20, padding: "32px 28px", maxWidth: 360, width: "100%" }}>
+              <div style={{ fontSize: 19, fontWeight: 900, color: "#fff", marginBottom: 4 }}>➕ {fr ? "Nouveau trade" : "New trade"}</div>
+              <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 22 }}>{fr ? "Sélectionne le jour du trade" : "Select the trade date"}</div>
+
+              {/* Saisie manuelle */}
+              <label style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1.2, display: "block", marginBottom: 6 }}>{fr ? "Saisie manuelle" : "Manual input"}</label>
+              <input type="date" value={newTradeDefaultDate || ""} onChange={e => setNewTradeDefaultDate(e.target.value)}
+                style={{ background: "#0e0e1a", border: "1px solid #2a2a3e", color: "#fff", borderRadius: 8, padding: "9px 12px", fontSize: 13, width: "100%", boxSizing: "border-box", fontFamily: "inherit", marginBottom: 20, colorScheme: "dark" }} />
+
+              {/* Mini calendrier */}
+              <div style={{ background: "#0e0e1a", border: "1px solid #1a1a2e", borderRadius: 12, padding: "14px 12px" }}>
+                {/* Header mois */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <button onClick={() => changeMonth(-1)} style={{ background: "none", border: "none", color: "#818cf8", fontSize: 16, cursor: "pointer", padding: "2px 6px", borderRadius: 6, lineHeight: 1 }}>‹</button>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{monthNames[pickerMonth]} {pickerYear}</span>
+                  <button onClick={() => changeMonth(1)} style={{ background: "none", border: "none", color: "#818cf8", fontSize: 16, cursor: "pointer", padding: "2px 6px", borderRadius: 6, lineHeight: 1 }}>›</button>
+                </div>
+                {/* Jours de semaine */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 6 }}>
+                  {dayNames.map((d, i) => (
+                    <div key={i} style={{ textAlign: "center", fontSize: 10, color: "#4b5563", fontWeight: 700, padding: "2px 0" }}>{d}</div>
+                  ))}
+                </div>
+                {/* Grille de jours */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
+                  {Array.from({ length: totalCells }, (_, i) => {
+                    const dayNum = i - startOffset + 1;
+                    const valid = dayNum >= 1 && dayNum <= daysInMonth;
+                    const dateStr = valid ? `${pickerYear}-${String(pickerMonth+1).padStart(2,"0")}-${String(dayNum).padStart(2,"0")}` : null;
+                    const isSelected = dateStr === newTradeDefaultDate;
+                    const isToday = dateStr === new Date().toISOString().split("T")[0];
+                    return (
+                      <button key={i} onClick={() => valid && setNewTradeDefaultDate(dateStr)} disabled={!valid}
+                        style={{ background: isSelected ? "#818cf8" : isToday ? "#818cf820" : "none", border: isToday && !isSelected ? "1px solid #818cf840" : "none", color: isSelected ? "#fff" : valid ? "#d1d5db" : "transparent", borderRadius: 6, padding: "5px 0", fontSize: 12, fontWeight: isSelected ? 700 : 400, cursor: valid ? "pointer" : "default", textAlign: "center", transition: "background 0.1s" }}>
+                        {valid ? dayNum : ""}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+                <button onClick={() => setShowTradeDateModal(false)} style={{ flex: 1, background: "none", border: "1px solid #1a1a2e", color: "#6b7280", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                  {fr ? "Annuler" : "Cancel"}
+                </button>
+                <button onClick={() => { setShowTradeDateModal(false); setEditingTrade(null); navigateTo("nouveau"); }} disabled={!newTradeDefaultDate}
+                  style={{ flex: 2, background: "#818cf8", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 900, cursor: "pointer", fontFamily: "inherit", opacity: newTradeDefaultDate ? 1 : 0.4 }}>
+                  {fr ? "Continuer →" : "Continue →"}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Notifications */}
       {/* Tutorial */}
