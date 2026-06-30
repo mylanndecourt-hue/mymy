@@ -4626,16 +4626,53 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
 
       {/* ── STEP 5 : NOTE GLOBALE ── */}
       {step === 5 && (<div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 20, padding: "24px 22px", marginBottom: 12 }}>
-        {sectionTitle("⭐", fr ? "Note globale du trade" : "Trade rating")}
-        <div style={{ fontSize: 13, color: G.dim, marginBottom: 20 }}>{fr ? "Comment évalues-tu ce trade dans l'ensemble ?" : "How do you rate this trade overall?"}</div>
-        <div style={{ display: "flex", gap: 8 }}>
-          {[1,2,3,4,5].map(n => (
-            <button key={n} onClick={() => set("note", form.note === n ? 0 : n)}
-              style={{ flex: 1, background: form.note >= n ? G.amber + "18" : "rgba(255,255,255,0.03)", border: `1.5px solid ${form.note >= n ? G.amber : "#1f2937"}`, borderRadius: 14, padding: "16px 0", fontSize: 28, cursor: "pointer", transition: "all 0.15s" }}>
-              {form.note >= n ? "⭐" : <span style={{ color: "#374151" }}>☆</span>}
-            </button>
-          ))}
-        </div>
+        {sectionTitle("🎯", fr ? "Note globale du trade" : "Trade rating")}
+        <div style={{ fontSize: 13, color: G.dim, marginBottom: 28 }}>{fr ? "Comment évalues-tu ce trade dans l'ensemble ?" : "How do you rate this trade overall?"}</div>
+        {(() => {
+          const note = form.note || 0;
+          const pct = (note / 5) * 100;
+          const trackColor = note === 0 ? "#1f2937"
+            : note <= 1 ? "#ef4444"
+            : note <= 2 ? "#f97316"
+            : note <= 3 ? "#f59e0b"
+            : note <= 4 ? "#84cc16"
+            : "#00e5a0";
+          const labels = fr
+            ? ["—", "Mauvais", "Moyen", "Correct", "Bon", "Excellent"]
+            : ["—", "Poor", "Below avg", "Average", "Good", "Excellent"];
+          return (
+            <div>
+              {/* Label + valeur */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                <div style={{ fontSize: 22, fontWeight: 900, color: trackColor, transition: "color 0.3s" }}>{labels[note]}</div>
+                <div style={{ fontSize: 13, color: G.dim }}>{note > 0 ? `${note}/5` : "—"}</div>
+              </div>
+              {/* Barre gradient cliquable */}
+              <div style={{ position: "relative", height: 16, borderRadius: 8, background: "#1a1a2e", cursor: "pointer", marginBottom: 20 }}
+                onClick={e => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = e.clientX - rect.left;
+                  const val = Math.max(1, Math.min(5, Math.ceil((x / rect.width) * 5)));
+                  set("note", val);
+                }}>
+                <div style={{ height: "100%", width: `${pct}%`, borderRadius: 8, background: `linear-gradient(90deg, #ef4444, #f97316, #f59e0b, #84cc16, #00e5a0)`, transition: "width 0.3s", backgroundSize: "500% 100%", backgroundPosition: "left" }} />
+                {note > 0 && <div style={{ position: "absolute", top: "50%", left: `${pct}%`, transform: "translate(-50%, -50%)", width: 24, height: 24, borderRadius: "50%", background: trackColor, border: "3px solid #0a0a14", boxShadow: `0 0 12px ${trackColor}80`, transition: "all 0.3s" }} />}
+              </div>
+              {/* Boutons 1-5 */}
+              <div style={{ display: "flex", gap: 6 }}>
+                {[1,2,3,4,5].map(n => {
+                  const c = n <= 1 ? "#ef4444" : n <= 2 ? "#f97316" : n <= 3 ? "#f59e0b" : n <= 4 ? "#84cc16" : "#00e5a0";
+                  return (
+                    <button key={n} onClick={() => set("note", note === n ? 0 : n)}
+                      style={{ flex: 1, background: note >= n ? c + "20" : "rgba(255,255,255,0.03)", border: `1.5px solid ${note >= n ? c : "#1f2937"}`, borderRadius: 10, padding: "10px 0", fontSize: 13, fontWeight: note >= n ? 800 : 500, color: note >= n ? c : G.dim, cursor: "pointer", transition: "all 0.2s" }}>
+                      {n}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
         {!editTrade && templates.length > 0 && (
           <div style={{ marginTop: 24 }}>
             {fieldLabel("⚡ " + (fr ? "Enregistrer comme template" : "Save as template"))}
