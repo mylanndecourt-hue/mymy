@@ -4481,15 +4481,13 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
           const pnlColor = isPos ? G.green : isNeg ? G.red : "#ffffff";
           return (
             <div style={{ marginBottom: 22 }}>
-              <div style={{ background: isPos ? `${G.green}10` : isNeg ? `${G.red}10` : "rgba(255,255,255,0.02)", border: `2px solid ${isPos ? G.green + "50" : isNeg ? G.red + "50" : "#1f2937"}`, borderRadius: 18, padding: "20px 20px 16px", boxShadow: isPos ? `0 0 32px ${G.green}20` : isNeg ? `0 0 32px ${G.red}20` : "none", transition: "all 0.3s" }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: pnlColor, textTransform: "uppercase", letterSpacing: 2, marginBottom: 10, textAlign: "center" }}>
-                  {isPos ? (fr ? "✦ GAIN" : "✦ PROFIT") : isNeg ? (fr ? "✦ PERTE" : "✦ LOSS") : (fr ? "RÉSULTAT (P&L)" : "RESULT (P&L)")}
-                </div>
-                <div style={{ position: "relative" }}>
-                  <input type="number" placeholder="0" value={form.pnl} onChange={e => set("pnl", e.target.value)}
-                    style={{ background: "transparent", border: "none", borderRadius: 10, color: pnlColor, fontSize: 48, fontWeight: 900, textAlign: "center", padding: "0 40px 0 0", width: "100%", boxSizing: "border-box", fontFamily: "inherit", outline: "none", letterSpacing: -1 }} />
-                  <div style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 18, fontWeight: 700, color: pnlColor, opacity: 0.6 }}>$</div>
-                </div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: pnlColor, textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>
+                {isPos ? (fr ? "✦ GAIN" : "✦ PROFIT") : isNeg ? (fr ? "✦ PERTE" : "✦ LOSS") : (fr ? "RÉSULTAT (P&L)" : "RESULT (P&L)")}
+              </div>
+              <div style={{ position: "relative" }}>
+                <input type="number" placeholder="0" value={form.pnl} onChange={e => set("pnl", e.target.value)}
+                  style={{ background: "rgba(255,255,255,0.03)", border: `2px solid ${isPos ? G.green + "60" : isNeg ? G.red + "60" : "#1f2937"}`, borderRadius: 14, color: pnlColor, fontSize: 32, fontWeight: 900, textAlign: "center", padding: "14px 40px 14px 20px", width: "100%", boxSizing: "border-box", fontFamily: "inherit", outline: "none", transition: "all 0.3s" }} />
+                <div style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", fontSize: 13, fontWeight: 700, color: pnlColor, opacity: 0.5 }}>$</div>
               </div>
             </div>
           );
