@@ -6507,7 +6507,8 @@ function Tarifs({ lang = "fr", user }) {
 
             {/* Price */}
             <div style={{ marginBottom: 6 }}>
-              <span style={{ fontSize: 36, fontWeight: 900, color: G.text, letterSpacing: -1 }}>{p.price}</span>
+              <span style={{ fontSize: 36, fontWeight: 900, color: G.text, letterSpacing: -1 }}>{p.price.split(",")[0]}</span>
+              <span style={{ fontSize: 18, fontWeight: 900, color: G.text }}>,{p.price.split(",")[1]}</span>
               <span style={{ fontSize: 14, color: G.dim, fontWeight: 500 }}>{p.period}</span>
             </div>
             <div style={{ fontSize: 11, color: p.color, fontWeight: 700, marginBottom: 24 }}>{p.priceNote}</div>
@@ -7251,7 +7252,8 @@ function LandingPage({ onEnter, onCheckout, lang }) {
                 {p.badge && <div style={{ position:"absolute", top:14, right:14, background:`${p.color}20`, color:p.color, fontSize:10, fontWeight:800, padding:"3px 8px", borderRadius:20, letterSpacing:0.5 }}>{p.badge}</div>}
                 <div style={{ fontSize:11, fontWeight:700, color:p.color, letterSpacing:2, textTransform:"uppercase", marginBottom:12 }}>{p.label}</div>
                 <div style={{ display:"flex", alignItems:"baseline", gap:4, marginBottom:6 }}>
-                  <span style={{ fontSize:36, fontWeight:900, color:"#fff", letterSpacing:-1 }}>{p.price}</span>
+                  <span style={{ fontSize:36, fontWeight:900, color:"#fff", letterSpacing:-1 }}>{p.price.split(",")[0]}</span>
+                  <span style={{ fontSize:18, fontWeight:900, color:"#fff" }}>,{p.price.split(",")[1]}</span>
                   <span style={{ fontSize:13, color:"#555", fontWeight:600 }}>{p.period}</span>
                 </div>
                 <div style={{ fontSize:11, color:"#444", marginBottom:20 }}>{p.note}</div>
