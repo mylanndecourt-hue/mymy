@@ -4478,12 +4478,12 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
         {(() => {
           const pnlVal = Number(form.pnl);
           const isPos = pnlVal > 0, isNeg = pnlVal < 0;
-          const pnlColor = isPos ? G.green : isNeg ? G.red : G.dim;
+          const pnlColor = isPos ? G.green : isNeg ? G.red : "#ffffff";
           return (
             <div style={{ marginBottom: 22 }}>
               <div style={{ background: isPos ? `${G.green}10` : isNeg ? `${G.red}10` : "rgba(255,255,255,0.02)", border: `2px solid ${isPos ? G.green + "50" : isNeg ? G.red + "50" : "#1f2937"}`, borderRadius: 18, padding: "20px 20px 16px", boxShadow: isPos ? `0 0 32px ${G.green}20` : isNeg ? `0 0 32px ${G.red}20` : "none", transition: "all 0.3s" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: pnlColor, textTransform: "uppercase", letterSpacing: 2, marginBottom: 10, textAlign: "center" }}>
-                  {isPos ? (fr ? "✦ GAIN" : "✦ PROFIT") : isNeg ? (fr ? "✦ PERTE" : "✦ LOSS") : (fr ? "Résultat (P&L)" : "Result (P&L)")}
+                  {isPos ? (fr ? "✦ GAIN" : "✦ PROFIT") : isNeg ? (fr ? "✦ PERTE" : "✦ LOSS") : (fr ? "RÉSULTAT (P&L)" : "RESULT (P&L)")}
                 </div>
                 <div style={{ position: "relative" }}>
                   <input type="number" placeholder="0" value={form.pnl} onChange={e => set("pnl", e.target.value)}
