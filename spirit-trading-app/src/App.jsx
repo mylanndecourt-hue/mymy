@@ -1117,114 +1117,135 @@ function Row({ label, value, color }) {
 
 // ─── DÉTAIL TRADE ─────────────────────────────────────────────────────────────
 function DetailTrade({ trade, onBack, onEdit, lang = "fr" }) {
-  const T = TR[lang]; const fr = lang === "fr";
-  const pnlColor = trade.pnl >= 0 ? COLORS.green : COLORS.red;
-  const respectColor = trade.respect === "Oui" ? COLORS.green : trade.respect === "Partiel" ? COLORS.amber : COLORS.red;
+  const fr = lang === "fr";
+  const G = { green: "#00e5a0", red: "#ef4444", amber: "#f59e0b", purple: "#818cf8", cyan: "#22d3ee", dim: "#6b7280", border: "#1a1a2e", card: "#0e0e1a", bg: "#06060f", text: "#e5e7eb" };
+  const pnlColor = trade.pnl >= 0 ? G.green : G.red;
+  const isWin = trade.pnl >= 0;
+  const respectColor = trade.respect === "Oui" ? G.green : trade.respect === "Partiel" ? G.amber : G.red;
+  const noteColor = (trade.note || 0) <= 1 ? G.red : (trade.note || 0) <= 2 ? "#f97316" : (trade.note || 0) <= 3 ? G.amber : (trade.note || 0) <= 4 ? "#84cc16" : G.green;
+  const emoAvant = Array.isArray(trade.emotion_avant) ? trade.emotion_avant.join(", ") : trade.emotion_avant || "—";
+  const emoPendant = Array.isArray(trade.emotion_pendant) ? trade.emotion_pendant.join(", ") : trade.emotion_pendant || "—";
+
+  const chip = (label, color) => (
+    <span style={{ background: color + "18", border: `1px solid ${color}40`, color, borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{label}</span>
+  );
+
+  const kpi = (label, value, color) => (
+    <div style={{ background: "#0a0a14", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: G.dim, textTransform: "uppercase", letterSpacing: 1.5 }}>{label}</div>
+      <div style={{ fontSize: 18, fontWeight: 900, color: color || G.text }}>{value}</div>
+    </div>
+  );
+
+  const row = (label, value, color) => value && value !== "—" ? (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 0", borderBottom: `1px solid ${G.border}` }}>
+      <span style={{ fontSize: 12, color: G.dim }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 700, color: color || G.text }}>{value}</span>
+    </div>
+  ) : null;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button onClick={onBack} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, color: COLORS.textDim, borderRadius: 8, padding: "8px 12px", fontSize: 13, cursor: "pointer" }}>← Retour</button>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: COLORS.text }}>Trade #{trade.id}</div>
-            <div style={{ fontSize: 11, color: COLORS.muted }}>{trade.date} à {trade.heure}</div>
-          </div>
-        </div>
+    <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
+
+      {/* ── NAV ── */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <button onClick={onBack} style={{ background: "none", border: "none", color: G.dim, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, padding: 0, fontFamily: "inherit" }}>
+          ← {fr ? "Retour" : "Back"}
+        </button>
         {onEdit && (
-          <button onClick={() => onEdit(trade)} style={{ background: COLORS.cyan + "20", border: `1px solid ${COLORS.cyan}40`, color: COLORS.cyan, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-            ✎ Modifier
+          <button onClick={() => onEdit(trade)} style={{ background: G.purple + "15", border: `1px solid ${G.purple}40`, color: G.purple, borderRadius: 10, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+            ✎ {fr ? "Modifier" : "Edit"}
           </button>
         )}
       </div>
 
+      {/* ── HERO ── */}
+      <div style={{ background: `linear-gradient(135deg, ${pnlColor}0d 0%, #0e0e1a 60%)`, border: `1px solid ${pnlColor}25`, borderRadius: 24, padding: "28px 28px 22px" }}>
+        {/* Date + compte */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
+          <div style={{ fontSize: 12, color: G.dim }}>
+            {trade.date}{trade.heure ? ` · ${trade.heure}` : ""}
+            {trade.duree ? ` · ${trade.duree} min` : ""}
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            {trade.compte && chip(trade.compte, G.cyan)}
+            {trade.direction && chip(trade.direction === "LONG" ? "▲ LONG" : "▼ SHORT", trade.direction === "LONG" ? G.green : G.red)}
+          </div>
+        </div>
 
-      {/* P&L + Note */}
-      <Card>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        {/* P&L + note */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
           <div>
-            <div style={{ fontSize: 42, fontWeight: 800, fontFamily: "monospace", color: pnlColor }}>
-              {trade.pnl >= 0 ? "+" : ""}{trade.pnl}$
+            <div style={{ fontSize: 52, fontWeight: 900, color: pnlColor, letterSpacing: -2, lineHeight: 1 }}>
+              {isWin ? "+" : ""}{trade.pnl}$
             </div>
-            <div style={{ fontSize: 12, color: COLORS.textDim }}>R:R {trade.rr} · {trade.duree} min</div>
+            {trade.rr && <div style={{ fontSize: 12, color: G.dim, marginTop: 6 }}>R:R {trade.rr}</div>}
           </div>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 28, color: COLORS.amber }}>{"⭐".repeat(trade.note)}</div>
-            <div style={{ fontSize: 11, color: respectColor, fontWeight: 700, marginTop: 4 }}>
-              {trade.respect === "Oui" ? "✓ Plan respecté" : trade.respect === "Partiel" ? "~ Partiel" : "✗ Non respecté"}
+            {(trade.note > 0) && (
+              <div style={{ fontSize: 11, fontWeight: 700, color: noteColor, marginBottom: 4 }}>
+                {["—","Mauvais","Moyen","Correct","Bon","Excellent"][trade.note] || ""} · {trade.note}/5
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+              {[1,2,3,4,5].map(n => {
+                const c = n <= 1 ? "#ef4444" : n <= 2 ? "#f97316" : n <= 3 ? G.amber : n <= 4 ? "#84cc16" : G.green;
+                return <div key={n} style={{ width: 28, height: 8, borderRadius: 4, background: (trade.note || 0) >= n ? c : "#1a1a2e", transition: "background 0.2s" }} />;
+              })}
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: respectColor, marginTop: 8 }}>
+              {trade.respect === "Oui" ? "✓ Plan respecté" : trade.respect === "Partiel" ? "~ Partiel" : trade.respect === "Non" ? "✗ Non respecté" : ""}
             </div>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 12 }}>
-          <Tag color={trade.compte === "Topstep Funded" ? COLORS.cyan : COLORS.amber}>{trade.compte}</Tag>
-          <Tag color={COLORS.muted}>{trade.actif}</Tag>
-          <Tag color={trade.direction === "LONG" ? COLORS.green : COLORS.red}>{trade.direction}</Tag>
-          <Tag color={COLORS.muted}>{trade.setup}</Tag>
-          <Tag color={COLORS.muted}>{trade.taille} lot{trade.taille > 1 ? "s" : ""}</Tag>
-          {trade.impulsif && <Tag color={COLORS.red}>⚡ Impulsif</Tag>}
-        </div>
-      </Card>
 
-      {/* Technique */}
-      <Card>
-        <SectionTitle>🔧 Technique</SectionTitle>
-        <Row label="Actif" value={trade.actif} />
-        <Row label="Direction" value={trade.direction} color={trade.direction === "LONG" ? COLORS.green : COLORS.red} />
-        <Row label="Setup" value={trade.setup} color={COLORS.cyan} />
-        <Row label="Taille" value={`${trade.taille} contrat${trade.taille > 1 ? "s" : ""}`} />
-        <Row label="P&L" value={`${trade.pnl >= 0 ? "+" : ""}${trade.pnl}$`} color={pnlColor} />
-        <Row label="R:R" value={trade.rr} color={trade.rr >= 2 ? COLORS.green : trade.rr >= 1 ? COLORS.amber : COLORS.red} />
-        <Row label="Durée" value={`${trade.duree} min`} />
-        <Row label="Respect du plan" value={trade.respect} color={respectColor} />
-        {trade.regle_violee && <Row label="Règle violée" value={trade.regle_violee} color={COLORS.red} />}
+        {/* Tags */}
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 18 }}>
+          {trade.actif && chip(trade.actif, G.dim)}
+          {trade.setup && chip(trade.setup, G.purple)}
+          {trade.taille && chip(`${trade.taille} lot${trade.taille > 1 ? "s" : ""}`, G.dim)}
+        </div>
+      </div>
+
+      {/* ── KPIs ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
+        {kpi("P&L", `${isWin ? "+" : ""}${trade.pnl}$`, pnlColor)}
+        {kpi("R:R", trade.rr || "—", trade.rr >= 2 ? G.green : trade.rr >= 1 ? G.amber : G.red)}
+        {kpi(fr ? "Durée" : "Duration", trade.duree ? `${trade.duree} min` : "—")}
+      </div>
+
+      {/* ── ANALYSE ── */}
+      <div style={{ background: G.card, borderRadius: 20, padding: "20px 22px" }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: G.purple, letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>🎯 {fr ? "Analyse" : "Analysis"}</div>
+        {row(fr ? "Actif" : "Asset", trade.actif)}
+        {row("Setup", trade.setup, G.purple)}
+        {row("Direction", trade.direction === "LONG" ? "▲ LONG" : trade.direction === "SHORT" ? "▼ SHORT" : trade.direction, trade.direction === "LONG" ? G.green : G.red)}
+        {row(fr ? "Taille" : "Size", trade.taille ? `${trade.taille} contrat${trade.taille > 1 ? "s" : ""}` : null)}
+        {row(fr ? "Respect du plan" : "Plan respected", trade.respect, respectColor)}
+        {trade.regle_violee && row(fr ? "Règle violée" : "Violated rule", trade.regle_violee, G.red)}
         {trade.notes_tech && (
-          <div style={{ marginTop: 4 }}>
-            <div style={{ fontSize: 11, color: COLORS.textDim, marginBottom: 6 }}>Notes techniques</div>
-            <div style={{ background: COLORS.bg, borderRadius: 8, padding: 12, fontSize: 12, color: COLORS.text, lineHeight: 1.7 }}>{trade.notes_tech}</div>
+          <div style={{ marginTop: 12 }}>
+            <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{fr ? "Notes techniques" : "Technical notes"}</div>
+            <div style={{ fontSize: 13, color: G.text, lineHeight: 1.8, fontStyle: "italic", opacity: 0.85 }}>{trade.notes_tech}</div>
           </div>
         )}
-      </Card>
+      </div>
 
-      {/* Discipline */}
-      <Card>
-        <SectionTitle>🌿 Discipline</SectionTitle>
-        <Row label="Prière" value={trade.priere ? "✓ Oui" : "✗ Non"} color={trade.priere ? COLORS.green : COLORS.muted} />
-        <Row label="Heure coucher" value={trade.heure_coucher} />
-        <Row label="Sommeil" value={`${trade.sommeil}h`} color={trade.sommeil >= 7 ? COLORS.green : trade.sommeil >= 6 ? COLORS.amber : COLORS.red} />
-        <Row label="Écrans avant dodo" value={trade.ecrans ? "⚠️ Oui" : "✓ Non"} color={trade.ecrans ? COLORS.amber : COLORS.green} />
-        <Row label="Qualité sommeil" value={`${trade.qualite_sommeil}/5 ${"★".repeat(trade.qualite_sommeil)}${"☆".repeat(5 - trade.qualite_sommeil)}`} color={trade.qualite_sommeil >= 4 ? COLORS.green : trade.qualite_sommeil >= 3 ? COLORS.amber : COLORS.red} />
-        <Row label="Alimentation" value={trade.alimentation} color={trade.alimentation === "Saine" ? COLORS.green : trade.alimentation === "Neutre" ? COLORS.amber : COLORS.red} />
-      </Card>
-
-      {/* Psychologie */}
-      <Card>
-        <SectionTitle>🧠 Psychologie</SectionTitle>
-        <Row label="Impulsivité" value={trade.impulsif ? "⚡ Oui" : "✓ Non"} color={trade.impulsif ? COLORS.red : COLORS.green} />
-        <Row label="Émotion avant" value={trade.emotion_avant} color={COLORS.amber} />
-        <Row label="Émotion pendant" value={trade.emotion_pendant} color={COLORS.amber} />
-        <Row label="Note globale" value={`${trade.note}/5`} color={COLORS.amber} />
-        {trade.lecon && (
-          <div style={{ marginTop: 4 }}>
-            <div style={{ fontSize: 11, color: COLORS.textDim, marginBottom: 6 }}>📝 Leçon apprise</div>
-            <div style={{ background: COLORS.bg, borderRadius: 8, padding: 12, fontSize: 12, color: COLORS.text, lineHeight: 1.7, fontStyle: "italic" }}>"{trade.lecon}"</div>
-          </div>
-        )}
-      </Card>
-
-      {/* Zone screenshot placeholder */}
-      <Card>
-        <SectionTitle>📸 Screenshots</SectionTitle>
-        <div style={{ background: COLORS.bg, borderRadius: 8, border: `2px dashed ${COLORS.border}`, padding: 32, textAlign: "center" }}>
-          <div style={{ fontSize: 28, marginBottom: 8 }}>🖼️</div>
-          <div style={{ fontSize: 13, color: COLORS.muted }}>Glisser-déposer tes screenshots ici</div>
-          <div style={{ fontSize: 11, color: COLORS.border, marginTop: 4 }}>Entrée · Sortie · Contexte HTF</div>
+      {/* ── PSYCHOLOGIE ── */}
+      {(emoAvant !== "—" || emoPendant !== "—" || trade.lecon) && (
+        <div style={{ background: G.card, borderRadius: 20, padding: "20px 22px" }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: G.amber, letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>🧠 {fr ? "Psychologie" : "Psychology"}</div>
+          {emoAvant !== "—" && row(fr ? "Avant" : "Before", emoAvant, G.amber)}
+          {emoPendant !== "—" && row(fr ? "Pendant" : "During", emoPendant, G.amber)}
+          {trade.lecon && (
+            <div style={{ marginTop: 12, background: "#06060f", borderRadius: 12, padding: "14px 16px", borderLeft: `3px solid ${G.amber}` }}>
+              <div style={{ fontSize: 10, color: G.amber, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>📝 {fr ? "Leçon" : "Lesson"}</div>
+              <div style={{ fontSize: 13, color: G.text, lineHeight: 1.8, fontStyle: "italic" }}>"{trade.lecon}"</div>
+            </div>
+          )}
         </div>
-      </Card>
+      )}
 
-      <button onClick={onBack} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, color: COLORS.textDim, borderRadius: 10, padding: "14px", fontSize: 14, cursor: "pointer" }}>
-        ← Retour au journal
-      </button>
     </div>
   );
 }
