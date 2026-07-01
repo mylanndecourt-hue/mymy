@@ -8364,6 +8364,184 @@ function makeAuthFetch(user) {
   };
 }
 
+// ── Widget alertes économiques ──────────────────────────────────────────────
+function EcoAlertWidget({ lang = "fr" }) {
+  const fr = lang === "fr";
+  const [open, setOpen] = useState(false);
+  const [enabled, setEnabled] = useState(() => localStorage.getItem("eco_alerts_on") !== "false");
+  const [minutesBefore, setMinutesBefore] = useState(() => parseInt(localStorage.getItem("eco_alert_min") || "5"));
+  const [annonces, setAnnonces] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("eco_annonces") || "[]"); } catch { return []; }
+  });
+  const [newTime, setNewTime] = useState("");
+  const [newLabel, setNewLabel] = useState("");
+  const [lastAlerted, setLastAlerted] = useState({});
+
+  // Persist
+  React.useEffect(() => { localStorage.setItem("eco_annonces", JSON.stringify(annonces)); }, [annonces]);
+  React.useEffect(() => { localStorage.setItem("eco_alerts_on", enabled); }, [enabled]);
+  React.useEffect(() => { localStorage.setItem("eco_alert_min", minutesBefore); }, [minutesBefore]);
+
+  // Vider les annonces périmées à minuit
+  React.useEffect(() => {
+    const now = new Date();
+    const todayStr = now.toISOString().split("T")[0];
+    setAnnonces(prev => prev.filter(a => !a.date || a.date === todayStr));
+  }, []);
+
+  // Timer de vérification toutes les 30 secondes
+  React.useEffect(() => {
+    if (!enabled) return;
+    const check = () => {
+      const now = new Date();
+      const hhmm = now.getHours().toString().padStart(2, "0") + ":" + now.getMinutes().toString().padStart(2, "0");
+      annonces.forEach(a => {
+        const [ah, am] = a.time.split(":").map(Number);
+        const annonceMin = ah * 60 + am;
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+        const diff = annonceMin - nowMin;
+        const key = `${a.time}-${minutesBefore}`;
+        if (diff === minutesBefore && !lastAlerted[key]) {
+          setLastAlerted(prev => ({ ...prev, [key]: true }));
+          const msg = fr
+            ? `Attention. Sortir de position. Annonce économique dans ${minutesBefore} minutes. ${a.label || "Annonce économique"}.`
+            : `Warning. Exit position. Economic announcement in ${minutesBefore} minutes. ${a.label || "Economic announcement"}.`;
+          const u = new SpeechSynthesisUtterance(msg);
+          u.lang = fr ? "fr-FR" : "en-US";
+          u.rate = 0.88;
+          u.pitch = 1.05;
+          u.volume = 1;
+          // Choisir une voix féminine si disponible
+          const voices = window.speechSynthesis.getVoices();
+          const pref = voices.find(v => v.lang.startsWith(fr ? "fr" : "en") && v.name.toLowerCase().includes("female"))
+            || voices.find(v => v.lang.startsWith(fr ? "fr" : "en"));
+          if (pref) u.voice = pref;
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(u);
+        }
+        // Alerte à l'heure exacte aussi
+        const key0 = `${a.time}-0`;
+        if (diff === 0 && !lastAlerted[key0]) {
+          setLastAlerted(prev => ({ ...prev, [key0]: true }));
+          const msg0 = fr
+            ? `Annonce économique maintenant. ${a.label || ""}. Restez hors du marché.`
+            : `Economic announcement now. ${a.label || ""}. Stay out of the market.`;
+          const u0 = new SpeechSynthesisUtterance(msg0);
+          u0.lang = fr ? "fr-FR" : "en-US";
+          u0.rate = 0.88;
+          u0.volume = 1;
+          const voices = window.speechSynthesis.getVoices();
+          const pref = voices.find(v => v.lang.startsWith(fr ? "fr" : "en"));
+          if (pref) u0.voice = pref;
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(u0);
+        }
+      });
+    };
+    check();
+    const id = setInterval(check, 30000);
+    return () => clearInterval(id);
+  }, [enabled, annonces, minutesBefore, lastAlerted, fr]);
+
+  const addAnnonce = () => {
+    if (!newTime) return;
+    const today = new Date().toISOString().split("T")[0];
+    setAnnonces(prev => [...prev, { id: Date.now(), time: newTime, label: newLabel.trim() || "Annonce", date: today }]);
+    setNewTime(""); setNewLabel("");
+  };
+
+  const testVoice = () => {
+    const msg = fr ? "Test. Sortir de position. Annonce économique dans 5 minutes." : "Test. Exit position. Economic announcement in 5 minutes.";
+    const u = new SpeechSynthesisUtterance(msg);
+    u.lang = fr ? "fr-FR" : "en-US"; u.rate = 0.88; u.volume = 1;
+    const voices = window.speechSynthesis.getVoices();
+    const pref = voices.find(v => v.lang.startsWith(fr ? "fr" : "en"));
+    if (pref) u.voice = pref;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  };
+
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const upcoming = annonces.filter(a => {
+    const [h, m] = a.time.split(":").map(Number);
+    return h * 60 + m >= nowMin;
+  }).sort((a, b) => a.time > b.time ? 1 : -1);
+
+  return (
+    <div style={{ position: "fixed", bottom: 80, right: 16, zIndex: 400 }}>
+      {/* Bouton flottant */}
+      <button onClick={() => setOpen(v => !v)}
+        title={fr ? "Alertes économiques" : "Economic alerts"}
+        style={{ width: 44, height: 44, borderRadius: "50%", background: enabled && annonces.length > 0 ? "#f59e0b" : "#1a1a2e", border: `1.5px solid ${enabled && annonces.length > 0 ? "#f59e0b60" : "#2a2a3e"}`, color: enabled && annonces.length > 0 ? "#06060f" : "#6b7280", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: enabled && annonces.length > 0 ? "0 0 16px #f59e0b40" : "none", transition: "all 0.2s" }}>
+        📢
+      </button>
+
+      {/* Panneau */}
+      {open && (
+        <div style={{ position: "absolute", bottom: 52, right: 0, width: 300, background: "#0e0e1a", border: "1px solid #1a1a2e", borderRadius: 16, padding: "18px 16px", boxShadow: "0 20px 60px rgba(0,0,0,0.7)" }}>
+          {/* Header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#e5e7eb" }}>📢 {fr ? "Alertes éco" : "Eco alerts"}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button onClick={testVoice} title="Tester la voix" style={{ background: "none", border: "1px solid #1a1a2e", borderRadius: 6, padding: "3px 8px", fontSize: 10, color: "#6b7280", cursor: "pointer", fontFamily: "inherit" }}>
+                🔊 {fr ? "Test" : "Test"}
+              </button>
+              <button onClick={() => setEnabled(v => !v)}
+                style={{ background: enabled ? "#f59e0b20" : "#1a1a2e", border: `1px solid ${enabled ? "#f59e0b40" : "#2a2a3e"}`, borderRadius: 20, padding: "3px 10px", fontSize: 10, fontWeight: 700, color: enabled ? "#f59e0b" : "#555", cursor: "pointer", fontFamily: "inherit" }}>
+                {enabled ? (fr ? "ON" : "ON") : (fr ? "OFF" : "OFF")}
+              </button>
+            </div>
+          </div>
+
+          {/* Paramètre — minutes avant */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, padding: "8px 10px", background: "#0a0a14", borderRadius: 8 }}>
+            <span style={{ fontSize: 11, color: "#6b7280", flex: 1 }}>{fr ? "Alerter" : "Alert"}</span>
+            <select value={minutesBefore} onChange={e => setMinutesBefore(parseInt(e.target.value))}
+              style={{ background: "#1a1a2e", border: "1px solid #2a2a3e", borderRadius: 6, color: "#e5e7eb", fontSize: 11, padding: "3px 6px", fontFamily: "inherit", outline: "none" }}>
+              {[1,2,3,5,10,15].map(m => <option key={m} value={m}>{m} min</option>)}
+            </select>
+            <span style={{ fontSize: 11, color: "#6b7280" }}>{fr ? "avant" : "before"}</span>
+          </div>
+
+          {/* Liste annonces */}
+          <div style={{ maxHeight: 180, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
+            {annonces.length === 0 && <div style={{ fontSize: 11, color: "#374151", textAlign: "center", padding: "12px 0" }}>{fr ? "Aucune annonce. Ajoute-en une." : "No announcements yet."}</div>}
+            {annonces.map(a => {
+              const [h, m] = a.time.split(":").map(Number);
+              const diffMin = h * 60 + m - nowMin;
+              const isPast = diffMin < 0;
+              const isSoon = diffMin >= 0 && diffMin <= minutesBefore;
+              return (
+                <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 8, background: isSoon ? "#f59e0b10" : "#0a0a14", border: `1px solid ${isSoon ? "#f59e0b30" : "#1a1a2e"}`, borderRadius: 8, padding: "7px 10px", opacity: isPast ? 0.4 : 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, fontFamily: "monospace", color: isSoon ? "#f59e0b" : "#e5e7eb", minWidth: 40 }}>{a.time}</div>
+                  <div style={{ flex: 1, fontSize: 11, color: isSoon ? "#f59e0b" : "#9ca3af", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.label}</div>
+                  {isSoon && <span style={{ fontSize: 9, color: "#f59e0b", fontWeight: 700 }}>⚡ {diffMin}m</span>}
+                  <button onClick={() => setAnnonces(prev => prev.filter(x => x.id !== a.id))} style={{ background: "none", border: "none", color: "#374151", cursor: "pointer", fontSize: 14, padding: "0 2px", lineHeight: 1 }}>×</button>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Ajouter annonce */}
+          <div style={{ display: "flex", gap: 6 }}>
+            <input type="time" value={newTime} onChange={e => setNewTime(e.target.value)}
+              style={{ background: "#0a0a14", border: "1px solid #1a1a2e", borderRadius: 8, color: "#e5e7eb", fontSize: 12, padding: "7px 8px", fontFamily: "inherit", outline: "none", colorScheme: "dark", width: 90, flexShrink: 0 }} />
+            <input type="text" value={newLabel} onChange={e => setNewLabel(e.target.value)}
+              placeholder={fr ? "NFP, CPI…" : "NFP, CPI…"} onKeyDown={e => e.key === "Enter" && addAnnonce()}
+              style={{ background: "#0a0a14", border: "1px solid #1a1a2e", borderRadius: 8, color: "#e5e7eb", fontSize: 12, padding: "7px 8px", fontFamily: "inherit", outline: "none", flex: 1, minWidth: 0 }} />
+            <button onClick={addAnnonce} style={{ background: "#f59e0b", border: "none", borderRadius: 8, color: "#06060f", fontWeight: 800, fontSize: 16, cursor: "pointer", padding: "0 10px", flexShrink: 0 }}>+</button>
+          </div>
+
+          <div style={{ fontSize: 10, color: "#374151", marginTop: 10, lineHeight: 1.5 }}>
+            {fr ? "La voix parle automatiquement dans tes enceintes." : "Voice plays automatically through your speakers."}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MonCompte({ user, subscription, onLogout, lang = "fr" }) {
   const fr = lang === "fr";
   const G = { bg: "#06060f", card: "#0a0a14", border: "#1a1a2e", text: "#e5e7eb", dim: "#6b7280", green: "#00e5a0", red: "#ef4444", purple: "#818cf8" };
@@ -9297,6 +9475,9 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
           </div>
         );
       })()}
+
+      {/* Widget alertes économiques */}
+      {!isLanding && !isPreview && <EcoAlertWidget lang={lang} />}
 
       {/* Notifications */}
       {/* Tutorial */}
