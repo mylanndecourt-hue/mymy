@@ -3009,7 +3009,7 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAc
                   {balancePoints.map((v, i) => {
                     const cx = xOf(i), cy = yOf(v);
                     const col = v >= startVal ? "#22c55e" : "#ef4444";
-                    const isLast = i === balancePoints.length - 1 && balancePoints.length > 1;
+                    const isLast = i === balancePoints.length - 1;
                     return (
                       <g key={i}>
                         {isLast && (
