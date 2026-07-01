@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   onAuthStateChanged, signInWithPopup, getRedirectResult, signOut,
   createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail,
@@ -37,6 +37,9 @@ async function getSubscriptionStatus(uid) {
 export default function AppShell() {
   const lang = localStorage.getItem("spirit_lang") || "fr";
   const fr = lang === "fr";
+
+  const [activeSlot, setActiveSlot] = useState(() => parseInt(localStorage.getItem("spirit_active_slot") || "1"));
+  const lastDataRef = useRef(null);
 
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -85,26 +88,43 @@ export default function AppShell() {
   useEffect(() => {
     if (!isActive) { setCloudData(null); return; }
     setDataLoading(true);
-    const ref = doc(db, "users", user.uid, "journal", "data");
+    const ref = doc(db, "users", user.uid, "journal", `slot${activeSlot}`);
     getDoc(ref).then((snap) => {
       setCloudData(snap.exists() ? snap.data() : {});
       setDataLoading(false);
     }).catch(() => { setCloudData({}); setDataLoading(false); });
-  }, [isActive, user?.uid]);
+  }, [isActive, user?.uid, activeSlot]);
 
   const handleDataChange = useCallback((data) => {
     if (!user) return;
+    lastDataRef.current = data;
     setSaveStatus("saving");
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(async () => {
       try {
-        const ref = doc(db, "users", user.uid, "journal", "data");
+        const ref = doc(db, "users", user.uid, "journal", `slot${activeSlot}`);
         await setDoc(ref, data, { merge: false });
         setSaveStatus("saved");
         setTimeout(() => setSaveStatus("idle"), 2000);
       } catch { setSaveStatus("idle"); }
     }, SAVE_DEBOUNCE);
-  }, [user]);
+  }, [user, activeSlot]);
+
+  const handleSwitchSlot = useCallback(async (newSlot) => {
+    if (newSlot === activeSlot || !user) return;
+    // Flush pending save to current slot immediately
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+    if (lastDataRef.current) {
+      try {
+        const ref = doc(db, "users", user.uid, "journal", `slot${activeSlot}`);
+        await setDoc(ref, lastDataRef.current, { merge: false });
+      } catch {}
+    }
+    lastDataRef.current = null;
+    localStorage.setItem("spirit_active_slot", String(newSlot));
+    setActiveSlot(newSlot);
+    setCloudData(null); // force reload
+  }, [activeSlot, user]);
 
   const handleLogout = async () => { await signOut(auth); };
 
@@ -195,6 +215,7 @@ export default function AppShell() {
   );
 
   return <App
+    key={activeSlot}
     user={user}
     cloudData={isPreview ? {} : cloudData}
     onDataChange={isPreview ? () => {} : handleDataChange}
@@ -205,6 +226,8 @@ export default function AppShell() {
     onCheckout={handleCheckout}
     checkoutLoading={checkoutLoading}
     checkoutError={checkoutError}
+    activeSlot={activeSlot}
+    onSwitchSlot={isPreview ? () => {} : handleSwitchSlot}
   />;
 }
 

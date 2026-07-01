@@ -4481,20 +4481,6 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
 
       {/* ── STEP 1 : LE TRADE ── */}
       {step === 1 && (<div style={{ background: G.card, border: "1px solid #0f172a", borderRadius: 20, padding: "24px 22px", marginBottom: 12 }}>
-        {!editTrade && templates.filter(t => !t.vide).length > 0 && (
-          <div style={{ marginBottom: 20 }}>
-            {fieldLabel("⚡ Templates")}
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {templates.filter(t => !t.vide).map(tpl => (
-                <button key={tpl.id} onClick={() => applyTemplate(tpl)} style={{ ...bubble(false, G.purple), border: "1.5px solid #818cf840", color: G.purple, background: "#818cf810", display: "flex", flexDirection: "column", alignItems: "flex-start", padding: "10px 14px", borderRadius: 12 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700 }}>{tpl.nom}</span>
-                  <span style={{ fontSize: 10, color: G.dim, marginTop: 2 }}>{tpl.actif}{tpl.direction ? ` · ${tpl.direction}` : ""}{tpl.setup ? ` · ${tpl.setup}` : ""}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* 1. RÉSULTAT */}
         {(() => {
           const pnlVal = Number(form.pnl);
@@ -8230,7 +8216,7 @@ function TemplatesPage({ templates, setTemplates, lang = "fr" }) {
   );
 }
 
-export default function App({ user, cloudData, onDataChange, saveStatus, onLogout, subscription, isPreview = false, onCheckout, checkoutLoading, checkoutError }) {
+export default function App({ user, cloudData, onDataChange, saveStatus, onLogout, subscription, isPreview = false, onCheckout, checkoutLoading, checkoutError, activeSlot = 1, onSwitchSlot }) {
   const authFetch = makeAuthFetch(user);
 
   const [lang, setLang] = useState(() => localStorage.getItem("spirit_lang") || "fr");
@@ -8697,8 +8683,21 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
           ))}
         </div>
 
+        {/* Slot switcher */}
+        {!isPreview && (
+          <div style={{ display: "flex", gap: 4, alignItems: "center", marginLeft: "auto", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "4px 6px" }}>
+            {[1, 2, 3].map(s => (
+              <button key={s} onClick={() => onSwitchSlot?.(s)}
+                title={`Espace ${s}`}
+                style={{ background: activeSlot === s ? "rgba(0,229,160,0.15)" : "none", border: activeSlot === s ? "1px solid #00e5a040" : "1px solid transparent", color: activeSlot === s ? "#00e5a0" : "#555", borderRadius: 7, padding: "4px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s" }}>
+                S{s}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Actions droite */}
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0, position: "relative", marginLeft: "auto" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0, position: "relative", marginLeft: 8 }}>
           {isOwner && <>
             <button className="sp-desktop-only" onClick={() => setShowExportMenu(s => !s)} style={{ background: showExportMenu ? "rgba(0,229,160,0.1)" : "rgba(255,255,255,0.04)", border: `1px solid ${showExportMenu ? "#00e5a040" : "rgba(255,255,255,0.08)"}`, color: showExportMenu ? "#00e5a0" : "#666", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
               💾 {fr ? "Données" : "Data"}
