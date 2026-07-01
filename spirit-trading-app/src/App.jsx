@@ -2844,11 +2844,8 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAc
         let running = startVal;
         sorted.forEach(t => { running += (t.pnl || 0); balancePoints.push(running); });
 
-        // La valeur MLL : si >0 on considère que c'est une balance plancher absolue, si <0 c'est un drawdown
-        // On normalise toujours en valeur absolue de balance
-        const mllAbsolute = mllVal !== null
-          ? (mllVal < 0 && useAbsolute ? balanceInit + mllVal : mllVal)
-          : null;
+        // MLL : valeur exacte telle que saisie (ex: -1306 → affichée à -1306)
+        const mllAbsolute = mllVal;
 
         const lastBalance = balancePoints[balancePoints.length - 1];
         const pnlNet = lastBalance - startVal;
