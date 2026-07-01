@@ -2918,24 +2918,20 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAc
                 </linearGradient>
               </defs>
 
-              {/* Grid lignes */}
-              {[0, 0.25, 0.5, 0.75, 1].map(f => {
-                const y = PAD.t + iH * f;
-                const val = maxVal - f * range;
-                return (
-                  <g key={f}>
-                    <line x1={PAD.l} y1={y} x2={PAD.l + iW} y2={y} stroke="#1e2d45" strokeWidth="1" />
-                    <text x={PAD.l - 6} y={y + 4} textAnchor="end" fontSize="9" fill="#4b5e7a">{Math.round(val)}$</text>
-                  </g>
-                );
-              })}
+              {/* Ligne zéro — grise */}
+              {(() => { const zY = yOf(0); return zY >= PAD.t && zY <= PAD.t + iH ? (
+                <g>
+                  <line x1={PAD.l} y1={zY} x2={PAD.l + iW} y2={zY} stroke="#4b5e7a" strokeWidth="1" strokeDasharray="3,3" opacity="0.7" />
+                  <text x={PAD.l - 6} y={zY + 4} textAnchor="end" fontSize="9" fill="#4b5e7a">0$</text>
+                </g>
+              ) : null; })()}
 
-              {/* Ligne de départ — bien visible comme Dashboard */}
+              {/* Ligne balance de départ — verte */}
               {startY >= PAD.t && startY <= PAD.t + iH && (
                 <g>
-                  <line x1={PAD.l} y1={startY} x2={PAD.l + iW} y2={startY} stroke="#4b5e7a" strokeWidth="1" strokeDasharray="3,3" opacity="0.9" />
+                  <line x1={PAD.l} y1={startY} x2={PAD.l + iW} y2={startY} stroke="#22c55e" strokeWidth="1.5" strokeDasharray="5,3" opacity="0.8" />
                   <rect x={PAD.l + iW + 2} y={startY - 9} width={66} height={14} rx={3} fill="#0a0a14" />
-                  <text x={PAD.l + iW + 6} y={startY + 4} fontSize="9" fill="#94a3b8" fontWeight="700">{useAbsolute ? `${Math.round(startVal)}$` : "0$"}</text>
+                  <text x={PAD.l + iW + 6} y={startY + 4} fontSize="9" fill="#22c55e" fontWeight="700">{Math.round(startVal)}$</text>
                 </g>
               )}
 
