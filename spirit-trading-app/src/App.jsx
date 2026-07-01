@@ -2955,9 +2955,13 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAc
                     </g>
                   ))}
 
-                  {/* Ligne zéro — grise visible */}
+                  {/* Ligne zéro — grise visible, masque le tick Y qui s'en approche */}
                   {zY >= PAD.t && zY <= PAD.t + iH && (
-                    <line x1={PAD.l} y1={zY} x2={PAD.l + iW} y2={zY} stroke="#4b5e7a" strokeWidth="1.2" strokeDasharray="4,3" opacity="0.8" />
+                    <g>
+                      <line x1={PAD.l} y1={zY} x2={PAD.l + iW} y2={zY} stroke="#4b5e7a" strokeWidth="1.2" strokeDasharray="4,3" opacity="0.8" />
+                      <rect x={0} y={zY - 8} width={PAD.l - 2} height={16} fill="#0a0e1a" />
+                      <text x={PAD.l - 8} y={zY + 4} textAnchor="end" fontSize="9" fill="#4b5e7a" fontWeight="700">0</text>
+                    </g>
                   )}
 
                   {/* Ligne balance de départ — verte */}
