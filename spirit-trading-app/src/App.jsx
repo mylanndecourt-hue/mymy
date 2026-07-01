@@ -2820,7 +2820,7 @@ function BalanceChart({ compte, tradeDuCompte, targetMontant, firm, onTradeClick
           {/* MLL rouge */}
           {mllY !== null && mllY >= PAD.t && mllY <= PAD.t + iH && (
             <g>
-              <line x1={PAD.l} y1={mllY} x2={PAD.l + iW} y2={mllY} stroke="#ef4444" strokeWidth="1.2" strokeDasharray="6,3" opacity="0.85" />
+              <line x1={PAD.l} y1={mllY} x2={PAD.l + iW} y2={mllY} stroke="#ef4444" strokeWidth="1.5" opacity="0.9" />
               <rect x={PAD.l + iW + 2} y={mllY - 9} width={72} height={14} rx={3} fill="#0a0e1a" />
               <text x={PAD.l + iW + 6} y={mllY + 4} fontSize="9" fill="#ef4444" fontWeight="700">MLL {Math.round(mllAbsolute)}$</text>
             </g>
@@ -3197,7 +3197,7 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAc
                   {/* Ligne MLL — rouge */}
                   {mllY !== null && mllY >= PAD.t && mllY <= PAD.t + iH && (
                     <g>
-                      <line x1={PAD.l} y1={mllY} x2={PAD.l + iW} y2={mllY} stroke="#ef4444" strokeWidth="1.2" strokeDasharray="6,3" opacity="0.85" />
+                      <line x1={PAD.l} y1={mllY} x2={PAD.l + iW} y2={mllY} stroke="#ef4444" strokeWidth="1.5" opacity="0.9" />
                       <rect x={PAD.l + iW + 2} y={mllY - 9} width={72} height={14} rx={3} fill="#0a0e1a" />
                       <text x={PAD.l + iW + 6} y={mllY + 4} fontSize="9" fill="#ef4444" fontWeight="700">MLL {Math.round(mllAbsolute)}$</text>
                     </g>
