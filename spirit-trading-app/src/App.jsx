@@ -2684,7 +2684,215 @@ function CalendrierPnL({ trades }) {
   );
 }
 
-function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAccount, lang = "fr" }) {
+function BalanceChart({ compte, tradeDuCompte, targetMontant, firm, onTradeClick, G }) {
+  const [hoverIdx, setHoverIdx] = useState(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const containerRef = React.useRef(null);
+
+  const balanceInit = compte.balanceActuelle ?? null;
+  const mllVal = compte.mll ?? null;
+  const sorted = [...tradeDuCompte].sort((a, b) => a.date > b.date ? 1 : a.date < b.date ? -1 : 0);
+  const useAbsolute = balanceInit !== null;
+  const startVal = useAbsolute ? balanceInit : 0;
+  const balancePoints = [startVal];
+  let running = startVal;
+  sorted.forEach(t => { running += (t.pnl || 0); balancePoints.push(running); });
+  const mllAbsolute = mllVal;
+  const lastBalance = balancePoints[balancePoints.length - 1];
+  const pnlNet = lastBalance - startVal;
+  const firmColor = firm.couleur || "#00e5a0";
+
+  const W = 600, H = 220, PAD = { t: 24, r: 80, b: 36, l: 60 };
+  const iW = W - PAD.l - PAD.r, iH = H - PAD.t - PAD.b;
+  const allVals = [...balancePoints, mllAbsolute, targetMontant ? startVal + targetMontant : null].filter(v => v !== null);
+  const rawMin = Math.min(...allVals), rawMax = Math.max(...allVals);
+  const pad = (rawMax - rawMin) * 0.15 || 300;
+  const minVal = rawMin - pad, maxVal = rawMax + pad;
+  const range = maxVal - minVal || 1;
+  const xOf = i => PAD.l + (i / (balancePoints.length - 1 || 1)) * iW;
+  const yOf = v => PAD.t + iH - ((v - minVal) / range) * iH;
+
+  const startY = yOf(startVal);
+  const mllY = mllAbsolute !== null ? yOf(mllAbsolute) : null;
+  const targetBalY = targetMontant ? yOf(startVal + targetMontant) : null;
+  const lastX = xOf(balancePoints.length - 1);
+  const lastY = yOf(lastBalance);
+  const pnlColor = pnlNet >= 0 ? "#22c55e" : "#ef4444";
+
+  // Ticks Y multiples de 500
+  const yLabels = [];
+  const first500 = Math.ceil(minVal / 500) * 500;
+  for (let v = first500; v <= maxVal; v += 500) {
+    if (v === 0) continue;
+    const y = yOf(v);
+    if (y >= PAD.t && y <= PAD.t + iH) yLabels.push({ val: v, y });
+  }
+
+  // Ticks X dates
+  const allDates = [null, ...sorted.map(t => t.date)];
+  const xCount = Math.min(6, balancePoints.length);
+  const xTicks = Array.from({ length: xCount }, (_, i) => {
+    const idx = Math.round(i * (balancePoints.length - 1) / Math.max(1, xCount - 1));
+    const d = allDates[idx];
+    return { idx, label: d ? d.slice(5).replace("-", "/") : "Départ" };
+  }).filter((v, i, a) => a.findIndex(x => x.idx === v.idx) === i);
+
+  const lPath = balancePoints.length > 1 ? `M ${balancePoints.map((v, i) => `${xOf(i)},${yOf(v)}`).join(" L ")}` : null;
+  const fPath = lPath ? `M ${xOf(0)},${startY} ${balancePoints.map((v, i) => `L ${xOf(i)},${yOf(v)}`).join(" ")} L ${lastX},${startY} Z` : null;
+  const zY = yOf(0);
+
+  const hovTrade = hoverIdx !== null && hoverIdx > 0 ? sorted[hoverIdx - 1] : null;
+
+  return (
+    <div style={{ background: "linear-gradient(135deg,#0e0e1a,#0a0a14)", border: "1px solid #1a1a2e", borderRadius: 16, padding: "20px 24px" }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+        <div>
+          <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, fontWeight: 700, marginBottom: 4 }}>Balance du compte</div>
+          <div style={{ fontSize: 28, fontWeight: 900, fontFamily: "monospace", color: pnlColor, letterSpacing: -1 }}>
+            {useAbsolute ? `${Math.round(lastBalance)}$` : `${pnlNet >= 0 ? "+" : ""}${Math.round(pnlNet)}$`}
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+          {useAbsolute && <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 10, color: G.dim, marginBottom: 2 }}>Départ</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#6b7280" }}>{Math.round(startVal)}$</div>
+          </div>}
+          {mllAbsolute !== null && <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 10, color: "#ef4444", marginBottom: 2 }}>MLL</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#ef4444" }}>{Math.round(mllAbsolute)}$</div>
+          </div>}
+          {pnlNet !== 0 && <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 10, color: G.dim, marginBottom: 2 }}>P&L net</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: pnlColor }}>{pnlNet >= 0 ? "+" : ""}{Math.round(pnlNet)}$</div>
+          </div>}
+        </div>
+      </div>
+
+      <div ref={containerRef} style={{ position: "relative" }}
+        onMouseMove={e => { if (containerRef.current) { const r = containerRef.current.getBoundingClientRect(); setMousePos({ x: e.clientX - r.left, y: e.clientY - r.top }); } }}
+        onMouseLeave={() => setHoverIdx(null)}>
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block", overflow: "visible" }}>
+          <defs>
+            <clipPath id={`cup-${compte.id}`}><rect x={PAD.l} y={PAD.t} width={iW} height={Math.max(0, startY - PAD.t)} /></clipPath>
+            <clipPath id={`cdn-${compte.id}`}><rect x={PAD.l} y={startY} width={iW} height={Math.max(0, PAD.t + iH - startY)} /></clipPath>
+            <linearGradient id={`fup-${compte.id}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.15" /><stop offset="100%" stopColor="#22c55e" stopOpacity="0.01" />
+            </linearGradient>
+            <linearGradient id={`fdn-${compte.id}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.01" /><stop offset="100%" stopColor="#ef4444" stopOpacity="0.15" />
+            </linearGradient>
+          </defs>
+
+          {/* Grilles */}
+          {yLabels.map((t, i) => (
+            <g key={i}>
+              <line x1={PAD.l} y1={t.y} x2={PAD.l + iW} y2={t.y} stroke="#1e2d45" strokeWidth="0.8" />
+              <text x={PAD.l - 8} y={t.y + 4} textAnchor="end" fontSize="9" fill="#4b5e7a">{t.val}</text>
+            </g>
+          ))}
+
+          {/* Zéro */}
+          {zY >= PAD.t && zY <= PAD.t + iH && (
+            <g>
+              <line x1={PAD.l} y1={zY} x2={PAD.l + iW} y2={zY} stroke="#4b5e7a" strokeWidth="1.2" strokeDasharray="4,3" opacity="0.8" />
+              <rect x={0} y={zY - 8} width={PAD.l - 2} height={16} fill="#0a0e1a" />
+              <text x={PAD.l - 8} y={zY + 4} textAnchor="end" fontSize="9" fill="#4b5e7a" fontWeight="700">0</text>
+            </g>
+          )}
+
+          {/* Ligne départ verte */}
+          {startY >= PAD.t && startY <= PAD.t + iH && (
+            <g>
+              <line x1={PAD.l} y1={startY} x2={PAD.l + iW} y2={startY} stroke="#22c55e" strokeWidth="1.2" strokeDasharray="5,3" opacity="0.75" />
+              <rect x={PAD.l + iW + 2} y={startY - 9} width={64} height={14} rx={3} fill="#0a0e1a" />
+              <text x={PAD.l + iW + 6} y={startY + 4} fontSize="9" fill="#22c55e" fontWeight="700">{Math.round(startVal)}$</text>
+            </g>
+          )}
+
+          {/* MLL rouge */}
+          {mllY !== null && mllY >= PAD.t && mllY <= PAD.t + iH && (
+            <g>
+              <line x1={PAD.l} y1={mllY} x2={PAD.l + iW} y2={mllY} stroke="#ef4444" strokeWidth="1.2" strokeDasharray="6,3" opacity="0.85" />
+              <rect x={PAD.l + iW + 2} y={mllY - 9} width={72} height={14} rx={3} fill="#0a0e1a" />
+              <text x={PAD.l + iW + 6} y={mllY + 4} fontSize="9" fill="#ef4444" fontWeight="700">MLL {Math.round(mllAbsolute)}$</text>
+            </g>
+          )}
+
+          {/* Objectif profit */}
+          {targetBalY !== null && targetBalY >= PAD.t && targetBalY <= PAD.t + iH && (
+            <g>
+              <line x1={PAD.l} y1={targetBalY} x2={PAD.l + iW} y2={targetBalY} stroke={firmColor} strokeWidth="1.2" strokeDasharray="6,3" opacity="0.6" />
+              <rect x={PAD.l + iW + 2} y={targetBalY - 9} width={70} height={14} rx={3} fill="#0a0e1a" />
+              <text x={PAD.l + iW + 6} y={targetBalY + 4} fontSize="9" fill={firmColor} fontWeight="700">Obj +{targetMontant}$</text>
+            </g>
+          )}
+
+          {/* Fill */}
+          {fPath && (<><path d={fPath} fill={`url(#fup-${compte.id})`} clipPath={`url(#cup-${compte.id})`} /><path d={fPath} fill={`url(#fdn-${compte.id})`} clipPath={`url(#cdn-${compte.id})`} /></>)}
+
+          {/* Courbe */}
+          {lPath ? (<>
+            <path d={lPath} fill="none" stroke="#22c55e" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" clipPath={`url(#cup-${compte.id})`} />
+            <path d={lPath} fill="none" stroke="#ef4444" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" clipPath={`url(#cdn-${compte.id})`} />
+          </>) : <circle cx={xOf(0)} cy={yOf(balancePoints[0])} r="5" fill="#4b5e7a" />}
+
+          {/* Points interactifs */}
+          {balancePoints.map((v, i) => {
+            const cx = xOf(i), cy = yOf(v);
+            const col = v >= startVal ? "#22c55e" : "#ef4444";
+            const isLast = i === balancePoints.length - 1;
+            const isHov = hoverIdx === i;
+            return (
+              <g key={i} style={{ cursor: i > 0 ? "pointer" : "default" }}
+                onMouseEnter={() => i > 0 && setHoverIdx(i)}
+                onClick={() => i > 0 && onTradeClick && onTradeClick(sorted[i - 1])}>
+                {isLast && (<>
+                  <circle cx={cx} cy={cy} r="3" fill={col} opacity="0.2">
+                    <animate attributeName="r" values="3;14;3" dur="2.4s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.2;0;0.2" dur="2.4s" repeatCount="indefinite" />
+                  </circle>
+                  <circle cx={cx} cy={cy} r="3" fill={col} opacity="0.4">
+                    <animate attributeName="r" values="3;9;3" dur="2.4s" begin="0.3s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.4;0;0.4" dur="2.4s" begin="0.3s" repeatCount="indefinite" />
+                  </circle>
+                </>)}
+                {/* Halo au hover */}
+                {isHov && <circle cx={cx} cy={cy} r="10" fill={col} opacity="0.15" />}
+                <circle cx={cx} cy={cy} r={isLast ? 4.5 : isHov ? 4 : 3} fill={col} stroke="#0a0e1a" strokeWidth="1.5" />
+                {/* Zone de détection élargie */}
+                {i > 0 && <circle cx={cx} cy={cy} r="10" fill="transparent" />}
+              </g>
+            );
+          })}
+
+          {/* Ligne verticale au hover */}
+          {hoverIdx !== null && hoverIdx > 0 && (
+            <line x1={xOf(hoverIdx)} y1={PAD.t} x2={xOf(hoverIdx)} y2={PAD.t + iH} stroke="#ffffff12" strokeWidth="1" strokeDasharray="3,3" />
+          )}
+
+          {/* Labels X */}
+          {xTicks.map(t => (
+            <text key={t.idx} x={xOf(t.idx)} y={H - 5} textAnchor="middle" fontSize="9" fill="#4b5e7a">{t.label}</text>
+          ))}
+        </svg>
+
+        {/* Tooltip */}
+        {hovTrade && (
+          <div style={{ position: "absolute", left: Math.min(mousePos.x + 12, 260), top: Math.max(mousePos.y - 70, 0), pointerEvents: "none", background: "#0e0e1a", border: `1px solid ${hovTrade.pnl >= 0 ? "#22c55e40" : "#ef444440"}`, borderRadius: 10, padding: "10px 14px", minWidth: 140, zIndex: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
+            <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4 }}>{hovTrade.date} · {hovTrade.heure}</div>
+            <div style={{ fontSize: 16, fontWeight: 900, fontFamily: "monospace", color: hovTrade.pnl >= 0 ? "#22c55e" : "#ef4444", marginBottom: 4 }}>{hovTrade.pnl >= 0 ? "+" : ""}{hovTrade.pnl}$</div>
+            {hovTrade.actif && <div style={{ fontSize: 11, color: "#9ca3af" }}>{hovTrade.actif} · {hovTrade.direction}</div>}
+            {hovTrade.setup && <div style={{ fontSize: 10, color: "#6b7280", marginTop: 2 }}>{hovTrade.setup}</div>}
+            <div style={{ fontSize: 10, color: "#4b5e7a", marginTop: 6, borderTop: "1px solid #1a1a2e", paddingTop: 6 }}>Cliquer pour voir le trade →</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAccount, onTradeClick, lang = "fr" }) {
   const fr = lang === "fr";
   const firm = PROP_FIRMS_CATALOG[compte.type] || PROP_FIRMS_CATALOG["Autre"];
   const tradeDuCompte = trades.filter(t => t.compte === compte.nom);
@@ -2831,7 +3039,8 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAc
       </div>
 
       {/* ══ GRAPHIQUE BALANCE ══ */}
-      {(() => {
+      <BalanceChart compte={compte} tradeDuCompte={tradeDuCompte} targetMontant={targetMontant} firm={firm} onTradeClick={onTradeClick} G={G} />
+      {false && (() => {
         const balanceInit = compte.balanceActuelle ?? null;
         const mllVal = compte.mll ?? null; // valeur absolue de balance (ex: 48500) ou montant négatif (ex: -1306)
         const sorted = [...tradeDuCompte].sort((a, b) => a.date > b.date ? 1 : a.date < b.date ? -1 : 0);
@@ -3044,7 +3253,7 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAc
             })()}
           </div>
         );
-      })()}
+      })() }
 
       {/* Stats + règles */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -8931,7 +9140,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
             {selectedTrade
               ? <DetailTrade trade={selectedTrade} onBack={() => setSelectedTrade(null)} onEdit={handleEditTrade} lang={lang} />
               : selectedCompte && tab === "dashboard"
-              ? <DetailCompte compte={selectedCompte} trades={trades} onBack={() => setSelectedCompte(null)} onEdit={() => { setSelectedCompte(null); handleEditCompte(selectedCompte); }} lang={lang}
+              ? <DetailCompte compte={selectedCompte} trades={trades} onBack={() => setSelectedCompte(null)} onEdit={() => { setSelectedCompte(null); handleEditCompte(selectedCompte); }} onTradeClick={(t) => { setSelectedCompte(null); setSelectedTrade(t); navigateTo("session"); }} lang={lang}
                   onBlowAccount={(compteId) => {
                     setComptes(cs => cs.map(c => c.id === compteId ? { ...c, blown: true, blownAt: new Date().toISOString().split("T")[0] } : c));
                     setSelectedCompte(null);
