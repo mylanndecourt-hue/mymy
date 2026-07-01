@@ -8145,72 +8145,62 @@ function MonCompte({ user, subscription, onLogout, lang = "fr" }) {
   );
 }
 
-function TemplatesPage({ templates, setTemplates, lang = "fr" }) {
+function EspacesPage({ activeSlot, onSwitchSlot, slotNames, onRenameSlot, trades, comptes, lang = "fr" }) {
   const fr = lang === "fr";
-  const [editingId, setEditingId] = useState(null);
+  const [editingSlot, setEditingSlot] = useState(null);
   const [editingNom, setEditingNom] = useState("");
-  const FIELDS = [
-    { key: "actif", label: fr ? "Actif" : "Asset" },
-    { key: "direction", label: "Direction" },
-    { key: "setup", label: "Setup" },
-    { key: "taille", label: fr ? "Taille" : "Size" },
-    { key: "heure", label: fr ? "Heure" : "Time" },
-    { key: "duree", label: fr ? "Durée" : "Duration" },
-    { key: "compte", label: fr ? "Compte" : "Account" },
-  ];
+  const names = slotNames || { 1: "Espace 1", 2: "Espace 2", 3: "Espace 3" };
   return (
     <div style={{ maxWidth: 700, margin: "0 auto", padding: "40px 24px" }}>
       <h2 style={{ fontSize: 26, fontWeight: 800, color: "#fff", marginBottom: 8 }}>
-        {fr ? "Mes Templates" : "My Templates"}
+        {fr ? "Mes espaces" : "My workspaces"}
       </h2>
       <p style={{ color: "#6b7280", fontSize: 14, marginBottom: 32 }}>
-        {fr ? "Tes 3 templates sauvegardés. Clique sur le nom pour renommer." : "Your 3 saved templates. Click the name to rename."}
+        {fr ? "3 espaces indépendants. Chaque espace a ses propres trades, comptes, objectifs et données." : "3 independent workspaces. Each has its own trades, accounts, goals and data."}
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {templates.map(tpl => (
-          <div key={tpl.id} style={{ background: "#0a0a14", border: `1px solid ${tpl.vide ? "#1a1a2e" : "#7c3aed40"}`, borderRadius: 12, padding: "18px 20px", display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              {editingId === tpl.id ? (
-                <input
-                  autoFocus
-                  value={editingNom}
-                  onChange={e => setEditingNom(e.target.value)}
-                  onBlur={() => {
-                    if (editingNom.trim()) setTemplates(prev => prev.map(t => t.id === tpl.id ? { ...t, nom: editingNom.trim() } : t));
-                    setEditingId(null);
-                  }}
-                  onKeyDown={e => { if (e.key === "Enter" || e.key === "Escape") e.currentTarget.blur(); }}
-                  style={{ background: "#1a1a2e", border: "1px solid #7c3aed60", borderRadius: 6, color: "#fff", fontSize: 15, fontWeight: 700, padding: "4px 10px", fontFamily: "inherit", outline: "none", width: 220 }}
-                />
-              ) : (
-                <span onClick={() => { setEditingId(tpl.id); setEditingNom(tpl.nom); }} style={{ fontSize: 15, fontWeight: 700, color: tpl.vide ? "#4b5563" : "#e5e7eb", cursor: "pointer" }}>
-                  {tpl.nom} <span style={{ opacity: 0.4, fontSize: 12 }}>✏️</span>
-                </span>
-              )}
-              {tpl.vide
-                ? <div style={{ fontSize: 12, color: "#4b5563", marginTop: 4 }}>{fr ? "Vide — sauvegarde depuis le formulaire Nouveau trade" : "Empty — save from the New trade form"}</div>
-                : <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-                    {FIELDS.filter(f => tpl[f.key]).map(f => (
-                      <span key={f.key} style={{ background: "#12121f", border: "1px solid #2a2a3e", borderRadius: 6, fontSize: 11, color: "#9ca3af", padding: "2px 8px" }}>
-                        <span style={{ color: "#6b7280" }}>{f.label} </span>{tpl[f.key]}
-                      </span>
-                    ))}
+        {[1, 2, 3].map(s => {
+          const isActive = activeSlot === s;
+          const name = names[s] || `Espace ${s}`;
+          const tradeCount = isActive ? trades.length : null;
+          const compteCount = isActive ? comptes.length : null;
+          return (
+            <div key={s} onClick={() => !isActive && onSwitchSlot?.(s)}
+              style={{ background: isActive ? "rgba(0,229,160,0.05)" : "#0a0a14", border: `1.5px solid ${isActive ? "#00e5a040" : "#1a1a2e"}`, borderRadius: 14, padding: "20px 22px", display: "flex", alignItems: "center", gap: 16, cursor: isActive ? "default" : "pointer", transition: "all 0.2s" }}>
+              {/* Numéro */}
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: isActive ? "#00e5a015" : "#111827", border: `1px solid ${isActive ? "#00e5a030" : "#1f2937"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 900, color: isActive ? "#00e5a0" : "#4b5563", flexShrink: 0 }}>
+                S{s}
+              </div>
+              {/* Nom + stats */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {editingSlot === s ? (
+                  <input autoFocus value={editingNom}
+                    onChange={e => setEditingNom(e.target.value)}
+                    onBlur={() => { if (editingNom.trim()) onRenameSlot?.(s, editingNom.trim()); setEditingSlot(null); }}
+                    onKeyDown={e => { if (e.key === "Enter" || e.key === "Escape") e.currentTarget.blur(); }}
+                    onClick={e => e.stopPropagation()}
+                    style={{ background: "#1a1a2e", border: "1px solid #00e5a040", borderRadius: 6, color: "#fff", fontSize: 15, fontWeight: 700, padding: "4px 10px", fontFamily: "inherit", outline: "none", width: 220 }} />
+                ) : (
+                  <div style={{ fontSize: 15, fontWeight: 700, color: isActive ? "#e5e7eb" : "#6b7280", display: "flex", alignItems: "center", gap: 8 }}>
+                    {name}
+                    <span onClick={e => { e.stopPropagation(); setEditingSlot(s); setEditingNom(name); }} style={{ opacity: 0.4, fontSize: 12, cursor: "pointer" }}>✏️</span>
+                    {isActive && <span style={{ fontSize: 10, fontWeight: 700, color: "#00e5a0", background: "#00e5a015", border: "1px solid #00e5a030", borderRadius: 20, padding: "2px 8px", letterSpacing: 1 }}>ACTIF</span>}
                   </div>
-              }
+                )}
+                {isActive && (
+                  <div style={{ fontSize: 12, color: "#4b5563", marginTop: 4 }}>
+                    {tradeCount} trade{tradeCount !== 1 ? "s" : ""} · {compteCount} compte{compteCount !== 1 ? "s" : ""}
+                  </div>
+                )}
+                {!isActive && <div style={{ fontSize: 12, color: "#374151", marginTop: 4 }}>{fr ? "Cliquer pour charger cet espace" : "Click to load this workspace"}</div>}
+              </div>
+              {!isActive && <div style={{ fontSize: 20, color: "#374151" }}>→</div>}
             </div>
-            {!tpl.vide && (
-              <button
-                onClick={() => setTemplates(prev => prev.map(t => t.id === tpl.id ? { ...t, actif: "", direction: "LONG", setup: "", taille: "", heure: "09:30", duree: "", compte: "", vide: true } : t))}
-                style={{ background: "none", border: "1px solid #ef444430", borderRadius: 6, color: "#ef4444", fontSize: 11, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
-              >
-                {fr ? "Vider" : "Clear"}
-              </button>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
-      <div style={{ marginTop: 24, padding: 14, background: "#0a0a14", border: "1px solid #1a1a2e", borderRadius: 10, color: "#6b7280", fontSize: 13 }}>
-        💡 {fr ? "Pour sauvegarder : remplis un trade → \"Enregistrer comme template\"." : "To save: fill a trade → \"Save as template\"."}
+      <div style={{ marginTop: 24, padding: 14, background: "#0a0a14", border: "1px solid #1a1a2e", borderRadius: 10, color: "#6b7280", fontSize: 13, lineHeight: 1.6 }}>
+        💡 {fr ? "Chaque espace est 100% isolé. Tes données sont sauvegardées automatiquement dans l'espace actif." : "Each workspace is 100% isolated. Your data auto-saves into the active workspace."}
       </div>
     </div>
   );
@@ -8289,6 +8279,8 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
     { id: 3, nom: "Template 3", actif: "", direction: "LONG", setup: "", taille: "", heure: "09:30", duree: "", compte: "", vide: true },
   ];
   const [templates, setTemplates] = useState(DEFAULT_TEMPLATES);
+  const [slotNames, setSlotNames] = useState({ 1: "Espace 1", 2: "Espace 2", 3: "Espace 3" });
+  const handleRenameSlot = (s, name) => setSlotNames(prev => ({ ...prev, [s]: name }));
   const [mentorQ, setMentorQ] = useState(initialMentorQ);
   const [fraisDivers, setFraisDivers] = useState([
     { id: 1, label: "Plateforme NinjaTrader", montant: 60, type: "mensuel", categorie: "plateforme" },
@@ -8331,6 +8323,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
     if (Array.isArray(cloudData.chapitres)) setChapitres(cloudData.chapitres);
     if (cloudData.sessions && typeof cloudData.sessions === "object") setSessions(cloudData.sessions);
     if (Array.isArray(cloudData.templates) && cloudData.templates.length === 3) setTemplates(cloudData.templates);
+    if (cloudData.slotNames && typeof cloudData.slotNames === "object") setSlotNames(cloudData.slotNames);
     setStorageReady(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -8338,11 +8331,11 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
   // Sauvegarde automatique vers Firestore via onDataChange (debounce géré dans AppShell)
   useEffect(() => {
     if (!storageReady) return;
-    const data = { trades, comptes, objectifs, reglesPerso, mentorQ, fraisDivers, fiscal, deviseRecue, deviseRef, tauxPerso, chapitres, sessions, templates };
+    const data = { trades, comptes, objectifs, reglesPerso, mentorQ, fraisDivers, fiscal, deviseRecue, deviseRef, tauxPerso, chapitres, sessions, templates, slotNames };
     onDataChange?.(data);
     setShowStorageSaved(saveStatus === "saved");
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trades, comptes, objectifs, reglesPerso, mentorQ, fraisDivers, fiscal, deviseRecue, deviseRef, tauxPerso, chapitres, sessions, templates, storageReady]);
+  }, [trades, comptes, objectifs, reglesPerso, mentorQ, fraisDivers, fiscal, deviseRecue, deviseRef, tauxPerso, chapitres, sessions, templates, slotNames, storageReady]);
 
   const handleSaveTrade = (form, editId) => {
     const t = {
@@ -8610,7 +8603,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
     { id: "dashboard",  label: fr ? "Dashboard"             : "Dashboard"        },
     { id: "session",    label: fr ? "Session"               : "Session"          },
     { id: "analyse",    label: fr ? "Analyse"               : "Analysis"         },
-    { id: "templates",  label: fr ? "Templates"             : "Templates"        },
+    { id: "templates",  label: fr ? "Espaces"               : "Workspaces"       },
     { id: "roi",        label: fr ? "Structure & Fiscalité" : "Structure & Tax"  },
     { id: "tarifs",     label: fr ? "Tarifs"                : "Pricing"          },
     { id: "compte",     label: fr ? "Mon compte"            : "My account"       },
@@ -8867,7 +8860,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
                     </div>
                   )
               )
-              : tab === "templates"  ? <TemplatesPage templates={templates} setTemplates={setTemplates} lang={lang} />
+              : tab === "templates"  ? <EspacesPage activeSlot={activeSlot} onSwitchSlot={onSwitchSlot} slotNames={slotNames} onRenameSlot={handleRenameSlot} trades={trades} comptes={comptes} lang={lang} />
               : tab === "analyse"    ? <AnalysePage trades={trades} comptes={comptes} onDetail={(t) => setSelectedTrade(t)} lang={lang} user={user} />
               : tab === "nouveau"    ? <NouveauTrade onSave={handleSaveTrade} onCancel={handleCancelEdit} comptes={comptes} editTrade={editingTrade} defaultDate={newTradeDefaultDate} templates={templates} onSaveTemplate={(tpl) => setTemplates(prev => prev.map(t => t.id === tpl.id ? tpl : t))} lang={lang} />
               : tab === "ajout_compte" ? (
@@ -8974,7 +8967,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
             { id: "dashboard", icon: "📊", label: "Dashboard" },
             { id: "session",   icon: "🌅", label: "Session" },
             { id: "nouveau",    icon: "➕", label: fr ? "Trade" : "Trade" },
-            { id: "templates",  icon: "📋", label: "Templates" },
+            { id: "templates",  icon: "🗂️", label: fr ? "Espaces" : "Spaces" },
             { id: "analyse",    icon: "🔬", label: fr ? "Analyse" : "Analysis" },
             { id: "compte",     icon: "👤", label: fr ? "Compte" : "Account" },
           ].map(item => (
