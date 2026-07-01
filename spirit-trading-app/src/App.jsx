@@ -2830,89 +2830,167 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAc
         ))}
       </div>
 
-      {/* ══ GRAPHIQUE PnL CUMULATIF ══ */}
-      {tradeDuCompte.length > 0 && (() => {
+      {/* ══ GRAPHIQUE BALANCE ══ */}
+      {(() => {
+        const balanceInit = compte.balanceActuelle ?? null;
+        const mllVal = compte.mll ?? null; // valeur absolue de balance (ex: 48500) ou montant négatif (ex: -1306)
         const sorted = [...tradeDuCompte].sort((a, b) => a.date > b.date ? 1 : a.date < b.date ? -1 : 0);
-        const cumul = [];
-        let running = 0;
-        sorted.forEach(t => { running += (t.pnl || 0); cumul.push(running); });
-        const W = 600, H = 180, PAD = { t: 20, r: 20, b: 30, l: 52 };
-        const iW = W - PAD.l - PAD.r, iH = H - PAD.t - PAD.b;
-        const allVals = [...cumul, 0, targetMontant ? targetMontant * 1.05 : null].filter(v => v !== null);
-        const minVal = Math.min(...allVals);
-        const maxVal = Math.max(...allVals);
-        const range = maxVal - minVal || 1;
-        const xOf = i => PAD.l + (i / (cumul.length - 1 || 1)) * iW;
-        const yOf = v => PAD.t + iH - ((v - minVal) / range) * iH;
-        const pts = cumul.map((v, i) => `${xOf(i)},${yOf(v)}`).join(" ");
-        const zeroY = yOf(0);
-        const targetY = targetMontant ? yOf(targetMontant) : null;
-        const lastX = xOf(cumul.length - 1);
-        const lastY = yOf(cumul[cumul.length - 1]);
+
+        // Points de la courbe en termes de balance absolue
+        // Si balanceActuelle défini → on part de là. Sinon on part de 0 (PnL relatif)
+        const useAbsolute = balanceInit !== null;
+        const startVal = useAbsolute ? balanceInit : 0;
+        const balancePoints = [startVal]; // point de départ
+        let running = startVal;
+        sorted.forEach(t => { running += (t.pnl || 0); balancePoints.push(running); });
+
+        // La valeur MLL : si >0 on considère que c'est une balance plancher absolue, si <0 c'est un drawdown
+        // On normalise toujours en valeur absolue de balance
+        const mllAbsolute = mllVal !== null
+          ? (mllVal < 0 && useAbsolute ? balanceInit + mllVal : mllVal)
+          : null;
+
+        const lastBalance = balancePoints[balancePoints.length - 1];
+        const pnlNet = lastBalance - startVal;
         const firmColor = firm.couleur || "#00e5a0";
-        const lastPnl = cumul[cumul.length - 1];
+
+        const W = 600, H = 200, PAD = { t: 24, r: 80, b: 32, l: 60 };
+        const iW = W - PAD.l - PAD.r, iH = H - PAD.t - PAD.b;
+
+        // Plage Y : inclure start, all points, mll, target si présent
+        const allVals = [...balancePoints, mllAbsolute, targetMontant ? startVal + targetMontant : null].filter(v => v !== null);
+        const rawMin = Math.min(...allVals);
+        const rawMax = Math.max(...allVals);
+        const padding = (rawMax - rawMin) * 0.12 || 200;
+        const minVal = rawMin - padding;
+        const maxVal = rawMax + padding;
+        const range = maxVal - minVal || 1;
+
+        const xOf = i => PAD.l + (i / (balancePoints.length - 1 || 1)) * iW;
+        const yOf = v => PAD.t + iH - ((v - minVal) / range) * iH;
+
+        const startY = yOf(startVal);
+        const mllY = mllAbsolute !== null ? yOf(mllAbsolute) : null;
+        const targetBalY = targetMontant ? yOf(startVal + targetMontant) : null;
+        const lastX = xOf(balancePoints.length - 1);
+        const lastY = yOf(lastBalance);
+        const lineColor = pnlNet >= 0 ? G.green : G.red;
+        const pts = balancePoints.map((v, i) => `${xOf(i)},${yOf(v)}`).join(" ");
+
         return (
           <div style={{ background: "linear-gradient(135deg,#0e0e1a,#0a0a14)", border: "1px solid #1a1a2e", borderRadius: 16, padding: "20px 24px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, fontWeight: 700 }}>P&L Cumulatif</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: lastPnl >= 0 ? G.green : G.red }}>{lastPnl >= 0 ? "+" : ""}{lastPnl.toFixed(0)}$</div>
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 10, color: G.dim, textTransform: "uppercase", letterSpacing: 2, fontWeight: 700, marginBottom: 4 }}>Balance du compte</div>
+                <div style={{ fontSize: 28, fontWeight: 900, fontFamily: "monospace", color: lineColor, letterSpacing: -1 }}>
+                  {useAbsolute ? `${lastBalance.toFixed(0)}$` : `${pnlNet >= 0 ? "+" : ""}${pnlNet.toFixed(0)}$`}
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+                {useAbsolute && <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 10, color: G.dim, marginBottom: 2 }}>Départ</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#6b7280" }}>{startVal.toFixed(0)}$</div>
+                </div>}
+                {mllAbsolute !== null && <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 10, color: "#ef4444", marginBottom: 2 }}>MLL</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#ef4444" }}>{mllAbsolute.toFixed(0)}$</div>
+                </div>}
+                {pnlNet !== 0 && <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 10, color: G.dim, marginBottom: 2 }}>P&L net</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: lineColor }}>{pnlNet >= 0 ? "+" : ""}{pnlNet.toFixed(0)}$</div>
+                </div>}
+              </div>
             </div>
+
             <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block", overflow: "visible" }}>
-              <defs>
-                <linearGradient id={`pnl-fill-${compte.id}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={lastPnl >= 0 ? G.green : G.red} stopOpacity="0.25" />
-                  <stop offset="100%" stopColor={lastPnl >= 0 ? G.green : G.red} stopOpacity="0.02" />
-                </linearGradient>
-                <clipPath id={`clip-above-${compte.id}`}>
-                  <rect x={PAD.l} y={PAD.t} width={iW} height={Math.max(0, zeroY - PAD.t)} />
-                </clipPath>
-                <clipPath id={`clip-below-${compte.id}`}>
-                  <rect x={PAD.l} y={zeroY} width={iW} height={Math.max(0, PAD.t + iH - zeroY)} />
-                </clipPath>
-              </defs>
-              {/* Grid lines */}
+              {/* Grid lignes horizontales */}
               {[0, 0.25, 0.5, 0.75, 1].map(f => {
                 const y = PAD.t + iH * f;
                 const val = maxVal - f * range;
                 return (
                   <g key={f}>
                     <line x1={PAD.l} y1={y} x2={PAD.l + iW} y2={y} stroke="#1a1a2e" strokeWidth="1" />
-                    <text x={PAD.l - 6} y={y + 4} textAnchor="end" fontSize="9" fill="#4b5563">{val >= 0 ? "+" : ""}{Math.round(val)}</text>
+                    <text x={PAD.l - 6} y={y + 4} textAnchor="end" fontSize="9" fill="#4b5563">{Math.round(val)}</text>
                   </g>
                 );
               })}
-              {/* Zero line */}
-              {zeroY >= PAD.t && zeroY <= PAD.t + iH && (
-                <line x1={PAD.l} y1={zeroY} x2={PAD.l + iW} y2={zeroY} stroke="#374151" strokeWidth="1.5" strokeDasharray="4,4" />
-              )}
-              {/* Target line */}
-              {targetY !== null && targetY >= PAD.t && targetY <= PAD.t + iH && (
+
+              {/* Ligne de départ (balance initiale) */}
+              {startY >= PAD.t && startY <= PAD.t + iH && (
                 <g>
-                  <line x1={PAD.l} y1={targetY} x2={PAD.l + iW} y2={targetY} stroke={firmColor} strokeWidth="1.5" strokeDasharray="6,4" opacity="0.7" />
-                  <rect x={PAD.l + iW - 68} y={targetY - 11} width={66} height={14} rx={3} fill="#0a0a14" />
-                  <text x={PAD.l + iW - 4} y={targetY + 2} textAnchor="end" fontSize="9" fill={firmColor} fontWeight="700">Target ${targetMontant}</text>
+                  <line x1={PAD.l} y1={startY} x2={PAD.l + iW} y2={startY} stroke="#374151" strokeWidth="1.5" strokeDasharray="4,4" />
+                  <text x={PAD.l + iW + 6} y={startY + 4} fontSize="9" fill="#6b7280" fontWeight="700">{useAbsolute ? `${startVal.toFixed(0)}$` : "0"}</text>
                 </g>
               )}
-              {/* Fill above zero */}
-              <polygon points={`${PAD.l},${zeroY} ${cumul.map((v, i) => `${xOf(i)},${yOf(v)}`).join(" ")} ${lastX},${zeroY}`}
-                fill="#00e5a0" opacity="0.08" clipPath={`url(#clip-above-${compte.id})`} />
-              {/* Fill below zero */}
-              <polygon points={`${PAD.l},${zeroY} ${cumul.map((v, i) => `${xOf(i)},${yOf(v)}`).join(" ")} ${lastX},${zeroY}`}
-                fill="#ef4444" opacity="0.12" clipPath={`url(#clip-below-${compte.id})`} />
-              {/* Line */}
-              {cumul.length > 1 ? (
-                <polyline points={pts} fill="none" stroke={lastPnl >= 0 ? G.green : G.red} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-              ) : (
-                <circle cx={xOf(0)} cy={yOf(cumul[0])} r="4" fill={lastPnl >= 0 ? G.green : G.red} />
+
+              {/* Ligne MLL rouge */}
+              {mllY !== null && mllY >= PAD.t && mllY <= PAD.t + iH && (
+                <g>
+                  <line x1={PAD.l} y1={mllY} x2={PAD.l + iW} y2={mllY} stroke="#ef4444" strokeWidth="2" strokeDasharray="6,4" opacity="0.8" />
+                  <rect x={PAD.l + iW + 2} y={mllY - 9} width={72} height={14} rx={3} fill="#0a0a14" />
+                  <text x={PAD.l + iW + 6} y={mllY + 4} fontSize="9" fill="#ef4444" fontWeight="700">MLL {mllAbsolute.toFixed(0)}$</text>
+                </g>
               )}
-              {/* Last dot */}
-              <circle cx={lastX} cy={lastY} r="4" fill={lastPnl >= 0 ? G.green : G.red} />
-              <circle cx={lastX} cy={lastY} r="7" fill="none" stroke={lastPnl >= 0 ? G.green : G.red} strokeWidth="1.5" opacity="0.4" />
-              {/* X axis labels */}
-              {[0, Math.floor((cumul.length - 1) / 2), cumul.length - 1].filter((v, i, arr) => arr.indexOf(v) === i && v >= 0).map(i => (
-                <text key={i} x={xOf(i)} y={H - 6} textAnchor="middle" fontSize="9" fill="#4b5563">T{i + 1}</text>
+
+              {/* Ligne target profit */}
+              {targetBalY !== null && targetBalY >= PAD.t && targetBalY <= PAD.t + iH && (
+                <g>
+                  <line x1={PAD.l} y1={targetBalY} x2={PAD.l + iW} y2={targetBalY} stroke={firmColor} strokeWidth="1.5" strokeDasharray="6,4" opacity="0.6" />
+                  <rect x={PAD.l + iW + 2} y={targetBalY - 9} width={70} height={14} rx={3} fill="#0a0a14" />
+                  <text x={PAD.l + iW + 6} y={targetBalY + 4} fontSize="9" fill={firmColor} fontWeight="700">Obj +{targetMontant}$</text>
+                </g>
+              )}
+
+              {/* Fill sous la courbe */}
+              {balancePoints.length > 1 && (
+                <>
+                  <defs>
+                    <linearGradient id={`bal-fill-${compte.id}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={lineColor} stopOpacity="0.2" />
+                      <stop offset="100%" stopColor={lineColor} stopOpacity="0.01" />
+                    </linearGradient>
+                  </defs>
+                  <polygon points={`${xOf(0)},${startY} ${pts} ${lastX},${startY}`}
+                    fill={`url(#bal-fill-${compte.id})`} />
+                </>
+              )}
+
+              {/* Courbe */}
+              {balancePoints.length > 1 ? (
+                <polyline points={pts} fill="none" stroke={lineColor} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+              ) : (
+                <circle cx={xOf(0)} cy={yOf(balancePoints[0])} r="5" fill={lineColor} />
+              )}
+
+              {/* Point de départ */}
+              <circle cx={xOf(0)} cy={startY} r="4" fill="#374151" />
+
+              {/* Point actuel */}
+              <circle cx={lastX} cy={lastY} r="5" fill={lineColor} />
+              <circle cx={lastX} cy={lastY} r="9" fill="none" stroke={lineColor} strokeWidth="1.5" opacity="0.35" />
+
+              {/* Labels X */}
+              {balancePoints.length > 1 && [0, Math.floor((balancePoints.length - 1) / 2), balancePoints.length - 1].filter((v, i, a) => a.indexOf(v) === i).map(i => (
+                <text key={i} x={xOf(i)} y={H - 6} textAnchor="middle" fontSize="9" fill="#4b5563">{i === 0 ? "Départ" : `T${i}`}</text>
               ))}
             </svg>
+
+            {/* Légende */}
+            <div style={{ display: "flex", gap: 16, marginTop: 12, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <div style={{ width: 20, height: 2, background: "#374151", borderRadius: 1 }} />
+                <span style={{ fontSize: 10, color: G.dim }}>{useAbsolute ? `Départ ${startVal.toFixed(0)}$` : "Zéro"}</span>
+              </div>
+              {mllAbsolute !== null && <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <div style={{ width: 20, height: 2, background: "#ef4444", borderRadius: 1 }} />
+                <span style={{ fontSize: 10, color: "#ef4444" }}>Max Loss Limit</span>
+              </div>}
+              {targetMontant && <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <div style={{ width: 20, height: 2, background: firmColor, borderRadius: 1 }} />
+                <span style={{ fontSize: 10, color: G.dim }}>Objectif profit</span>
+              </div>}
+            </div>
           </div>
         );
       })()}
@@ -2926,15 +3004,17 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAc
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {[
               { label: fr ? "Taille du compte" : "Account size", val: `$${(compte.taille / 1000).toFixed(0)}K` },
+              { label: fr ? "Balance actuelle" : "Current balance", val: compte.balanceActuelle != null ? `${compte.balanceActuelle.toFixed(0)}$` : "—", color: compte.balanceActuelle != null ? G.green : undefined },
+              { label: "Max Loss Limit (MLL)", val: compte.mll != null ? `${compte.mll < 0 ? "" : ""}${compte.mll.toFixed(0)}$` : "—", color: compte.mll != null ? G.red : undefined },
               { label: fr ? "Coût d'achat" : "Purchase cost", val: compte.achat ? `${compte.achat}$` : "—" },
               { label: fr ? "Note moyenne" : "Avg note", val: notesMoy ? `${notesMoy} ✦` : "—" },
               { label: fr ? "P&L moyen / trade" : "Avg P&L/trade", val: tradeDuCompte.length ? `${Number(avgPnl) >= 0 ? "+" : ""}${avgPnl}$` : "—" },
               { label: fr ? "Jours validés" : "Valid days", val: joursValides || "0" },
               { label: fr ? "Victoires / Défaites" : "Wins / Losses", val: `${wins}W · ${losses}L` },
             ].map((row, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 8, borderBottom: i < 5 ? "1px solid #1a1a2e" : "none" }}>
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 8, borderBottom: i < 7 ? "1px solid #1a1a2e" : "none" }}>
                 <div style={{ fontSize: 12, color: G.dim }}>{row.label}</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{row.val}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: row.color || "#fff" }}>{row.val}</div>
               </div>
             ))}
           </div>
