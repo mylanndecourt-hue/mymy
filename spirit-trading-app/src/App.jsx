@@ -8206,9 +8206,11 @@ function TutorialOverlay({ step, onNext, onSkip, lang = "fr", onNavigate }) {
   );
 }
 
-function DayDetail({ date, trades, sessions = {}, onBack, onTradeDetail, onNewTrade, onDeleteSession, lang = "fr" }) {
+function DayDetail({ date, trades, sessions = {}, onBack, onTradeDetail, onNewTrade, onDeleteSession, onUpdateSession, lang = "fr" }) {
   const fr = lang === "fr";
   const G = { green: "#00e5a0", red: "#ef4444", purple: "#818cf8", amber: "#f59e0b", card: "#0a0a14", border: "#1a1a2e", text: "#e5e7eb", dim: "#6b7280" };
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notesValue, setNotesValue] = useState(() => (sessions[date] || {}).notes_fin_session || "");
   const EMOTION_EMOJI = { "Confiant": "😊", "Serein": "😌", "Stressé": "😰", "Anxieux": "😟", "Frustré": "😤", "Euphorique": "🤩", "Impatient": "⚡", "En FOMO": "😱", "Neutre": "😐" };
   const FOOD_EMOJI = { "Saine": "🥗", "Neutre": "🍽️", "Mauvaise": "🍔" };
   const FOOD_COLOR = { "Saine": G.green, "Neutre": G.amber, "Mauvaise": G.red };
@@ -8363,6 +8365,33 @@ function DayDetail({ date, trades, sessions = {}, onBack, onTradeDetail, onNewTr
             </button>
           );
         })}
+      </div>
+
+      {/* Fin de session */}
+      <div style={{ background: G.card, border: `1px solid ${notesOpen ? "#818cf840" : G.border}`, borderRadius: 14, overflow: "hidden", transition: "border-color 0.2s" }}>
+        <button onClick={() => setNotesOpen(o => !o)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", color: G.text }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 10, fontWeight: 800, color: G.purple, letterSpacing: 2, textTransform: "uppercase" }}>{fr ? "Notes de fin de session" : "End of session notes"}</span>
+            {notesValue && !notesOpen && <span style={{ fontSize: 10, color: G.dim, fontStyle: "italic", maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{notesValue}</span>}
+          </div>
+          <span style={{ fontSize: 13, color: G.dim, transition: "transform 0.2s", display: "inline-block", transform: notesOpen ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
+        </button>
+        {notesOpen && (
+          <div style={{ padding: "0 20px 20px" }}>
+            <textarea
+              value={notesValue}
+              onChange={e => setNotesValue(e.target.value)}
+              onBlur={() => onUpdateSession?.(date, { notes_fin_session: notesValue })}
+              placeholder={fr ? "Comment s'est passée ta session ? Ce que tu retiens, ce que tu amélioreras..." : "How did your session go? Key takeaways, improvements..."}
+              style={{ width: "100%", minHeight: 120, background: "#06060f", border: "1px solid #1a1a2e", borderRadius: 10, padding: "12px 14px", color: G.text, fontSize: 13, lineHeight: 1.7, fontFamily: "inherit", resize: "vertical", outline: "none", boxSizing: "border-box", color: "#e5e7eb" }}
+              onFocus={e => e.target.style.borderColor = "#818cf840"}
+            />
+            <button onClick={() => { onUpdateSession?.(date, { notes_fin_session: notesValue }); setNotesOpen(false); }}
+              style={{ marginTop: 10, background: G.purple + "15", border: `1px solid ${G.purple}40`, color: G.purple, borderRadius: 8, padding: "7px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+              {fr ? "Enregistrer" : "Save"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -9378,6 +9407,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
                   : sessionSubView === "dayDetail" && sessionDayDate
                   ? <DayDetail date={sessionDayDate} trades={trades} sessions={sessions} onBack={() => setSessionSubView("calendar")} onTradeDetail={setSelectedTrade} onNewTrade={() => navigateTo("nouveau")} lang={lang}
                       onDeleteSession={(date) => { setSessions(prev => { const next = { ...prev }; delete next[date]; return next; }); setSessionSubView("calendar"); }}
+                      onUpdateSession={(date, updates) => setSessions(prev => ({ ...prev, [date]: { ...(prev[date] || {}), ...updates } }))}
                     />
                   : (
                     <div>
