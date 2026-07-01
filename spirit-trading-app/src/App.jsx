@@ -2900,118 +2900,125 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAc
               </div>
             </div>
 
-            <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block", overflow: "visible" }}>
-              <defs>
-                <clipPath id={`clip-up-${compte.id}`}>
-                  <rect x={PAD.l} y={PAD.t} width={iW} height={Math.max(0, startY - PAD.t)} />
-                </clipPath>
-                <clipPath id={`clip-dn-${compte.id}`}>
-                  <rect x={PAD.l} y={startY} width={iW} height={Math.max(0, PAD.t + iH - startY)} />
-                </clipPath>
-                <linearGradient id={`fill-up-${compte.id}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#22c55e" stopOpacity="0.18" />
-                  <stop offset="100%" stopColor="#22c55e" stopOpacity="0.02" />
-                </linearGradient>
-                <linearGradient id={`fill-dn-${compte.id}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.02" />
-                  <stop offset="100%" stopColor="#ef4444" stopOpacity="0.18" />
-                </linearGradient>
-              </defs>
+            {(() => {
+              // Ticks Y : 5 valeurs réparties sur la plage
+              const yTicks = 5;
+              const yStep = (maxVal - minVal) / (yTicks - 1);
+              const yLabels = Array.from({ length: yTicks }, (_, i) => {
+                const val = minVal + i * yStep;
+                return { val: Math.round(val), y: yOf(val) };
+              }).reverse();
 
-              {/* Ligne zéro — grise */}
-              {(() => { const zY = yOf(0); return zY >= PAD.t && zY <= PAD.t + iH ? (
-                <g>
-                  <line x1={PAD.l} y1={zY} x2={PAD.l + iW} y2={zY} stroke="#4b5e7a" strokeWidth="1" strokeDasharray="3,3" opacity="0.7" />
-                  <text x={PAD.l - 6} y={zY + 4} textAnchor="end" fontSize="9" fill="#4b5e7a">0$</text>
-                </g>
-              ) : null; })()}
+              // Ticks X : dates des trades (max 6 labels)
+              const allDates = [null, ...sorted.map(t => t.date)]; // null = point de départ
+              const xTickCount = Math.min(6, balancePoints.length);
+              const xTicks = Array.from({ length: xTickCount }, (_, i) => {
+                const idx = Math.round(i * (balancePoints.length - 1) / Math.max(1, xTickCount - 1));
+                const d = allDates[idx];
+                const label = d ? d.slice(5).replace("-", "/") : "Départ";
+                return { idx, label };
+              }).filter((v, i, a) => a.findIndex(x => x.idx === v.idx) === i);
 
-              {/* Ligne balance de départ — verte */}
-              {startY >= PAD.t && startY <= PAD.t + iH && (
-                <g>
-                  <line x1={PAD.l} y1={startY} x2={PAD.l + iW} y2={startY} stroke="#22c55e" strokeWidth="1.5" strokeDasharray="5,3" opacity="0.8" />
-                  <rect x={PAD.l + iW + 2} y={startY - 9} width={66} height={14} rx={3} fill="#0a0a14" />
-                  <text x={PAD.l + iW + 6} y={startY + 4} fontSize="9" fill="#22c55e" fontWeight="700">{Math.round(startVal)}$</text>
-                </g>
-              )}
+              const lPath = balancePoints.length > 1
+                ? `M ${balancePoints.map((v, i) => `${xOf(i)},${yOf(v)}`).join(" L ")}`
+                : null;
+              const fPath = lPath
+                ? `M ${xOf(0)},${startY} ${balancePoints.map((v, i) => `L ${xOf(i)},${yOf(v)}`).join(" ")} L ${lastX},${startY} Z`
+                : null;
+              const zY = yOf(0);
+              const curveColor = pnlNet >= 0 ? "#22c55e" : "#ef4444";
 
-              {/* Ligne MLL rouge */}
-              {mllY !== null && mllY >= PAD.t && mllY <= PAD.t + iH && (
-                <g>
-                  <rect x={PAD.l} y={mllY - 0.5} width={iW} height={1} fill="#ef4444" opacity="0.15" />
-                  <line x1={PAD.l} y1={mllY} x2={PAD.l + iW} y2={mllY} stroke="#ef4444" strokeWidth="1.5" strokeDasharray="6,3" opacity="0.85" />
-                  <rect x={PAD.l + iW + 2} y={mllY - 9} width={72} height={14} rx={3} fill="#0a0a14" />
-                  <text x={PAD.l + iW + 6} y={mllY + 4} fontSize="9" fill="#ef4444" fontWeight="700">MLL {Math.round(mllAbsolute)}$</text>
-                </g>
-              )}
+              return (
+                <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block", overflow: "visible" }}>
+                  <defs>
+                    <clipPath id={`cup-${compte.id}`}>
+                      <rect x={PAD.l} y={PAD.t} width={iW} height={Math.max(0, startY - PAD.t)} />
+                    </clipPath>
+                    <clipPath id={`cdn-${compte.id}`}>
+                      <rect x={PAD.l} y={startY} width={iW} height={Math.max(0, PAD.t + iH - startY)} />
+                    </clipPath>
+                    <linearGradient id={`fup-${compte.id}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#22c55e" stopOpacity="0.15" />
+                      <stop offset="100%" stopColor="#22c55e" stopOpacity="0.01" />
+                    </linearGradient>
+                    <linearGradient id={`fdn-${compte.id}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#ef4444" stopOpacity="0.01" />
+                      <stop offset="100%" stopColor="#ef4444" stopOpacity="0.15" />
+                    </linearGradient>
+                  </defs>
 
-              {/* Ligne objectif profit */}
-              {targetBalY !== null && targetBalY >= PAD.t && targetBalY <= PAD.t + iH && (
-                <g>
-                  <line x1={PAD.l} y1={targetBalY} x2={PAD.l + iW} y2={targetBalY} stroke={firmColor} strokeWidth="1.5" strokeDasharray="6,3" opacity="0.6" />
-                  <rect x={PAD.l + iW + 2} y={targetBalY - 9} width={70} height={14} rx={3} fill="#0a0a14" />
-                  <text x={PAD.l + iW + 6} y={targetBalY + 4} fontSize="9" fill={firmColor} fontWeight="700">Obj +{targetMontant}$</text>
-                </g>
-              )}
+                  {/* Grilles horizontales subtiles */}
+                  {yLabels.map((t, i) => (
+                    <g key={i}>
+                      <line x1={PAD.l} y1={t.y} x2={PAD.l + iW} y2={t.y} stroke="#1e2d45" strokeWidth="0.8" />
+                      <text x={PAD.l - 8} y={t.y + 4} textAnchor="end" fontSize="9" fill="#4b5e7a">{t.val}</text>
+                    </g>
+                  ))}
 
-              {/* Fill vert au-dessus du départ */}
-              {balancePoints.length > 1 && (() => {
-                const fPath = `M ${xOf(0)},${startY} ${balancePoints.map((v,i) => `L ${xOf(i)},${yOf(v)}`).join(" ")} L ${lastX},${startY} Z`;
-                return (
-                  <>
-                    <path d={fPath} fill={`url(#fill-up-${compte.id})`} clipPath={`url(#clip-up-${compte.id})`} />
-                    <path d={fPath} fill={`url(#fill-dn-${compte.id})`} clipPath={`url(#clip-dn-${compte.id})`} />
-                  </>
-                );
-              })()}
+                  {/* Ligne zéro — grise visible */}
+                  {zY >= PAD.t && zY <= PAD.t + iH && (
+                    <line x1={PAD.l} y1={zY} x2={PAD.l + iW} y2={zY} stroke="#4b5e7a" strokeWidth="1.2" strokeDasharray="4,3" opacity="0.8" />
+                  )}
 
-              {/* Courbe verte au-dessus / rouge en-dessous */}
-              {balancePoints.length > 1 ? (() => {
-                const lPath = `M ${balancePoints.map((v,i) => `${xOf(i)},${yOf(v)}`).join(" L ")}`;
-                return (
-                  <>
-                    <path d={lPath} fill="none" stroke="#22c55e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" clipPath={`url(#clip-up-${compte.id})`} />
-                    <path d={lPath} fill="none" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" clipPath={`url(#clip-dn-${compte.id})`} />
-                  </>
-                );
-              })() : (
-                <circle cx={xOf(0)} cy={yOf(balancePoints[0])} r="5" fill="#4b5e7a" />
-              )}
+                  {/* Ligne balance de départ — verte */}
+                  {startY >= PAD.t && startY <= PAD.t + iH && (
+                    <g>
+                      <line x1={PAD.l} y1={startY} x2={PAD.l + iW} y2={startY} stroke="#22c55e" strokeWidth="1.2" strokeDasharray="5,3" opacity="0.75" />
+                      <rect x={PAD.l + iW + 2} y={startY - 9} width={64} height={14} rx={3} fill="#0a0e1a" />
+                      <text x={PAD.l + iW + 6} y={startY + 4} fontSize="9" fill="#22c55e" fontWeight="700">{Math.round(startVal)}$</text>
+                    </g>
+                  )}
 
-              {/* Point actuel */}
-              {balancePoints.length > 1 && (
-                <>
-                  <circle cx={lastX} cy={lastY} r="4.5" fill={pnlNet >= 0 ? "#22c55e" : "#ef4444"} stroke="#0a0a14" strokeWidth="2" />
-                  <circle cx={lastX} cy={lastY} r="9" fill="none" stroke={pnlNet >= 0 ? "#22c55e" : "#ef4444"} strokeWidth="1" opacity="0.3" />
-                </>
-              )}
+                  {/* Ligne MLL — rouge */}
+                  {mllY !== null && mllY >= PAD.t && mllY <= PAD.t + iH && (
+                    <g>
+                      <line x1={PAD.l} y1={mllY} x2={PAD.l + iW} y2={mllY} stroke="#ef4444" strokeWidth="1.2" strokeDasharray="6,3" opacity="0.85" />
+                      <rect x={PAD.l + iW + 2} y={mllY - 9} width={72} height={14} rx={3} fill="#0a0e1a" />
+                      <text x={PAD.l + iW + 6} y={mllY + 4} fontSize="9" fill="#ef4444" fontWeight="700">MLL {Math.round(mllAbsolute)}$</text>
+                    </g>
+                  )}
 
-              {/* Labels X */}
-              {balancePoints.length > 1 && (() => {
-                const n = balancePoints.length - 1;
-                return [0, Math.floor(n / 2), n].filter((v,i,a) => a.indexOf(v) === i).map(i => (
-                  <text key={i} x={xOf(i)} y={H - 6} textAnchor="middle" fontSize="9" fill="#4b5e7a">
-                    {i === 0 ? "Départ" : `T${i}`}
-                  </text>
-                ));
-              })()}
-            </svg>
+                  {/* Ligne objectif profit */}
+                  {targetBalY !== null && targetBalY >= PAD.t && targetBalY <= PAD.t + iH && (
+                    <g>
+                      <line x1={PAD.l} y1={targetBalY} x2={PAD.l + iW} y2={targetBalY} stroke={firmColor} strokeWidth="1.2" strokeDasharray="6,3" opacity="0.6" />
+                      <rect x={PAD.l + iW + 2} y={targetBalY - 9} width={70} height={14} rx={3} fill="#0a0e1a" />
+                      <text x={PAD.l + iW + 6} y={targetBalY + 4} fontSize="9" fill={firmColor} fontWeight="700">Obj +{targetMontant}$</text>
+                    </g>
+                  )}
 
-            {/* Légende */}
-            <div style={{ display: "flex", gap: 16, marginTop: 12, flexWrap: "wrap" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <div style={{ width: 20, height: 2, background: "#374151", borderRadius: 1 }} />
-                <span style={{ fontSize: 10, color: G.dim }}>{useAbsolute ? `Départ ${startVal.toFixed(0)}$` : "Zéro"}</span>
-              </div>
-              {mllAbsolute !== null && <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <div style={{ width: 20, height: 2, background: "#ef4444", borderRadius: 1 }} />
-                <span style={{ fontSize: 10, color: "#ef4444" }}>Max Loss Limit</span>
-              </div>}
-              {targetMontant && <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <div style={{ width: 20, height: 2, background: firmColor, borderRadius: 1 }} />
-                <span style={{ fontSize: 10, color: G.dim }}>Objectif profit</span>
-              </div>}
-            </div>
+                  {/* Fill */}
+                  {fPath && (
+                    <>
+                      <path d={fPath} fill={`url(#fup-${compte.id})`} clipPath={`url(#cup-${compte.id})`} />
+                      <path d={fPath} fill={`url(#fdn-${compte.id})`} clipPath={`url(#cdn-${compte.id})`} />
+                    </>
+                  )}
+
+                  {/* Courbe */}
+                  {lPath ? (
+                    <>
+                      <path d={lPath} fill="none" stroke="#22c55e" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" clipPath={`url(#cup-${compte.id})`} />
+                      <path d={lPath} fill="none" stroke="#ef4444" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" clipPath={`url(#cdn-${compte.id})`} />
+                    </>
+                  ) : (
+                    <circle cx={xOf(0)} cy={yOf(balancePoints[0])} r="5" fill="#4b5e7a" />
+                  )}
+
+                  {/* Points sur chaque trade */}
+                  {balancePoints.map((v, i) => {
+                    const cx = xOf(i), cy = yOf(v);
+                    const col = v >= startVal ? "#22c55e" : "#ef4444";
+                    return <circle key={i} cx={cx} cy={cy} r="3" fill={col} stroke="#0a0e1a" strokeWidth="1.5" />;
+                  })}
+
+                  {/* Labels X (dates) */}
+                  {xTicks.map(t => (
+                    <text key={t.idx} x={xOf(t.idx)} y={H - 5} textAnchor="middle" fontSize="9" fill="#4b5e7a">{t.label}</text>
+                  ))}
+                </svg>
+              );
+            })()}
           </div>
         );
       })()}
