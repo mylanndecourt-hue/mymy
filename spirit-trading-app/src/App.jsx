@@ -4329,7 +4329,7 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
     return {
       date: defaultDate || new Date().toISOString().split("T")[0], heure: "09:30", duree: "",
       compte: defaultCompte, actif: "Nasdaq", direction: "LONG", setup: "Breakout", taille: "",
-      pnl: "", rr: "", respect: "Oui", regle_violee: "", notes_tech: "",
+      pnl: "", rr: "", mentorq: "", respect: "Oui", regle_violee: "", notes_tech: "",
       priere: false, heure_coucher: "", sommeil: "", ecrans: false, qualite_sommeil: 3,
       alimentation: "Neutre", discipline: 3,
       impulsif: false, emotion_avant: [], emotion_pendant: [], emotion_apres: [],
@@ -4553,7 +4553,20 @@ function NouveauTrade({ onSave, onCancel, comptes = [], editTrade = null, defaul
           </div>
         </div>
 
-        {/* 6. DATE / HEURE / DURÉE */}
+        {/* 6. NIVEAU MENTORQ */}
+        <div style={{ marginBottom: 20 }}>
+          {fieldLabel(fr ? "Niveau MentorQ" : "MentorQ Level")}
+          <div style={{ display: "flex", gap: 10 }}>
+            {[[fr ? "Oui" : "Yes", G.green], [fr ? "Non" : "No", G.red]].map(([label, c]) => (
+              <button key={label} onClick={() => set("mentorq", label === (fr ? "Oui" : "Yes") ? "oui" : "non")}
+                style={{ ...bubble(form.mentorq === (label === (fr ? "Oui" : "Yes") ? "oui" : "non"), c), flex: 1, padding: "12px 0", fontWeight: 700, fontSize: 13, textAlign: "center", borderRadius: 14 }}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 7. DATE / HEURE / DURÉE */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
           {[
             { label: fr ? "Date" : "Date", key: "date", type: "date" },
@@ -8351,6 +8364,7 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
       date: form.date, heure: form.heure, duree: parseInt(form.duree) || 0,
       compte: form.compte, actif: form.actif, direction: form.direction, setup: form.setup,
       taille: parseInt(form.taille) || 1, pnl: parseFloat(form.pnl) || 0, rr: parseFloat(form.rr) || 0,
+      mentorq: form.mentorq || "",
       respect: form.respect, regle_violee: form.regle_violee, notes_tech: form.notes_tech,
       priere: form.priere, heure_coucher: form.heure_coucher, sommeil: parseFloat(form.sommeil) || 0,
       ecrans: form.ecrans, qualite_sommeil: form.qualite_sommeil, alimentation: form.alimentation,
