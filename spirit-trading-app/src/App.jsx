@@ -2687,7 +2687,7 @@ function CalendrierPnL({ trades }) {
 function BalanceChart({ compte, tradeDuCompte, targetMontant, firm, onTradeClick, G }) {
   const [hoverIdx, setHoverIdx] = useState(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const containerRef = React.useRef(null);
+  const containerRef = useRef(null);
 
   const balanceInit = compte.balanceActuelle ?? null;
   const mllVal = compte.mll ?? null;
@@ -8378,19 +8378,19 @@ function EcoAlertWidget({ lang = "fr" }) {
   const [lastAlerted, setLastAlerted] = useState({});
 
   // Persist
-  React.useEffect(() => { localStorage.setItem("eco_annonces", JSON.stringify(annonces)); }, [annonces]);
-  React.useEffect(() => { localStorage.setItem("eco_alerts_on", enabled); }, [enabled]);
-  React.useEffect(() => { localStorage.setItem("eco_alert_min", minutesBefore); }, [minutesBefore]);
+    useEffect(() => { localStorage.setItem("eco_annonces", JSON.stringify(annonces)); }, [annonces]);
+  useEffect(() => { localStorage.setItem("eco_alerts_on", enabled); }, [enabled]);
+  useEffect(() => { localStorage.setItem("eco_alert_min", minutesBefore); }, [minutesBefore]);
 
   // Vider les annonces périmées à minuit
-  React.useEffect(() => {
+  useEffect(() => {
     const now = new Date();
     const todayStr = now.toISOString().split("T")[0];
     setAnnonces(prev => prev.filter(a => !a.date || a.date === todayStr));
   }, []);
 
   // Timer de vérification toutes les 30 secondes
-  React.useEffect(() => {
+  useEffect(() => {
     if (!enabled) return;
     const check = () => {
       const now = new Date();
