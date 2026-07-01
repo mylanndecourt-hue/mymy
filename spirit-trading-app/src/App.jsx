@@ -2901,13 +2901,15 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAc
             </div>
 
             {(() => {
-              // Ticks Y : 5 valeurs réparties sur la plage
-              const yTicks = 5;
-              const yStep = (maxVal - minVal) / (yTicks - 1);
-              const yLabels = Array.from({ length: yTicks }, (_, i) => {
-                const val = minVal + i * yStep;
-                return { val: Math.round(val), y: yOf(val) };
-              }).reverse();
+              // Ticks Y : multiples de 500
+              const step500 = 500;
+              const firstTick = Math.ceil(minVal / step500) * step500;
+              const yLabels = [];
+              for (let v = firstTick; v <= maxVal; v += step500) {
+                if (v === 0) continue; // zéro géré séparément
+                const y = yOf(v);
+                if (y >= PAD.t && y <= PAD.t + iH) yLabels.push({ val: v, y });
+              }
 
               // Ticks X : dates des trades (max 6 labels)
               const allDates = [null, ...sorted.map(t => t.date)]; // null = point de départ
