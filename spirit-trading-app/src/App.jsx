@@ -1116,7 +1116,7 @@ function Row({ label, value, color }) {
 }
 
 // ─── DÉTAIL TRADE ─────────────────────────────────────────────────────────────
-function DetailTrade({ trade, onBack, onEdit, lang = "fr" }) {
+function DetailTrade({ trade, onBack, onEdit, onDelete, lang = "fr" }) {
   const fr = lang === "fr";
   const G = { green: "#00e5a0", red: "#ef4444", amber: "#f59e0b", purple: "#818cf8", cyan: "#22d3ee", dim: "#6b7280", border: "#1a1a2e", card: "#0e0e1a", bg: "#06060f", text: "#e5e7eb" };
   const pnlColor = trade.pnl >= 0 ? G.green : G.red;
@@ -1152,11 +1152,18 @@ function DetailTrade({ trade, onBack, onEdit, lang = "fr" }) {
         <button onClick={onBack} style={{ background: "none", border: "none", color: G.dim, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, padding: 0, fontFamily: "inherit" }}>
           ← {fr ? "Retour" : "Back"}
         </button>
-        {onEdit && (
-          <button onClick={() => onEdit(trade)} style={{ background: G.purple + "15", border: `1px solid ${G.purple}40`, color: G.purple, borderRadius: 10, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-            ✎ {fr ? "Modifier" : "Edit"}
-          </button>
-        )}
+        <div style={{ display: "flex", gap: 8 }}>
+          {onEdit && (
+            <button onClick={() => onEdit(trade)} style={{ background: G.purple + "15", border: `1px solid ${G.purple}40`, color: G.purple, borderRadius: 10, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+              ✎ {fr ? "Modifier" : "Edit"}
+            </button>
+          )}
+          {onDelete && (
+            <button onClick={() => { if (window.confirm(fr ? "Supprimer ce trade ?" : "Delete this trade?")) onDelete(trade); }} style={{ background: G.red + "15", border: `1px solid ${G.red}40`, color: G.red, borderRadius: 10, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+              🗑 {fr ? "Supprimer" : "Delete"}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── HERO ── */}
@@ -2892,7 +2899,7 @@ function BalanceChart({ compte, tradeDuCompte, targetMontant, firm, onTradeClick
   );
 }
 
-function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAccount, onTradeClick, lang = "fr" }) {
+function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAccount, onDelete, onTradeClick, lang = "fr" }) {
   const fr = lang === "fr";
   const firm = PROP_FIRMS_CATALOG[compte.type] || PROP_FIRMS_CATALOG["Autre"];
   const tradeDuCompte = trades.filter(t => t.compte === compte.nom);
@@ -3020,6 +3027,9 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAc
             <button onClick={() => setShowBlowModal(true)} style={{ background: "#ef444410", border: "1px solid #ef444430", color: "#ef4444", borderRadius: 10, padding: "8px 16px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>🔥 Compte cramé</button>
           )}
           <button onClick={onEdit} style={{ background: "#1a1a2e", border: "1px solid #2a2a3e", color: "#aaa", borderRadius: 10, padding: "8px 16px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>✏️ Modifier</button>
+          {onDelete && (
+            <button onClick={() => { if (window.confirm(fr ? `Supprimer le compte "${compte.nom}" et tous ses trades ?` : `Delete account "${compte.nom}" and all its trades?`)) onDelete(compte); }} style={{ background: "#ef444415", border: "1px solid #ef444440", color: "#ef4444", borderRadius: 10, padding: "8px 16px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>🗑 Supprimer</button>
+          )}
         </div>
       </div>
 
@@ -8196,7 +8206,7 @@ function TutorialOverlay({ step, onNext, onSkip, lang = "fr", onNavigate }) {
   );
 }
 
-function DayDetail({ date, trades, sessions = {}, onBack, onTradeDetail, onNewTrade, lang = "fr" }) {
+function DayDetail({ date, trades, sessions = {}, onBack, onTradeDetail, onNewTrade, onDeleteSession, lang = "fr" }) {
   const fr = lang === "fr";
   const G = { green: "#00e5a0", red: "#ef4444", purple: "#818cf8", amber: "#f59e0b", card: "#0a0a14", border: "#1a1a2e", text: "#e5e7eb", dim: "#6b7280" };
   const EMOTION_EMOJI = { "Confiant": "😊", "Serein": "😌", "Stressé": "😰", "Anxieux": "😟", "Frustré": "😤", "Euphorique": "🤩", "Impatient": "⚡", "En FOMO": "😱", "Neutre": "😐" };
@@ -8252,11 +8262,18 @@ function DayDetail({ date, trades, sessions = {}, onBack, onTradeDetail, onNewTr
 
   return (
     <div style={{ maxWidth: 760, margin: "0 auto" }}>
-      <button onClick={onBack} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "none", border: "1px solid #1a1a2e", color: "#6b7280", borderRadius: 8, padding: "7px 14px", fontSize: 12, cursor: "pointer", fontWeight: 600, fontFamily: "inherit", marginBottom: 24, transition: "all 0.15s" }}
-        onMouseEnter={e => { e.currentTarget.style.color = "#e5e7eb"; e.currentTarget.style.borderColor = "#374151"; }}
-        onMouseLeave={e => { e.currentTarget.style.color = "#6b7280"; e.currentTarget.style.borderColor = "#1a1a2e"; }}>
-        ← {fr ? "Retour au calendrier" : "Back to calendar"}
-      </button>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+        <button onClick={onBack} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "none", border: "1px solid #1a1a2e", color: "#6b7280", borderRadius: 8, padding: "7px 14px", fontSize: 12, cursor: "pointer", fontWeight: 600, fontFamily: "inherit", transition: "all 0.15s" }}
+          onMouseEnter={e => { e.currentTarget.style.color = "#e5e7eb"; e.currentTarget.style.borderColor = "#374151"; }}
+          onMouseLeave={e => { e.currentTarget.style.color = "#6b7280"; e.currentTarget.style.borderColor = "#1a1a2e"; }}>
+          ← {fr ? "Retour au calendrier" : "Back to calendar"}
+        </button>
+        {onDeleteSession && (
+          <button onClick={() => { if (window.confirm(fr ? `Supprimer la session du ${dateLabel} ?` : `Delete session for ${dateLabel}?`)) onDeleteSession(date); }} style={{ background: "#ef444415", border: "1px solid #ef444440", color: "#ef4444", borderRadius: 8, padding: "7px 14px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
+            🗑 {fr ? "Supprimer la session" : "Delete session"}
+          </button>
+        )}
+      </div>
 
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
@@ -9316,9 +9333,12 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
 
             {/* Module content */}
             {selectedTrade
-              ? <DetailTrade trade={selectedTrade} onBack={() => setSelectedTrade(null)} onEdit={handleEditTrade} lang={lang} />
+              ? <DetailTrade trade={selectedTrade} onBack={() => setSelectedTrade(null)} onEdit={handleEditTrade} lang={lang}
+                  onDelete={(t) => { setTrades(prev => prev.filter(x => x.id !== t.id)); setSelectedTrade(null); }}
+                />
               : selectedCompte && tab === "dashboard"
               ? <DetailCompte compte={selectedCompte} trades={trades} onBack={() => setSelectedCompte(null)} onEdit={() => { setSelectedCompte(null); handleEditCompte(selectedCompte); }} onTradeClick={(t) => { setSelectedCompte(null); setSelectedTrade(t); navigateTo("session"); }} lang={lang}
+                  onDelete={(c) => { setComptes(prev => prev.filter(x => x.id !== c.id)); setTrades(prev => prev.filter(t => t.compte !== c.nom)); setSelectedCompte(null); }}
                   onBlowAccount={(compteId) => {
                     setComptes(cs => cs.map(c => c.id === compteId ? { ...c, blown: true, blownAt: new Date().toISOString().split("T")[0] } : c));
                     setSelectedCompte(null);
@@ -9356,7 +9376,9 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
                     </div>
                   )
                   : sessionSubView === "dayDetail" && sessionDayDate
-                  ? <DayDetail date={sessionDayDate} trades={trades} sessions={sessions} onBack={() => setSessionSubView("calendar")} onTradeDetail={setSelectedTrade} onNewTrade={() => navigateTo("nouveau")} lang={lang} />
+                  ? <DayDetail date={sessionDayDate} trades={trades} sessions={sessions} onBack={() => setSessionSubView("calendar")} onTradeDetail={setSelectedTrade} onNewTrade={() => navigateTo("nouveau")} lang={lang}
+                      onDeleteSession={(date) => { setSessions(prev => { const next = { ...prev }; delete next[date]; return next; }); setSessionSubView("calendar"); }}
+                    />
                   : (
                     <div>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
