@@ -2901,76 +2901,104 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAc
             </div>
 
             <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block", overflow: "visible" }}>
-              {/* Grid lignes horizontales */}
+              <defs>
+                <clipPath id={`clip-up-${compte.id}`}>
+                  <rect x={PAD.l} y={PAD.t} width={iW} height={Math.max(0, startY - PAD.t)} />
+                </clipPath>
+                <clipPath id={`clip-dn-${compte.id}`}>
+                  <rect x={PAD.l} y={startY} width={iW} height={Math.max(0, PAD.t + iH - startY)} />
+                </clipPath>
+                <linearGradient id={`fill-up-${compte.id}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#22c55e" stopOpacity="0.18" />
+                  <stop offset="100%" stopColor="#22c55e" stopOpacity="0.02" />
+                </linearGradient>
+                <linearGradient id={`fill-dn-${compte.id}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.02" />
+                  <stop offset="100%" stopColor="#ef4444" stopOpacity="0.18" />
+                </linearGradient>
+              </defs>
+
+              {/* Grid lignes */}
               {[0, 0.25, 0.5, 0.75, 1].map(f => {
                 const y = PAD.t + iH * f;
                 const val = maxVal - f * range;
                 return (
                   <g key={f}>
-                    <line x1={PAD.l} y1={y} x2={PAD.l + iW} y2={y} stroke="#1a1a2e" strokeWidth="1" />
-                    <text x={PAD.l - 6} y={y + 4} textAnchor="end" fontSize="9" fill="#4b5563">{Math.round(val)}</text>
+                    <line x1={PAD.l} y1={y} x2={PAD.l + iW} y2={y} stroke="#1e2d45" strokeWidth="1" />
+                    <text x={PAD.l - 6} y={y + 4} textAnchor="end" fontSize="9" fill="#4b5e7a">{Math.round(val)}$</text>
                   </g>
                 );
               })}
 
-              {/* Ligne de départ (balance initiale) */}
+              {/* Ligne de départ — bien visible comme Dashboard */}
               {startY >= PAD.t && startY <= PAD.t + iH && (
                 <g>
-                  <line x1={PAD.l} y1={startY} x2={PAD.l + iW} y2={startY} stroke="#374151" strokeWidth="1.5" strokeDasharray="4,4" />
-                  <text x={PAD.l + iW + 6} y={startY + 4} fontSize="9" fill="#6b7280" fontWeight="700">{useAbsolute ? `${startVal.toFixed(0)}$` : "0"}</text>
+                  <line x1={PAD.l} y1={startY} x2={PAD.l + iW} y2={startY} stroke="#4b5e7a" strokeWidth="1" strokeDasharray="3,3" opacity="0.9" />
+                  <rect x={PAD.l + iW + 2} y={startY - 9} width={66} height={14} rx={3} fill="#0a0a14" />
+                  <text x={PAD.l + iW + 6} y={startY + 4} fontSize="9" fill="#94a3b8" fontWeight="700">{useAbsolute ? `${Math.round(startVal)}$` : "0$"}</text>
                 </g>
               )}
 
               {/* Ligne MLL rouge */}
               {mllY !== null && mllY >= PAD.t && mllY <= PAD.t + iH && (
                 <g>
-                  <line x1={PAD.l} y1={mllY} x2={PAD.l + iW} y2={mllY} stroke="#ef4444" strokeWidth="2" strokeDasharray="6,4" opacity="0.8" />
+                  <rect x={PAD.l} y={mllY - 0.5} width={iW} height={1} fill="#ef4444" opacity="0.15" />
+                  <line x1={PAD.l} y1={mllY} x2={PAD.l + iW} y2={mllY} stroke="#ef4444" strokeWidth="1.5" strokeDasharray="6,3" opacity="0.85" />
                   <rect x={PAD.l + iW + 2} y={mllY - 9} width={72} height={14} rx={3} fill="#0a0a14" />
-                  <text x={PAD.l + iW + 6} y={mllY + 4} fontSize="9" fill="#ef4444" fontWeight="700">MLL {mllAbsolute.toFixed(0)}$</text>
+                  <text x={PAD.l + iW + 6} y={mllY + 4} fontSize="9" fill="#ef4444" fontWeight="700">MLL {Math.round(mllAbsolute)}$</text>
                 </g>
               )}
 
-              {/* Ligne target profit */}
+              {/* Ligne objectif profit */}
               {targetBalY !== null && targetBalY >= PAD.t && targetBalY <= PAD.t + iH && (
                 <g>
-                  <line x1={PAD.l} y1={targetBalY} x2={PAD.l + iW} y2={targetBalY} stroke={firmColor} strokeWidth="1.5" strokeDasharray="6,4" opacity="0.6" />
+                  <line x1={PAD.l} y1={targetBalY} x2={PAD.l + iW} y2={targetBalY} stroke={firmColor} strokeWidth="1.5" strokeDasharray="6,3" opacity="0.6" />
                   <rect x={PAD.l + iW + 2} y={targetBalY - 9} width={70} height={14} rx={3} fill="#0a0a14" />
                   <text x={PAD.l + iW + 6} y={targetBalY + 4} fontSize="9" fill={firmColor} fontWeight="700">Obj +{targetMontant}$</text>
                 </g>
               )}
 
-              {/* Fill sous la courbe */}
+              {/* Fill vert au-dessus du départ */}
+              {balancePoints.length > 1 && (() => {
+                const fPath = `M ${xOf(0)},${startY} ${balancePoints.map((v,i) => `L ${xOf(i)},${yOf(v)}`).join(" ")} L ${lastX},${startY} Z`;
+                return (
+                  <>
+                    <path d={fPath} fill={`url(#fill-up-${compte.id})`} clipPath={`url(#clip-up-${compte.id})`} />
+                    <path d={fPath} fill={`url(#fill-dn-${compte.id})`} clipPath={`url(#clip-dn-${compte.id})`} />
+                  </>
+                );
+              })()}
+
+              {/* Courbe verte au-dessus / rouge en-dessous */}
+              {balancePoints.length > 1 ? (() => {
+                const lPath = `M ${balancePoints.map((v,i) => `${xOf(i)},${yOf(v)}`).join(" L ")}`;
+                return (
+                  <>
+                    <path d={lPath} fill="none" stroke="#22c55e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" clipPath={`url(#clip-up-${compte.id})`} />
+                    <path d={lPath} fill="none" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" clipPath={`url(#clip-dn-${compte.id})`} />
+                  </>
+                );
+              })() : (
+                <circle cx={xOf(0)} cy={yOf(balancePoints[0])} r="5" fill="#4b5e7a" />
+              )}
+
+              {/* Point actuel */}
               {balancePoints.length > 1 && (
                 <>
-                  <defs>
-                    <linearGradient id={`bal-fill-${compte.id}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={lineColor} stopOpacity="0.2" />
-                      <stop offset="100%" stopColor={lineColor} stopOpacity="0.01" />
-                    </linearGradient>
-                  </defs>
-                  <polygon points={`${xOf(0)},${startY} ${pts} ${lastX},${startY}`}
-                    fill={`url(#bal-fill-${compte.id})`} />
+                  <circle cx={lastX} cy={lastY} r="4.5" fill={pnlNet >= 0 ? "#22c55e" : "#ef4444"} stroke="#0a0a14" strokeWidth="2" />
+                  <circle cx={lastX} cy={lastY} r="9" fill="none" stroke={pnlNet >= 0 ? "#22c55e" : "#ef4444"} strokeWidth="1" opacity="0.3" />
                 </>
               )}
 
-              {/* Courbe */}
-              {balancePoints.length > 1 ? (
-                <polyline points={pts} fill="none" stroke={lineColor} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-              ) : (
-                <circle cx={xOf(0)} cy={yOf(balancePoints[0])} r="5" fill={lineColor} />
-              )}
-
-              {/* Point de départ */}
-              <circle cx={xOf(0)} cy={startY} r="4" fill="#374151" />
-
-              {/* Point actuel */}
-              <circle cx={lastX} cy={lastY} r="5" fill={lineColor} />
-              <circle cx={lastX} cy={lastY} r="9" fill="none" stroke={lineColor} strokeWidth="1.5" opacity="0.35" />
-
               {/* Labels X */}
-              {balancePoints.length > 1 && [0, Math.floor((balancePoints.length - 1) / 2), balancePoints.length - 1].filter((v, i, a) => a.indexOf(v) === i).map(i => (
-                <text key={i} x={xOf(i)} y={H - 6} textAnchor="middle" fontSize="9" fill="#4b5563">{i === 0 ? "Départ" : `T${i}`}</text>
-              ))}
+              {balancePoints.length > 1 && (() => {
+                const n = balancePoints.length - 1;
+                return [0, Math.floor(n / 2), n].filter((v,i,a) => a.indexOf(v) === i).map(i => (
+                  <text key={i} x={xOf(i)} y={H - 6} textAnchor="middle" fontSize="9" fill="#4b5e7a">
+                    {i === 0 ? "Départ" : `T${i}`}
+                  </text>
+                ));
+              })()}
             </svg>
 
             {/* Légende */}
