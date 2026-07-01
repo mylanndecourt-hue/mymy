@@ -619,7 +619,9 @@ const PROP_FIRMS_CATALOG = {
   Topstep: {
     nom: "Topstep", couleur: "#00d4ff", emoji: "🏦", logo: "/firms/topstep.png", siteUrl: "https://www.topstep.com", reglesUrl: "https://support.topstep.com/hc/en-us/categories/4408836624791-Rules-Policies", discordUrl: "https://discord.com/invite/topstep",
     description: "Futures prop firm · XFA",
+    tailles: [25000, 50000, 100000, 150000],
     typesCompte: [
+      { id: "static25k", label: "25K Statique", desc: "Éval. drawdown fixe", couleurBadge: "#f97316", payoutRegles: { type: "profit_target", montant: 1500, label: "Atteindre +$1 500 de profit pour passer en XFA" } },
       { id: "combine", label: "Trading Combine", desc: "Évaluation", couleurBadge: "#f59e0b", payoutRegles: { type: "profit_target", montants: { 50000: 3000, 100000: 6000, 150000: 9000 }, label: "Atteindre le profit target pour passer en XFA" } },
       { id: "xfa", label: "Express Funded", desc: "Financé (XFA)", couleurBadge: "#00e5a0", payoutRegles: { type: "jours_gagnants", nombre: 5, minParJour: 150, label: "5 jours gagnants à +$150 min (non consécutifs)" } },
       { id: "live", label: "Live Funded", desc: "Compte live", couleurBadge: "#00d4ff", payoutRegles: { type: "libre", label: "Payout hebdomadaire — aucun jour minimum requis" } },
@@ -627,9 +629,11 @@ const PROP_FIRMS_CATALOG = {
     reglesFondamentales: [
       { titre: "Position overnight / week-end", consequence: "Compte fermé", detail: "Toute position ouverte après 15h10 CT ou le week-end = fermeture immédiate." },
       { titre: "Dépasser la taille max", consequence: "Violation de règle", detail: "Trader plus que les lots autorisés par ton palier = violation. La mise à jour se fait en début de session suivante." },
+      { titre: "Toucher le drawdown statique (25K Statique)", consequence: "Compte fermé", detail: "Le MLL est fixe à -$1 500 dès le départ — il ne trail PAS. Si le solde descend sous $23 500, le compte est liquidé immédiatement." },
     ],
     regles: [
       { cat: "🚨 Règle absolue", titre: "Maximum Loss Limit (MLL)", desc: "Ne JAMAIS toucher le MLL. Commence à -$2 000, trail vers le haut. Se verrouille à $0 après premier payout. Violation = compte fermé définitivement.", critique: true },
+      { cat: "🚨 25K Statique", titre: "Drawdown statique -$1 500", desc: "Sur le 25K Statique, le drawdown est FIXE à -$1 500 (ne trail jamais). Solde < $23 500 → liquidation immédiate. Profit target : +$1 500 → passage en XFA.", critique: true },
       { cat: "📏 Taille", titre: "Scaling Plan (50K)", desc: "Solde < $1 500 → 2 contrats max\nSolde ≥ $1 500 → 3 contrats max\nSolde ≥ $2 000 → 5 contrats max\nMise à jour au début de la session suivante uniquement.", critique: false },
       { cat: "⏰ Horaires", titre: "Fermeture 15h10 CT", desc: "Toutes positions fermées à 15h10 CT (22h10 Paris). Pas de positions overnight ni week-end.", critique: false },
       { cat: "💰 Payout", titre: "5 jours à +$150 min", desc: "5 jours gagnants (non consécutifs) avec P&L ≥ $150. Split 90/10. Max payout = 50% du solde.", critique: false },
