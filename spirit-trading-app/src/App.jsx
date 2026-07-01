@@ -3009,7 +3009,24 @@ function DetailCompte({ compte, trades, onBack, onEdit, onValidateEval, onBlowAc
                   {balancePoints.map((v, i) => {
                     const cx = xOf(i), cy = yOf(v);
                     const col = v >= startVal ? "#22c55e" : "#ef4444";
-                    return <circle key={i} cx={cx} cy={cy} r="3" fill={col} stroke="#0a0e1a" strokeWidth="1.5" />;
+                    const isLast = i === balancePoints.length - 1 && balancePoints.length > 1;
+                    return (
+                      <g key={i}>
+                        {isLast && (
+                          <>
+                            <circle cx={cx} cy={cy} r="3" fill={col} opacity="0.25">
+                              <animate attributeName="r" values="3;14;3" dur="2.4s" repeatCount="indefinite" />
+                              <animate attributeName="opacity" values="0.25;0;0.25" dur="2.4s" repeatCount="indefinite" />
+                            </circle>
+                            <circle cx={cx} cy={cy} r="3" fill={col} opacity="0.5">
+                              <animate attributeName="r" values="3;9;3" dur="2.4s" begin="0.3s" repeatCount="indefinite" />
+                              <animate attributeName="opacity" values="0.5;0;0.5" dur="2.4s" begin="0.3s" repeatCount="indefinite" />
+                            </circle>
+                          </>
+                        )}
+                        <circle cx={cx} cy={cy} r={isLast ? 4 : 3} fill={col} stroke="#0a0e1a" strokeWidth="1.5" />
+                      </g>
+                    );
                   })}
 
                   {/* Labels X (dates) */}
