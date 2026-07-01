@@ -8787,14 +8787,14 @@ export default function App({ user, cloudData, onDataChange, saveStatus, onLogou
   const [showLanding, setShowLanding] = useState(() => localStorage.getItem("spirit_skipped_landing") !== "1");
 
   const VALID_TABS = ["dashboard", "session", "analyse", "roi", "nouveau", "regles", "objectifs", "tarifs", "chemin", "compte"];
-  const [sessionSubView, setSessionSubView] = useState("calendar"); // "calendar" | "preparation" | "dayDetail"
+  const [sessionSubView, setSessionSubView] = useState("dayDetail"); // "calendar" | "preparation" | "dayDetail"
 
   // Tutorial
   const [tutorialActive, setTutorialActive] = useState(() => localStorage.getItem("spirit_tutorial_done") !== "1");
   const [tutorialStep, setTutorialStep] = useState(0);
   const closeTutorial = () => { setTutorialActive(false); localStorage.setItem("spirit_tutorial_done", "1"); };
   const nextTutorialStep = () => { if (tutorialStep < 2) setTutorialStep(s => s + 1); else closeTutorial(); };
-  const [sessionDayDate, setSessionDayDate] = useState(null);
+  const [sessionDayDate, setSessionDayDate] = useState(() => new Date().toISOString().slice(0, 10));
   const getTabFromUrl = () => {
     const path = window.location.pathname.replace("/", "").toLowerCase();
     return VALID_TABS.includes(path) ? path : null;
