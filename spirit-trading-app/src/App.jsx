@@ -8213,7 +8213,7 @@ function TutorialOverlay({ step, onNext, onSkip, lang = "fr", onNavigate }) {
 function DayDetail({ date, trades, sessions = {}, onBack, onTradeDetail, onNewTrade, onDeleteSession, onUpdateSession, lang = "fr" }) {
   const fr = lang === "fr";
   const G = { green: "#00e5a0", red: "#ef4444", purple: "#818cf8", amber: "#f59e0b", card: "#0a0a14", border: "#1a1a2e", text: "#e5e7eb", dim: "#6b7280" };
-  const [notesOpen, setNotesOpen] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(true);
   const [notesValue, setNotesValue] = useState(() => (sessions[date] || {}).notes_fin_session || "");
   const EMOTION_EMOJI = { "Confiant": "😊", "Serein": "😌", "Stressé": "😰", "Anxieux": "😟", "Frustré": "😤", "Euphorique": "🤩", "Impatient": "⚡", "En FOMO": "😱", "Neutre": "😐" };
   const FOOD_EMOJI = { "Saine": "🥗", "Neutre": "🍽️", "Mauvaise": "🍔" };
